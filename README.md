@@ -1,38 +1,119 @@
-# slop.measure
+# Slopmeter
 
-`slop.measure` detects redundant and structurally eroded source code. The first
-release targets Python and provides the `slop` command plus an importable API.
+Slopmeter is a Python code-review tool for people and coding agents. It measures
+redundant patterns, duplicated code, and excess complexity, then shows the source
+behind each result. It can scan a directory or compare directories and Git
+revisions. It does not execute target code or apply fixes.
 
-The raw scan reports Python source lines, production and test coverage, excluded
-files, diagnostics, M2 pattern verbosity, M3 clone verbosity, their combined line
-union, and M4 structural erosion. Compatible calibration profiles add file and
-project scores. Directory comparisons add exact M1 and metric changes. M1 remains
-unavailable for snapshots. Git revisions use the same analysis pipeline. See
-`.specs/python-slop-detector/` for the design and checkpoint.
+The command is **`slop`**, the Python package is **`slop-measure`**, and the import
+name is **`slop_measure`**. Terminal reports use the internal name `slop.measure`.
+Only Python analysis is currently implemented. This is an early 0.1.0 project;
+scores are review signals, not defect probabilities or proof of AI authorship.
 
-## Install
+## Quick start
 
-Use Python 3.12 or later. The release matrix covers Python 3.12, 3.13, and 3.14.
-Install from this checkout with an activated virtual environment:
+Use Python 3.12 or later; the test matrix covers Python 3.12, 3.13, and 3.14.
+Clone this repository and install into a virtual environment.
 
-```text
-python -m pip install .
+**Windows PowerShell:**
+
+```powershell
+git clone https://github.com/fdsprod/slopmeter.git
+cd slopmeter
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install .
+.\.venv\Scripts\slop.exe score . --lang py --top 10
 ```
 
-For development, `uv sync --all-groups --locked` creates the environment and installs
-the locked dependencies. Git must be on `PATH`
-for revision analysis. Directory analysis works without Git; ignore-file discovery
-then falls back to configured exclusions.
+Replace `-3.12` with `-3.13` or `-3.14` if that is your installed Python version.
+To scan another project, run this from the Slopmeter checkout:
 
-Built artifacts can be installed with:
-
-```text
-python -m pip install dist/slop_measure-0.1.0-py3-none-any.whl
+```powershell
+.\.venv\Scripts\slop.exe score C:\path\to\your-project --lang py --top 10
+.\.venv\Scripts\slop.exe score C:\path\to\your-project --lang py --json
 ```
 
-The corresponding `.tar.gz` file also installs from source.
-The package includes the calibration profile and corpus manifest. Normal analysis
-needs no network access. This checkout does not publish a package to a registry.
+**macOS or Linux:**
+
+```sh
+git clone https://github.com/fdsprod/slopmeter.git
+cd slopmeter
+python3 -m venv .venv
+.venv/bin/python -m pip install .
+.venv/bin/slop score /path/to/your-project --lang py --top 10
+```
+
+Check that `python3` is version 3.12 or later. These commands do not require
+activating the environment. With an activated environment, use `slop` directly.
+There is no need to copy this tool into the target repository.
+
+For development, use uv **0.11.14**, pinned in `pyproject.toml`:
+
+```text
+uv sync --all-groups --locked
+uv run slop score . --lang py --top 10
+```
+
+The `uv run slop` examples below assume you are in this checkout. With the pip
+installation, replace `uv run slop` with your environment's `slop` executable.
+After pulling updates, repeat `pip install .` or `uv sync --all-groups --locked`.
+
+Git must be on `PATH` for revision analysis and Git ignore discovery. Directory
+analysis works without Git, using configured exclusions. Calibration profiles
+are packaged with the tool; normal scans require no network access. Installation
+here is from source, not a claimed PyPI release.
+
+## Commands
+
+| Task | Command |
+|---|---|
+| Rank files in a project | `slop score PATH --lang py --top 10` |
+| Get a complete machine-readable report | `slop score PATH --lang py --json` |
+| Include test results in the terminal view | `slop score PATH --scope all` |
+| View files by directory | `slop tree PATH --lang py` |
+| Explain a file | `slop explain src/app.py --root PATH` |
+| Explain one callable | `slop explain src/app.py --root PATH --symbol MyClass.method` |
+| List matching evidence | `slop findings --root PATH --metric m4` |
+| List available pattern rules | `slop rules --root PATH` |
+| Compare two directories | `slop compare BEFORE AFTER` |
+| Compare Git revisions | `slop compare HEAD~1 HEAD --repo PATH` |
+| Compare a commit with local work | `slop compare HEAD WORKTREE --repo PATH` |
+
+Run `slop --help` or `slop COMMAND --help` for all options. `scan` is an alias for
+`score`. `--top` limits displayed rows, not analysis work. `--lang` filters files
+before reading and analysis; `--langs` is an alias with comma-separated or repeated
+values. Only installed language adapters can be selected.
+
+## Read a score or give it to an agent
+
+Lower scores indicate less measured redundancy and excess complexity under the
+selected calibration profile. A high score is a reason to inspect source, not an
+instruction to refactor it. A low score does not prove correctness. Raw percentages
+and calibrated points are different measurements.
+
+Every successful report includes **How to read this report**. Use `--verbose` for
+the full guide or `--json` to give an agent structured measurements, provenance,
+and interpretation together. Findings JSON also retains diagnostics, coverage,
+and excluded directories, so empty findings do not conceal incomplete analysis.
+
+A useful instruction for an agent is:
+
+> Read the report's interpretation and check coverage and diagnostics first.
+> Inspect the source behind the highest-ranked results. For each candidate,
+> report a location, evidence, an actionable/defer/no-change disposition, a
+> concrete reason, remaining risk, and the next step. Do not change code merely
+> to lower a score.
+
+The default profile is **`py-2026.2`**. Erosion grows gradually above the complexity
+threshold, and its score contribution scales with raw severity. A small excess
+therefore cannot dominate solely because it is unusual in the reference corpus.
+Scores from the previous profile are not directly comparable. Flat predicates
+can still be overstated, and difficult algorithms can be understated; these limits
+are included in the guide.
+
+Scanning this repository includes the deliberately malformed
+`tests/fixtures/basic/bad.py`. Its parse diagnostic is expected and can make the
+test cohort partial. Use `slop score src --lang py` to inspect only the tool source.
 
 ## Read a snapshot
 
@@ -87,6 +168,8 @@ If that name occurs more than once, add `--line` with its definition start line.
 Color is automatic for a terminal and disabled for redirected output or `NO_COLOR`.
 Use `--color always` to force color, `--no-color` to disable it, and `--ascii` for
 plain character bars and tree branches. Narrow views remove secondary columns.
+The CLI also falls back to ASCII when the output encoding cannot represent its
+display characters, including Windows CP1252 output streams.
 
 The Python API returns the same report as the CLI:
 
@@ -122,8 +205,10 @@ strict = false
 ```
 
 Explicit lists replace their defaults. Threshold or rule changes can make the
-packaged calibration incompatible; raw measurements remain available. API input
-errors inherit `slop_measure.errors.InputError`. Strict analysis failures raise
+packaged calibration incompatible; raw measurements remain available. Source,
+rule-selection, and report-selection errors inherit `slop_measure.errors.InputError`.
+Invalid API configuration or request models raise Pydantic `ValidationError`.
+Strict analysis failures raise
 `AnalysisFailure`. CLI input errors return 2, analysis failures return 3, and
 completed analyses return 0 even when findings are present.
 
@@ -232,7 +317,7 @@ uv run slop compare path/to/before path/to/after --scope all --ascii --no-color
 uv run slop compare path/to/before path/to/after --json
 ```
 
-Both sides use the current directory's resolved configuration. The comparison
+Both sides use the AFTER directory's resolved configuration. The comparison
 retains both complete snapshots and their source-owned evidence. M1 records
 baseline and current SLOC, added and deleted source lines, net change, and growth
 rate. Growth is unavailable when baseline SLOC is zero. Size growth is not a
@@ -288,7 +373,8 @@ or `error`. Rule and severity filters select patterns only because clone groups
 and callables have no rule ID or severity. Selecting a clone member keeps its
 complete group visible. `--top` limits terminal records only.
 
-Findings JSON contains analysis identity, provenance, and all matching evidence.
+Findings JSON contains analysis identity, provenance, interpretation, coverage,
+diagnostics, excluded directories, and all matching evidence.
 `explain --json` continues to return the complete analysis report. `rules` lists
 the installed catalog version, metadata, and configured enabled state without
 analyzing source files.
@@ -355,4 +441,10 @@ allocations. Timing starts before source discovery and ends after calibration;
 fixture generation and terminal rendering are outside the measurement.
 
 See the [release validation record](.specs/python-slop-detector/release-validation.md)
-for measured results, acceptance-test mappings, and platform execution limits.
+for the original release gates. The
+[scoring and interpretation validation](.specs/python-slop-detector/scoring-interpretation-design.md)
+records the latest change: 1,178 deterministic tests, 42 learning tests, four
+package checks, and 96.81 percent branch coverage on Windows Python 3.12, with
+focused checks on Python 3.13 and 3.14. These are local results; the
+[GitHub Actions workflow](.github/workflows/ci.yml) defines the full nine-cell
+Windows, macOS, and Linux matrix.
