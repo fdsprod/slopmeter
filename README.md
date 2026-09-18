@@ -5,8 +5,8 @@ release targets Python and provides the `slop` command plus an importable API.
 
 The raw scan reports Python source lines, production and test coverage, excluded
 files, diagnostics, M2 pattern verbosity, M3 clone verbosity, their combined line
-union, and M4 structural erosion. M1 and
-calibrated scores remain explicitly unavailable. Directory comparisons and Git revision scans arrive
+union, and M4 structural erosion. Compatible calibration profiles add file and
+project scores. M1 remains unavailable for snapshots. Directory comparisons and Git revision scans arrive
 in later slices. See `.specs/python-slop-detector/` for the design and checkpoint.
 
 ## Read a snapshot
@@ -32,7 +32,7 @@ failure. `scan` remains an alias for the same snapshot analysis. `--scope` and
 The summary shows measured percentages and bars first. Lower values mean less
 flagged code. These raw percentages are not calibrated scores. Unavailable metrics
 show a reason instead of a bar. Production and test results stay separate. File
-rows use path order until calibrated hotspot scores are available.
+rows show the highest calibrated scores first when a compatible profile is available.
 
 `tree` shows files under their directories. `explain` shows a file's metrics,
 findings, and callable facts. `--symbol` selects an exact qualified callable name.
@@ -106,6 +106,25 @@ mass. Verbose terminal output shows mass totals and the largest eroded callables
 without callables report `no-functions`. A complexity failure preserves source-line
 counts and makes M4 unavailable for that file and its cohort.
 
+Snapshot scores compare combined verbosity and erosion with a named reference
+population. Each input contributes half the score. M2 and M3 do not contribute
+again. The project score uses project raw measurements and a project population;
+it does not average file scores. Files use separate SLOC bands. Production and
+test populations remain separate.
+
+The percentile counts reference values strictly below the measured value. A raw
+zero receives zero points. Contributions use one decimal place and sum exactly
+to the displayed score. The profile defines the score bands. Callable-free files
+can use a separate verbosity-only model when enough reference samples exist.
+Missing or incompatible calibration leaves the raw evidence available.
+
+The initial corpus contains six pinned 2019 Python project snapshots. It provides
+a small, library-heavy reference, not a representative census or proof of code
+authorship. Project percentile steps are coarse. File populations pool eligible
+files, so larger projects have more influence. The
+[corpus policy](.specs/python-slop-detector/calibration-corpus-research.md) records
+revisions, licenses, exclusions, and limits.
+
 Test patterns take precedence over production patterns. Exclusions, Git-ignore
 rules, and generated markers apply before parsing. Tracked Git files remain eligible
 even if an ignore pattern matches them. The scanner does not execute source files
@@ -133,7 +152,7 @@ uv build
 uv run slop --help
 ```
 
-CI enforces four package dependency boundaries and a 90 percent coverage floor with
+CI enforces five package dependency boundaries and a 90 percent coverage floor with
 branch measurement enabled. The normal suite runs unit, golden, and architecture
 contract tests. The malformed source fixture is excluded from code linting and type
 checking.
@@ -143,3 +162,6 @@ Retained dependency learning tests run separately:
 ```text
 uv run pytest tests/learning
 ```
+
+Tree-sitter is constrained below 0.26. The retained coordinate regression test
+reproduces invalid coordinate reads with 0.26.0 and passes with locked 0.25.2.

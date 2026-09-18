@@ -7,7 +7,7 @@ from slop_measure.domain.evidence import (
     LanguageEvidence,
     ParseState,
 )
-from slop_measure.domain.reports import AnalysisReport, AnalyzerVersion
+from slop_measure.domain.reports import AnalysisReport, AnalyzerVersion, ScoreUnavailableReason
 from slop_measure.domain.requests import SnapshotRequest
 from slop_measure.domain.source import DirectorySourceReference, SourceDocument
 from slop_measure.errors import AnalysisFailure
@@ -15,6 +15,8 @@ from slop_measure.languages.base import LanguageAdapter
 from slop_measure.languages.python.adapter import PythonAdapter
 from slop_measure.languages.registry import LanguageRegistry
 from slop_measure.metrics.aggregate import aggregate_snapshot
+from slop_measure.scoring.engine import score_report
+from slop_measure.scoring.profiles import load_profile
 from slop_measure.sources.filesystem import FilesystemSourceProvider
 
 
@@ -127,4 +129,10 @@ class AnalysisService:
             first = failures[0]
             location = f"{first.path.root}: " if first.path else ""
             raise AnalysisFailure(f"Strict analysis failed: {location}{first.message}")
-        return report
+        try:
+            profile = load_profile(request.config.calibration_profile)
+        except ValueError:
+            return score_report(
+                report, None, failure=ScoreUnavailableReason.CALIBRATION_INCOMPATIBLE
+            )
+        return score_report(report, profile)

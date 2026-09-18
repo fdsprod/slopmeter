@@ -16,7 +16,7 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q07, T01-T44, and T79-T84 are complete through TB-4. The raw scan
+Current checkpoint: Q01-Q07, T01-T53, and T79-T84 are complete through TB-5. The scan
 reports patterns, clones, callable evidence, M2-M4, and combined verbosity through the CLI and public API. Comparison has a
 public entry point that explicitly raises `NotImplementedError` until TB-6. The retained learning tests
 record the external behavior that production adapters rely on.
@@ -97,12 +97,25 @@ TB-4 passes its validation gate:
 - [x] 805 deterministic tests and 37 retained learning tests pass. Coverage is 97.50 percent.
 - [x] Ruff, Pyright, four import contracts, and package builds pass.
 
-Next is TB-5 calibration. The pinned corpus and its limits are recorded in
-[calibration-corpus-research.md](calibration-corpus-research.md). Continue through
-TB-9, with quality gates between slices.
+TB-5 passes its validation gate:
+
+- [x] T45-T48: Versioned immutable profiles, strict compatibility, exact contribution
+  allocation, separate file/project populations, and stable hotspot order.
+- [x] T49-T51: Six pinned 2019 snapshots, recorded licenses and exclusions, 182,882
+  selected SLOC, no analysis diagnostics, and packaged profile `py-2026.1`.
+- [x] T52-T53: Calibrated JSON/terminal goldens, profile/model/band labels, explicit
+  unavailable reasons, and file explanation contributions.
+- [x] Profile replay from recorded evidence is byte-identical. Wheel resources retain
+  the exact profile and manifest bytes. Raw measurements remain available when scoring fails.
+- [x] 934 deterministic tests and 38 retained learning tests pass. Branch coverage is
+  97.12 percent. Ruff, Pyright, five import contracts, dependency audit, build, and CLI checks pass.
+- [x] Real corpus validation exposed the Tree-sitter 0.26.0 coordinate defect. A retained
+  subprocess regression proves the failure and verifies locked 0.25.2.
+
+Next is TB-6 directory comparison. [comparison-design.md](comparison-design.md) records
+the owned change data contract. Continue through TB-9, with quality gates between slices.
 TB-2 retains Radon learning tests for AST traversal and complete callable spans.
-The scoring package's import-linter source contract must be added when that package
-exists. M1 and calibrated snapshot scores remain explicitly unavailable.
+The scoring package now has its own import boundary. M1 remains unavailable for snapshots.
 
 The dependency graph keeps M1 work independent from M2-M4 after the first working
 scan. The quality gate is established before dependency characterization. Calibration
@@ -273,11 +286,11 @@ score bands, contributions, and top-five hotspots.
 
 **Validation:**
 
-- [ ] Contribution points sum exactly to the displayed score.
-- [ ] M2 and M3 contribute only through combined verbosity.
-- [ ] An incompatible profile yields raw metrics and score unavailable.
-- [ ] Adding clean tiny files cannot reduce the project score by file averaging.
-- [ ] The packaged profile records its corpus and metric versions.
+- [x] Contribution points sum exactly to the displayed score.
+- [x] M2 and M3 contribute only through combined verbosity.
+- [x] An incompatible profile yields raw metrics and score unavailable.
+- [x] Adding clean tiny files cannot reduce the project score by file averaging.
+- [x] The packaged profile records its corpus and metric versions.
 
 **Dependencies:** TB-4.
 

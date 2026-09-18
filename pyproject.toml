@@ -94,6 +94,7 @@ source_modules = ["slop_measure.domain"]
 forbidden_modules = [
   "slop_measure.application", "slop_measure.languages", "slop_measure.sources",
   "slop_measure.reporting", "slop_measure.api", "slop_measure.cli",
+  "slop_measure.scoring",
 ]
 
 [[tool.importlinter.contracts]]
@@ -120,3 +121,13 @@ name = "Renderers use reports rather than analyzers or sources"
 type = "forbidden"
 source_modules = ["slop_measure.reporting"]
 forbidden_modules = ["slop_measure.languages", "slop_measure.sources"]
+
+[[tool.importlinter.contracts]]
+id = "scoring-boundary"
+name = "Scoring uses owned reports and calibration data"
+type = "forbidden"
+source_modules = ["slop_measure.scoring"]
+forbidden_modules = [
+  "slop_measure.application", "slop_measure.languages", "slop_measure.sources",
+  "slop_measure.reporting", "slop_measure.api", "slop_measure.cli",
+]

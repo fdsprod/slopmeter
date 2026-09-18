@@ -29,11 +29,13 @@ from slop_measure.domain.reports import (
     ReportCloneGroup,
     SnapshotAnalysis,
     SnapshotCohortReport,
+    SnapshotScore,
     SourceSide,
 )
 from slop_measure.domain.source import Cohort
 from slop_measure.errors import SelectionError
 from slop_measure.reporting.queries import findings_for_file, select_callable, select_file
+from slop_measure.scoring.hotspots import rank_hotspots
 
 
 def _render_erosion(
@@ -198,10 +200,10 @@ def _partial(metrics: tuple[MetricResult, ...]) -> bool:
     )
 
 
-def _header(view: _View, report: AnalysisReport) -> None:
+def _header(view: _View, report: AnalysisReport, cohorts: tuple[SnapshotCohortReport, ...]) -> None:
     view.console.print(f"slop.measure  {report.analysis.current.root}", style="bold")
     partial = any(item.detail.severity is DiagnosticSeverity.ERROR for item in report.diagnostics)
-    measured = any(isinstance(item.current.score, MeasuredSnapshotScore) for item in report.cohorts)
+    measured = any(isinstance(item.current.score, MeasuredSnapshotScore) for item in cohorts)
     score = "Calibrated scores; lower is better" if measured else "Score unavailable"
     status = "analysis partial" if partial else "raw measurements available"
     view.console.print(score + view.separator + status)
@@ -250,6 +252,8 @@ def _metric_row(view: _View, metric: MeasuredMetric) -> None:
         text = f"  {label}  {metric.raw.value:g} source lines"
     if metric.metric_id in {"m2.pattern-verbosity", "m3.clone-verbosity", "verbosity.combined"}:
         text += f"  {metric.raw.numerator:g} / {metric.raw.denominator:g} SLOC"
+    if view.verbose and metric.score is not None:
+        text += f" | metric {metric.score.points:.1f}/100"
     view.console.print(text, style="cyan")
 
 
@@ -288,8 +292,16 @@ def _percentage(file: FileResult, metric_id: str, missing: str) -> str:
     return f"{metric.raw.value:.1%}" if isinstance(metric, MeasuredMetric) else missing
 
 
-def _file_values(view: _View, file: FileResult, label: str) -> str:
-    text = label + " | " + _percentage(file, "m2.pattern-verbosity", view.missing)
+def _file_values(view: _View, file: FileResult, label: str, *, scored: bool = False) -> str:
+    text = label
+    if scored:
+        points = (
+            f"{file.score.points:.1f}/100"
+            if isinstance(file.score, MeasuredSnapshotScore)
+            else view.missing
+        )
+        text += " | " + points
+    text += " | " + _percentage(file, "m2.pattern-verbosity", view.missing)
     if view.console.width >= _FULL_COLUMNS_WIDTH:
         text += " | " + _percentage(file, "m4.erosion", view.missing)
     return text
@@ -302,14 +314,49 @@ def _omitted(view: _View, files: tuple[FileResult, ...]) -> None:
 
 
 def _file_table(view: _View, files: tuple[FileResult, ...]) -> None:
-    view.console.print()
-    view.console.print("Files (path order)")
-    view.console.print(
-        "  File | Patterns" + (" | Erosion" if view.console.width >= _FULL_COLUMNS_WIDTH else "")
+    scored = any(isinstance(file.score, MeasuredSnapshotScore) for file in files)
+    ordered = (
+        (
+            *rank_hotspots(files, len(files)),
+            *sorted(
+                (file for file in files if not isinstance(file.score, MeasuredSnapshotScore)),
+                key=lambda file: file.evidence.path.root,
+            ),
+        )
+        if scored
+        else tuple(sorted(files, key=lambda file: file.evidence.path.root))
     )
-    for file in sorted(files, key=lambda item: item.evidence.path.root)[: view.limit]:
-        view.console.print("  " + _file_values(view, file, file.evidence.path.root))
+    view.console.print()
+    view.console.print("Files (score order)" if scored else "Files (path order)")
+    view.console.print(
+        "  File"
+        + (" | Score" if scored else "")
+        + " | Patterns"
+        + (" | Erosion" if view.console.width >= _FULL_COLUMNS_WIDTH else "")
+    )
+    for file in ordered[: view.limit]:
+        view.console.print("  " + _file_values(view, file, file.evidence.path.root, scored=scored))
     _omitted(view, files)
+
+
+def _score_row(view: _View, score: SnapshotScore, *, details: bool = False) -> None:
+    if not isinstance(score, MeasuredSnapshotScore):
+        view.console.print(
+            "  Score unavailable" + view.separator + score.reason.value.replace("-", " ")
+        )
+        return
+    view.console.print(
+        f"  Score {score.points:.1f}/100 {view.bar(score.points / 100)}; lower is better"
+    )
+    view.console.print(f"  {score.band} | profile {score.profile_id} | model {score.model_id}")
+    if details:
+        view.console.print("  Score contributions")
+        for contribution in score.contributions:
+            view.console.print(
+                f"    {_LABELS.get(contribution.metric_id, contribution.metric_id)}: "
+                f"{contribution.points:.1f} points | raw {contribution.raw_value:.1%} | "
+                f"percentile {contribution.percentile:.1f} | weight {contribution.weight:g}"
+            )
 
 
 def _heading(view: _View, cohort: SnapshotCohortReport) -> None:
@@ -325,11 +372,7 @@ def _heading(view: _View, cohort: SnapshotCohortReport) -> None:
             )
         )
     )
-    score = cohort.current.score
-    if isinstance(score, MeasuredSnapshotScore):
-        view.console.print(
-            f"  Score {score.points:.1f}/100 {view.bar(score.points / 100)}; lower is better"
-        )
+    _score_row(view, cohort.current.score, details=view.verbose)
 
 
 def _footer(view: _View, report: AnalysisReport, cohorts: tuple[SnapshotCohortReport, ...]) -> None:
@@ -438,7 +481,7 @@ def render_snapshot(  # noqa: PLR0913
         verbose,
         top if top is not None else report.provenance.config.default_hotspot_count,
     )
-    _header(view, report)
+    _header(view, report, cohorts)
     _coverage(view, report)
     for cohort in cohorts:
         _heading(view, cohort)
@@ -455,7 +498,12 @@ def render_snapshot(  # noqa: PLR0913
 
 
 def _tree_rows(
-    view: _View, files: tuple[FileResult, ...], prefix: str = "", depth: int = 0
+    view: _View,
+    files: tuple[FileResult, ...],
+    prefix: str = "",
+    depth: int = 0,
+    *,
+    scored: bool = False,
 ) -> None:
     children: dict[str, list[FileResult]] = {}
     for file in files:
@@ -467,11 +515,11 @@ def _tree_rows(
         branch = ("`-- " if last else "|-- ") if view.ascii else ("└── " if last else "├── ")
         members = tuple(children[name])
         directory = len(PurePosixPath(members[0].evidence.path.root).parts) > depth + 1
-        label = name + "/" if directory else _file_values(view, members[0], name)
+        label = name + "/" if directory else _file_values(view, members[0], name, scored=scored)
         view.console.print(prefix + branch + label)
         if directory:
             guide = "    " if last else ("|   " if view.ascii else "│   ")
-            _tree_rows(view, members, prefix + guide, depth + 1)
+            _tree_rows(view, members, prefix + guide, depth + 1, scored=scored)
 
 
 # Keep the same public presentation options as the summary renderer.
@@ -494,15 +542,19 @@ def render_tree(  # noqa: PLR0913
         verbose,
         top if top is not None else report.provenance.config.default_hotspot_count,
     )
-    _header(view, report)
+    _header(view, report, cohorts)
     _coverage(view, report)
     for cohort in cohorts:
         _heading(view, cohort)
+        scored = any(isinstance(file.score, MeasuredSnapshotScore) for file in cohort.current.files)
         view.console.print(
-            "File | Patterns" + (" | Erosion" if width >= _FULL_COLUMNS_WIDTH else "")
+            "File"
+            + (" | Score" if scored else "")
+            + " | Patterns"
+            + (" | Erosion" if width >= _FULL_COLUMNS_WIDTH else "")
         )
         files = tuple(sorted(cohort.current.files, key=lambda item: item.evidence.path.root))
-        _tree_rows(view, files[: view.limit])
+        _tree_rows(view, files[: view.limit], scored=scored)
         _omitted(view, files)
         _render_clone_groups(
             view, _groups_for(report, {file.evidence.path.root for file in files}), view.limit
@@ -543,6 +595,23 @@ def _explain_findings(
             view.console.print(f"    {finding.remediation}")
 
 
+def _explain_file(view: _View, file: FileResult, config: AnalysisConfig) -> None:
+    _score_row(view, file.score, details=True)
+    for metric in file.metrics:
+        if isinstance(metric, MeasuredMetric):
+            _metric_row(view, metric)
+            if metric.metric_id == "m4.erosion":
+                view.console.print(
+                    f"  mass: {metric.raw.numerator:g} / {metric.raw.denominator:g}; "
+                    f"CC threshold: > {config.complexity_threshold}"
+                )
+    _unavailable(view, file.metrics)
+    view.console.print()
+    view.console.print("Callables")
+    for function in file.functions:
+        _callable_row(view, function)
+
+
 # Callable selectors and terminal presentation are separate public options.
 def render_explanation(  # noqa: PLR0913
     report: AnalysisReport,
@@ -570,19 +639,7 @@ def render_explanation(  # noqa: PLR0913
     if function is not None:
         _callable_row(view, function)
     else:
-        for metric in file.metrics:
-            if isinstance(metric, MeasuredMetric):
-                _metric_row(view, metric)
-                if metric.metric_id == "m4.erosion":
-                    view.console.print(
-                        f"  mass: {metric.raw.numerator:g} / {metric.raw.denominator:g}; "
-                        f"CC threshold: > {report.provenance.config.complexity_threshold}"
-                    )
-        _unavailable(view, file.metrics)
-        view.console.print()
-        view.console.print("Callables")
-        for callable_evidence in file.functions:
-            _callable_row(view, callable_evidence)
+        _explain_file(view, file, report.provenance.config)
     _explain_findings(view, report, file, function)
     _render_clone_groups(view, _groups_for(report, {file.evidence.path.root}, function))
     for record in report.diagnostics:

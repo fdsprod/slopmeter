@@ -1,6 +1,7 @@
 """Versioned reports with source-specific results and checked evidence links."""
 
 from collections.abc import Hashable, Iterable, Iterator
+from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal, Self
 
@@ -21,9 +22,11 @@ from slop_measure.domain.evidence import (
 from slop_measure.domain.metrics import (
     FileMetricScope,
     MetricResult,
+    MetricVersion,
     ProjectMetricScope,
     UnavailableMetric,
 )
+from slop_measure.domain.scoring import ScoreContribution
 from slop_measure.domain.source import Cohort, SourceIdentity
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -73,13 +76,6 @@ class AnalyzerVersion(_ReportModel):
     clone_normalization_version: _Text | None = None
 
 
-class MetricVersion(_ReportModel):
-    """The calculation version used for one metric."""
-
-    metric_id: _Text
-    version: _Text
-
-
 class Provenance(_ReportModel):
     """Resolved settings and the versions that produced the report."""
 
@@ -110,6 +106,17 @@ class MeasuredSnapshotScore(_ReportModel):
     state: Literal["measured"] = "measured"
     points: Annotated[FiniteFloat, Field(ge=0, le=100)]
     profile_id: _Text
+    model_id: _Text
+    band: _Text
+    contributions: Annotated[tuple[ScoreContribution, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def validate_contributions(self) -> Self:
+        _require_unique((item.metric_id for item in self.contributions), "score contribution")
+        total = sum((Decimal(str(item.points)) for item in self.contributions), Decimal(0))
+        if Decimal(str(self.points)) != total:
+            raise ValueError("snapshot points must equal the displayed contribution sum")
+        return self
 
 
 class UnavailableSnapshotScore(_ReportModel):

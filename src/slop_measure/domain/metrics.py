@@ -15,6 +15,13 @@ class _MetricModel(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
 
+class MetricVersion(_MetricModel):
+    """The calculation version used for one metric."""
+
+    metric_id: _Text
+    version: _Text
+
+
 class ProjectMetricScope(_MetricModel):
     """A complete project population."""
 
