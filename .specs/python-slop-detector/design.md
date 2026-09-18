@@ -1,5 +1,9 @@
 # Python Slop Detector Design
 
+> [!IMPORTANT]
+> The post-TB-3 [output and CLI direction](cli-output.md) supersedes the terminal
+> mockups and command vocabulary below. Keep the metric and calibration contracts.
+
 **Spec**: `.specs/python-slop-detector/spec.md`
 **Status**: Approved
 

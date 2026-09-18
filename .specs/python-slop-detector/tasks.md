@@ -4,9 +4,10 @@
 **Status**: In Progress
 
 > [!NOTE]
-> After TB-3 passes its gate, read the user's
-> [output and CLI direction](https://chatgpt.com/share/6aacd885-7c24-83e8-bc3c-aaf72a1c65f3).
-> Update the remaining output and command plan before starting another tracer bullet.
+> The user's shared conversation has been read. [cli-output.md](cli-output.md)
+> records the revised output and command plan. TB-3a comes before clone detection.
+> The user has requested completion of all remaining tracer bullets without stopping
+> at individual checkpoints. Preserve the current application name.
 
 ## Delivery Strategy
 
@@ -79,8 +80,8 @@ The report contracts now resolve the decisions required before aggregation:
 - [x] The `unsupported-capability` metric reason distinguishes missing evidence
   support from a failed analyzer.
 
-Before the next implementation slice, review the linked output and CLI direction.
-The existing sequence puts TB-4 clone detection next, subject to that revision.
+Next is TB-3a: compact visual snapshots, a file tree, and evidence drill-down.
+Then continue through TB-4 to TB-9, with quality gates between slices.
 TB-2 retains Radon learning tests for AST traversal and complete callable spans.
 The scoring package's import-linter source contract must be added when that package
 exists. M1, M3, and calibrated snapshot scores remain explicitly unavailable.
@@ -95,7 +96,8 @@ flowchart LR
     TB0 --> TB1[TB-1 Raw scan]
     TB1 --> TB2[TB-2 M4 erosion]
     TB2 --> TB3[TB-3 M2 patterns]
-    TB3 --> TB4[TB-4 M3 clones]
+    TB3 --> TB3a[TB-3a Visual CLI]
+    TB3a --> TB4[TB-4 M3 clones]
     TB4 --> TB5[TB-5 Scoring]
     TB1 --> TB6[TB-6 Directory M1]
     TB6 --> TB7[TB-7 Git M1]
@@ -193,6 +195,29 @@ union, M2, and evidence rendering.
 
 **Dependencies:** TB-2.
 
+### TB-3a: Read and navigate a snapshot
+
+**Question answered:** Can one report power a compact summary, file tree, and
+evidence explanation without recalculating or inventing measurements?
+
+**Layers touched:** Report queries to terminal views to CLI entry points.
+
+**Scope:** `score` with compatible `scan`, `tree`, file/callable `explain`, raw
+percentage bars, measured-first ordering, color policy, ASCII, width, and top-N.
+Use [cli-output.md](cli-output.md) as the presentation contract.
+
+**Not included:** New metrics, directory scores, callable scores, or history analysis.
+
+**Validation:**
+
+- [ ] Full JSON is equivalent through `score` and `scan`.
+- [ ] Summary, file tree, and explanations reconcile with the same report evidence.
+- [ ] Unavailable and measured-zero values remain distinct.
+- [ ] Color, redirected output, ASCII, and narrow-width contracts pass.
+- [ ] Unknown file and ambiguous symbol selectors return clear errors.
+
+**Dependencies:** TB-3.
+
 ### TB-4: Measure structural clones
 
 **Question answered:** Can structural duplicate candidates be normalized, grouped,
@@ -213,7 +238,7 @@ groups, M3, and M2/M3 source-line union.
 - [ ] Cross-file clone members appear under one stable group identifier.
 - [ ] Overlapping groups never raise M3 or combined verbosity above one.
 
-**Dependencies:** TB-3.
+**Dependencies:** TB-3a.
 
 ### TB-5: Score snapshots
 
@@ -412,6 +437,19 @@ tests [new]
 | T35 | Add pattern evidence and M2 to the adapter and report pipeline | `src/slop_measure/languages/python/adapter.py` | T15, T33-T34 | Findings preserve rule and source provenance |
 | T36 | Render M2 totals and top pattern findings | `src/slop_measure/reporting/terminal.py` | T26, T35 | Summary and evidence match the approved structure |
 | T37 | Add exact M2 fixture manifests and golden reports | `tests/golden/test_patterns.py` | T36 | All TB-3 validation items pass |
+
+### Presentation revision: TB-3a
+
+These IDs extend the existing task list without renumbering retained checkpoints.
+
+| ID | Deliverable | Done when |
+|---|---|---|
+| T79 | Snapshot file and callable query contracts | Unknown and ambiguous selectors fail explicitly |
+| T80 | Compact measured-first summary and raw percentage bars | Numbers reconcile with the report and unavailable values have no bar |
+| T81 | File tree and evidence explanation views | Production/test ownership and exact source spans remain visible |
+| T82 | `score`, `tree`, and `explain` CLI commands | `scan` and complete JSON remain compatible |
+| T83 | Color, ASCII, top-N, and narrow-terminal options | Independent visual/CLI contracts pass |
+| T84 | Revised usage examples and golden fixtures | Commands reproduce the documented output |
 
 ### Phase 4: TB-4 structural clones
 

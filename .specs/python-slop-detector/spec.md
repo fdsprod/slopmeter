@@ -346,3 +346,6 @@ core aggregation and serialization contract.
 - Score production and test code separately. Use production as the primary score.
 - Show five hotspots by default and expose complete evidence through detail and JSON
   views.
+- Use the post-TB-3 [output and CLI direction](cli-output.md): compact visual summaries,
+  optional color, file hierarchy, and source-evidence drill-down. Keep raw ratios
+  distinct from calibrated scores and keep the current application name.
