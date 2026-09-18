@@ -281,3 +281,8 @@ def test_trivial_wrapper_preserves_pep484_type_comments(
 
     assert isinstance(result, AnalyzedPatterns)
     assert result.findings == ()
+
+
+def test_single_use_return_binding_preserves_assignment_type_comment() -> None:
+    source = "def f(value):\n    result = value  # type: int\n    return result\n"
+    assert run_catalog_source(source, "py.single-use-return-binding").findings == ()
