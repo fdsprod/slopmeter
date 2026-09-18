@@ -569,9 +569,42 @@ Git revision:
 
 ```python
 class SourceProvider(Protocol):
-    def inventory(self) -> tuple[SourceDocument, ...]: ...
+    def inventory(self) -> SourceInventory: ...
     def identity(self) -> SourceIdentity: ...
 ```
+
+Discovery keeps readable source bytes separate from skipped inventory totals and
+read failures. This preserves coverage without inventing empty source documents
+for files the provider could not read.
+
+```datamodel
+name: SourceInventory
+store: in-memory
+summary: The immutable result of source discovery before language analysis.
+fields:
+  - { name: documents, type: tuple[SourceDocument], required: true, description: Included readable source files }
+  - { name: coverage, type: tuple[Coverage], required: true, description: Excluded and unsupported file counts with zero unanalyzed SLOC }
+  - { name: failed_files, type: tuple[FileEvidence], required: true, description: Failed reads with empty source-line evidence }
+  - { name: diagnostics, type: tuple[Diagnostic], required: true, description: Source-read failures }
+```
+
+Filesystem patterns match from the supplied target root. A single `*` stays within
+one path segment; `**` matches zero or more segments. Test patterns take precedence
+over production patterns. Pattern matching preserves case; extension routing is
+case-insensitive. Exclusions, Git-ignore decisions, and generated markers apply
+before analysis. Generated markers match their UTF-8 bytes in source content.
+
+Git discovery includes tracked files and eligible untracked files. It does not
+exclude a tracked file merely because a later ignore pattern matches it. Filesystem
+discovery never follows symbolic links or Windows junctions and never traverses Git metadata. Unsupported
+files remain in coverage even when no production pattern matches their extension.
+
+Source-read errors produce diagnostics even when directory entries cannot be listed.
+Each included path has exactly one outcome: readable source bytes or failed read
+evidence. The service checks adapter language, file membership, cohorts, declared
+capabilities, and failure diagnostics before accepting its output. A broken adapter
+cannot silently remove files from coverage. Directory-level and project-level
+failures keep project metrics unavailable, including when no files were returned.
 
 The language adapter keeps parser objects private and returns only normalized
 evidence:

@@ -10,12 +10,12 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q05 and T01-T12 are complete. Q06 waits for the
-architecture packages, and Q07 waits for the first end-to-end scan. The retained
-learning tests record the external behavior that production adapters may rely on.
+Current checkpoint: Q01-Q07 and T01-T22 are complete for TB-1. The first raw scan
+runs through the CLI and public API. Comparison has a public entry point that
+explicitly raises `NotImplementedError` until TB-6. The retained learning tests
+record the external behavior that production adapters rely on.
 
-The recovered contract batch has passed its focused checks. TB-1 remains incomplete
-until the CLI and API can scan a fixture end to end:
+The raw-scan slice has passed its end-to-end checks:
 
 - [x] T06: Immutable snapshot and comparison request unions.
 - [x] T07: Diagnostics, coverage, exact file SLOC evidence, and language evidence.
@@ -24,9 +24,17 @@ until the CLI and API can scan a fixture end to end:
 - [x] T09: Report envelope, provenance, cohorts, and analysis variants.
 - [x] T11: Read-only adapter protocol with owned evidence and capability declarations.
 - [x] T12: Explicit registration with stable routing metadata and atomic validation.
-- [x] Validate 307 tests, Ruff format/lint, and Pyright. Coverage reports 99 percent.
-- [ ] T13-T15: Source inventory, Python SLOC, and the Python adapter.
-- [ ] T16-T22: Aggregation, orchestration, API, renderers, and the first complete scan.
+- [x] T13-T15: Source inventory, exact Python SLOC, and the Python adapter.
+- [x] T16-T22: Aggregation, orchestration, public API, JSON, terminal, and CLI scan.
+- [x] Validate 398 deterministic tests and 24 separate dependency learning tests.
+- [x] Ruff format/lint, Pyright, four import-linter contracts, dependency audit,
+  package build, and CLI smoke checks pass.
+- [x] Coverage is 97.90 percent with branch measurement enabled; CI enforces 90 percent.
+
+The malformed basic fixture is excluded from lint/type checks and normal test
+collection. Its source remains directly scannable with `slop scan tests/fixtures/basic`.
+The normal test command excludes learning tests. Architecture tests inject each of
+the 16 forbidden dependency directions into isolated package copies.
 
 Language evidence currently accepts only empty pattern, function, and clone
 collections. T23, T28, and the clone slice add their owned element contracts before adapters
@@ -43,9 +51,10 @@ The report contracts now resolve the decisions required before aggregation:
 - [x] The `unsupported-capability` metric reason distinguishes missing evidence
   support from a failed analyzer.
 
-Next, build the filesystem inventory and exact Python line classification. Preserve
-the separation between adapter diagnostics and report-owned diagnostic IDs. The
-report builder will assign those IDs in stable order when T16-T17 joins the layers.
+Next is TB-2: T23-T27 adds callable evidence and raw M4 structural erosion through
+the existing scan. The retained Radon learning tests are its dependency evidence.
+The scoring package's import-linter source contract must be added when that package
+exists. Snapshot metrics and scores remain explicitly unavailable in TB-1.
 
 The dependency graph keeps M1 work independent from M2-M4 after the first working
 scan. The quality gate is established before dependency characterization. Calibration
@@ -82,10 +91,10 @@ syntax normalization, parse errors, revision reads, and rename metadata.
 
 **Validation:**
 
-- [ ] Each behavioral question has one focused executable test.
-- [ ] Observations are recorded in the test comments.
-- [ ] Design assumptions that do not hold are raised before TB-1 starts.
-- [ ] The project decides whether to retain or remove these tests before release.
+- [x] Each behavioral question has one focused executable test.
+- [x] Observations are recorded in the test comments.
+- [x] Design assumptions that do not hold are raised before dependent implementation.
+- [x] Retain dependency tests as executable evidence, outside the normal suite.
 
 **Dependencies:** None.
 
@@ -104,10 +113,10 @@ coverage, and unavailable metric states.
 
 **Validation:**
 
-- [ ] `slop scan tests/fixtures/basic` completes successfully.
-- [ ] API and CLI JSON are equivalent after invocation metadata is removed.
-- [ ] A malformed file creates a diagnostic and does not stop the default scan.
-- [ ] Repeated scans produce byte-stable normalized JSON.
+- [x] `slop scan tests/fixtures/basic` completes successfully.
+- [x] API and CLI JSON are equivalent. No invocation-only metadata is emitted yet.
+- [x] A malformed file creates a diagnostic and does not stop the default scan.
+- [x] Repeated scans produce byte-stable JSON for the same resolved source root.
 
 **Dependencies:** TB-0.
 

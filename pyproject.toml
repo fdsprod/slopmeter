@@ -44,7 +44,7 @@ required-version = "==0.11.14"
 packages = ["src/slop_measure"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests/unit", "tests/golden", "tests/contract"]
 addopts = "-q --strict-config --strict-markers"
 xfail_strict = true
 
@@ -53,6 +53,7 @@ target-version = "py312"
 line-length = 100
 include = ["*.py", "*.pyi", "**/pyproject.toml"]
 output-format = "concise"
+extend-exclude = ["tests/fixtures"]
 
 [tool.ruff.lint]
 select = ["B", "C90", "E", "F", "I", "PL", "RUF", "S", "SIM", "UP", "W"]
@@ -71,6 +72,7 @@ max-complexity = 10
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
 include = ["src", "tests"]
+exclude = ["tests/fixtures"]
 
 [tool.coverage.run]
 branch = true
@@ -79,3 +81,42 @@ source = ["slop_measure"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
+fail_under = 90
+
+[tool.importlinter]
+root_package = "slop_measure"
+
+[[tool.importlinter.contracts]]
+id = "domain-boundary"
+name = "Domain does not depend on application or adapters"
+type = "forbidden"
+source_modules = ["slop_measure.domain"]
+forbidden_modules = [
+  "slop_measure.application", "slop_measure.languages", "slop_measure.sources",
+  "slop_measure.reporting", "slop_measure.api", "slop_measure.cli",
+]
+
+[[tool.importlinter.contracts]]
+id = "metrics-boundary"
+name = "Metrics use owned evidence only"
+type = "forbidden"
+source_modules = ["slop_measure.metrics"]
+forbidden_modules = [
+  "slop_measure.languages", "slop_measure.sources", "slop_measure.reporting", "slop_measure.cli",
+]
+
+[[tool.importlinter.contracts]]
+id = "languages-boundary"
+name = "Language adapters do not call application or presentation"
+type = "forbidden"
+source_modules = ["slop_measure.languages"]
+forbidden_modules = [
+  "slop_measure.application", "slop_measure.reporting", "slop_measure.api", "slop_measure.cli",
+]
+
+[[tool.importlinter.contracts]]
+id = "reporting-boundary"
+name = "Renderers use reports rather than analyzers or sources"
+type = "forbidden"
+source_modules = ["slop_measure.reporting"]
+forbidden_modules = ["slop_measure.languages", "slop_measure.sources"]

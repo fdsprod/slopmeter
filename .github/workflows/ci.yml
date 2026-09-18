@@ -33,6 +33,8 @@ jobs:
         run: uv run ruff check .
       - name: Check types
         run: uv run pyright
+      - name: Check architecture
+        run: uv run lint-imports --no-cache
       - name: Audit dependencies
         run: uv run pip-audit
 
