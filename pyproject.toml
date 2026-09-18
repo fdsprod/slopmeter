@@ -1,0 +1,81 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "slop-measure"
+version = "0.1.0"
+description = "Measure redundant and structurally eroded source code."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+  { name = "slop.measure contributors" },
+]
+dependencies = [
+  "pydantic>=2.12,<3",
+  "radon>=6,<7",
+  "rich>=14,<15",
+  "tree-sitter>=0.25,<0.27",
+  "tree-sitter-python>=0.23,<0.26",
+  "typer>=0.16,<1",
+]
+
+[project.scripts]
+slop = "slop_measure.cli:main"
+
+[dependency-groups]
+dev = [
+  "import-linter>=2.13,<3",
+  "pip-audit>=2.9,<4",
+  "pyright>=1.1.383,<2",
+  "ruff>=0.13,<1",
+]
+test = [
+  "pytest>=8.4,<10",
+  "pytest-cov>=6,<8",
+]
+
+[tool.uv]
+default-groups = ["dev", "test"]
+required-version = "==0.11.14"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/slop_measure"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-config --strict-markers"
+xfail_strict = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+include = ["*.py", "*.pyi", "**/pyproject.toml"]
+output-format = "concise"
+
+[tool.ruff.lint]
+select = ["B", "C90", "E", "F", "I", "PL", "RUF", "S", "SIM", "UP", "W"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+known-first-party = ["slop_measure"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLR2004", "S101"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+include = ["src", "tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["slop_measure"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
