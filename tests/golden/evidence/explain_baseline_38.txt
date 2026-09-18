@@ -1,0 +1,46 @@
+slop.measure  a.py
+Source: baseline
+Production | Python
+  Score unavailable | calibration 
+missing
+  Pattern verbosity  50.0% 
+[##########----------]  2 / 4 SLOC
+  Clone verbosity  0.0% 
+[--------------------]  0 / 4 SLOC
+  Erosion  0.0% [--------------------]
+  mass: 0 / 4.24264; CC threshold: > 
+10
+  Combined verbosity  50.0% 
+[##########----------]  2 / 4 SLOC
+
+Callables
+  a.py:1-2 f: CC 2, SLOC 2, mass 
+2.82843
+  a.py:4-5 g: CC 1, SLOC 2, mass 
+1.41421
+
+Findings (2)
+  a.py:2-2 py.boolean-conditional: 
+Replace the boolean conditional with a
+boolean conversion.
+  a.py:5-5 py.literal-fstring: Remove 
+the unused f-string prefix.
+    Preserve the decoded string value,
+including escaped braces, when using a
+plain string.
+
+File change | renamed
+  a.py -> renamed.py
+  M1 LOC delta  +0 added | -0 deleted 
+| +0 net
+  Source lines: 4 -> 4 SLOC
+  Growth +0.0%
+  Pattern verbosity: +0.0 percentage 
+points | unchanged
+  Clone verbosity: +0.0 percentage 
+points | unchanged
+  Erosion: +0.0 percentage points | 
+unchanged
+  Score change: - | unavailable input
+  Combined verbosity: +0.0 percentage 
+points | unchanged

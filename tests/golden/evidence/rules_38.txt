@@ -1,0 +1,114 @@
+slop.measure  rules
+python | py-patterns-1 | 20 rules
+
+py.boolean-conditional | enabled
+  redundancy | warning
+  Replace the boolean conditional with
+a boolean conversion.
+
+py.empty-finally | enabled
+  defensive | warning
+  The finally suite performs no 
+cleanup.
+
+py.explicit-default-metaclass | 
+enabled
+  abstraction | warning
+  The explicit metaclass repeats the 
+default type.
+
+py.explicit-object-base | enabled
+  abstraction | warning
+  Classes already inherit from object 
+by default.
+
+py.literal-fstring | enabled
+  redundancy | warning
+  Remove the unused f-string prefix.
+  Preserve the decoded string value, 
+including escaped braces, when using a
+plain string.
+
+py.literal-identity-comprehension | 
+enabled
+  redundancy | warning
+  The comprehension copies each 
+literal element unchanged.
+
+py.merge-nested-if | enabled
+  control-flow | warning
+  The two conditions can share one 
+conditional header.
+
+py.negated-boolean-conditional | 
+enabled
+  redundancy | warning
+  The conditional returns the negated 
+truth value.
+
+py.redundant-dict-get-default | 
+enabled
+  defensive | warning
+  Dictionary get already defaults to 
+None.
+
+py.redundant-else-after-break | 
+enabled
+  control-flow | warning
+  The preceding branch exits with 
+break; review the else nesting.
+
+py.redundant-else-after-continue | 
+enabled
+  control-flow | warning
+  The preceding branch exits with 
+continue; review the else nesting.
+
+py.redundant-else-after-raise | 
+enabled
+  control-flow | warning
+  The preceding branch exits with 
+raise; review the else nesting.
+
+py.redundant-else-after-return | 
+enabled
+  control-flow | warning
+  The preceding branch exits with 
+return; review the else nesting.
+
+py.redundant-except-reraise | enabled
+  defensive | warning
+  The handler only raises the same 
+exception again.
+
+py.redundant-literal-container | 
+enabled
+  redundancy | warning
+  The constructor repeats the literal 
+container type.
+
+py.redundant-literal-none-guard | 
+enabled
+  defensive | warning
+  The immediately assigned literal 
+cannot be None.
+
+py.redundant-none-fallback | enabled
+  defensive | warning
+  The fallback returns the same local 
+value in both cases.
+
+py.redundant-pass | enabled
+  abstraction | warning
+  This pass is unnecessary beside an 
+existing statement.
+
+py.single-use-return-binding | enabled
+  abstraction | warning
+  This local binding is used only by 
+the following return.
+
+py.trivial-wrapper | enabled
+  abstraction | warning
+  This private local wrapper only 
+forwards its arguments once.

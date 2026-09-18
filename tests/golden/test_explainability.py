@@ -401,3 +401,36 @@ def test_comparison_explanation_names_quality_direction_but_keeps_m1_neutral(
         assert "worse" not in neutral and "better" not in neutral
         unchanged = next(line for line in result.output.splitlines() if "Clone verbosity:" in line)
         assert "unchanged" in unchanged
+
+
+def test_path_selected_clone_group_retains_all_members_and_verbose_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from slop_measure.api import SnapshotRequest, scan  # noqa: PLC0415
+    from slop_measure.reporting.evidence import render_findings  # noqa: PLC0415
+    from slop_measure.reporting.queries import query_findings  # noqa: PLC0415
+
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    for name in ("a.py", "b.py"):
+        (tmp_path / name).write_text("x = 1\ny = 2\n", encoding="utf-8")
+    report = scan(
+        SnapshotRequest(
+            target=DirectorySourceReference(root=tmp_path),
+            config=AnalysisConfig(clone_min_sloc=2, calibration_profile="__raw__"),
+        )
+    )
+    selected = query_findings(report, path="a.py", metric="m3")
+    assert len(selected.clone_groups) == 1
+    group = selected.clone_groups[0]
+    for width in (38, 120):
+        output = render_findings(
+            report, selected, width=width, ascii=True, color=False, verbose=True, top=1
+        )
+        assert "a.py:1-2" in output and "b.py:1-2" in output
+        assert group.id in output
+        assert group.detail.normalization_version in output
+        compact = "".join(output.split())
+        assert group.detail.fingerprint in compact
+        assert all(len(line) <= width for line in output.splitlines())
+        assert "\x1b[" not in output

@@ -1,0 +1,22 @@
+slop.measure  findings
+2 pattern findings | 0 clone groups | 
+1 eroded callables
+
+Pattern findings
+  finding-0001 | current
+  a.py:2-2 py.boolean-conditional
+    redundancy | warning: Replace the 
+boolean conditional with a boolean 
+conversion.
+  finding-0002 | current
+  a.py:5-5 py.literal-fstring
+    redundancy | warning: Remove the 
+unused f-string prefix.
+    Preserve the decoded string value,
+including escaped braces, when using a
+plain string.
+
+Eroded callables (CC > 10)
+  current | python | production
+  b.py:1-2 high: CC 11, SLOC 2, mass 
+15.5563
