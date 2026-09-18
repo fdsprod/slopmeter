@@ -312,3 +312,92 @@ def test_direct_evidence_renderers_fit_narrow_ascii_and_keep_selection_immutable
     assert all(len(line) <= 38 for line in rules.splitlines())
     assert "py.boolean-conditional" in rules and "disabled" in rules.lower()
     assert "warning" in rules.lower() and "redundancy" in rules.lower()
+
+
+def golden_views(project: Path, current: Path) -> dict[str, str]:
+    from slop_measure.api import SnapshotRequest, scan  # noqa: PLC0415
+    from slop_measure.application.catalog import rule_catalog  # noqa: PLC0415
+    from slop_measure.domain.reports import ComparisonAnalysis, SnapshotAnalysis  # noqa: PLC0415
+    from slop_measure.domain.source import DirectorySourceIdentity  # noqa: PLC0415
+    from slop_measure.reporting.evidence import render_findings, render_rules  # noqa: PLC0415
+    from slop_measure.reporting.queries import query_findings  # noqa: PLC0415
+
+    config = AnalysisConfig(calibration_profile="__raw__")
+    report = scan(SnapshotRequest(target=DirectorySourceReference(root=project), config=config))
+    report = report.model_copy(
+        update={"analysis": SnapshotAnalysis(current=DirectorySourceIdentity(root=Path("PROJECT")))}
+    )
+    selection = query_findings(report)
+    assert len(selection.patterns) == 2 and len(selection.functions) == 1
+    assert not selection.clone_groups
+    catalog = rule_catalog(config)
+    assert len(catalog.rules) == 20
+    assert all(item.enabled for item in catalog.rules)
+    current.mkdir()
+    (current / "renamed.py").write_bytes((project / "a.py").read_bytes())
+    (current / "b.py").write_bytes((project / "b.py").read_bytes())
+    comparison = compare(
+        ComparisonRequest(
+            baseline=DirectorySourceReference(root=project),
+            current=DirectorySourceReference(root=current),
+            config=config,
+        )
+    )
+    comparison = comparison.model_copy(
+        update={
+            "analysis": ComparisonAnalysis(
+                baseline=DirectorySourceIdentity(root=Path("BASE")),
+                current=DirectorySourceIdentity(root=Path("CURRENT")),
+            )
+        }
+    )
+    assert len([item for item in comparison.findings if item.source is SourceSide.BASELINE]) == 2
+    views = {}
+    for width in (38, 100):
+        views[f"findings_{width}.txt"] = render_findings(
+            report, selection, width=width, color=False, ascii=True, top=10
+        )
+        views[f"rules_{width}.txt"] = render_rules(catalog, width=width, color=False, ascii=True)
+        views[f"explain_baseline_{width}.txt"] = render_explanation(
+            comparison, "a.py", source=SourceSide.BASELINE, width=width, color=False, ascii=True
+        )
+    return views
+
+
+def test_evidence_views_match_verified_wide_and_narrow_goldens(project: Path) -> None:
+    for name, rendered in golden_views(project, project.parent / "current-view").items():
+        assert rendered == (Path(__file__).parent / "evidence" / name).read_text(encoding="utf-8")
+
+
+def test_comparison_explanation_names_quality_direction_but_keeps_m1_neutral(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    before, after = tmp_path / "before", tmp_path / "after"
+    before.mkdir()
+    after.mkdir()
+    (before / "a.py").write_text("def f(flag):\n    return flag\n", encoding="utf-8")
+    (after / "a.py").write_text(
+        "def f(flag):\n    return True if flag else False\n", encoding="utf-8"
+    )
+    for baseline, current, word in ((before, after, "worse"), (after, before, "better")):
+        result = invoke(
+            "explain",
+            "a.py",
+            "--root",
+            str(current),
+            "--baseline-root",
+            str(baseline),
+            "--ascii",
+            "--no-color",
+        )
+        assert result.exit_code == 0, result.output
+        delta_line = next(
+            line for line in result.output.splitlines() if "Pattern verbosity:" in line
+        )
+        assert word in delta_line
+        neutral = next(line for line in result.output.splitlines() if "M1 LOC delta" in line)
+        assert "worse" not in neutral and "better" not in neutral
+        unchanged = next(line for line in result.output.splitlines() if "Clone verbosity:" in line)
+        assert "unchanged" in unchanged
