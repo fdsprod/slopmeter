@@ -97,7 +97,8 @@ def test_git_modified_rename_and_directory_snapshots_share_raw_results(history, 
     now = GitSourceReference(root=root, revision="current")
     report = compare(ComparisonRequest(baseline=baseline, current=now, config=config()))
     assert report.analysis.kind == "comparison"
-    assert report.analysis.baseline.kind == report.analysis.current.kind == "git"
+    assert report.analysis.baseline.kind == "git"
+    assert report.analysis.current.kind == "git"
     assert report.analysis.baseline.revision == base
     assert report.analysis.current.revision == head
     production = next(c for c in report.cohorts if c.cohort.value == "production")

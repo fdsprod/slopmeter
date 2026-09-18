@@ -14,14 +14,14 @@ from slop_measure.reporting.json import serialize_report
 @pytest.mark.parametrize("command", ["scan", "score", "tree"])
 def test_git_snapshot_commands_return_complete_committed_json(history, command):  # noqa: F811
     root, _, head, _, _ = history
-    result = CliRunner().invoke(
-        app, [command, str(root), "--rev", "current", "--json"]
-    )
+    result = CliRunner().invoke(app, [command, str(root), "--rev", "current", "--json"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.stdout)
     assert data["analysis"]["current"]["revision"] == head
     expected = scan(
-        SnapshotRequest(target=GitSourceReference(root=root, revision="current"), config=AnalysisConfig())
+        SnapshotRequest(
+            target=GitSourceReference(root=root, revision="current"), config=AnalysisConfig()
+        )
     )
     assert data == json.loads(serialize_report(expected))
 
