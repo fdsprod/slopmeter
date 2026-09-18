@@ -430,7 +430,7 @@ def _versions(evidence: tuple[LanguageEvidence, ...]) -> tuple[MetricVersion, ..
         (EvidenceCapability.FUNCTIONS, "m4.erosion"),
     )
     versions = tuple(
-        MetricVersion(metric_id=metric_id, version="2" if metric_id == "m4.erosion" else "1")
+        MetricVersion(metric_id=metric_id, version="3" if metric_id == "m4.erosion" else "1")
         for capability, metric_id in families
         if any(capability in item.capabilities for item in evidence)
     )

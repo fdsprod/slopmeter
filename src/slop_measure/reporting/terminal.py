@@ -34,7 +34,7 @@ from slop_measure.domain.reports import (
     SnapshotScore,
     SourceSide,
 )
-from slop_measure.domain.scoring import ScoreTransform
+from slop_measure.domain.scoring import RecordedReferenceSupport, ScoreTransform
 from slop_measure.domain.source import Cohort
 from slop_measure.errors import SelectionError
 from slop_measure.reporting.interpretation import render_interpretation
@@ -56,7 +56,7 @@ def _render_erosion(
         (
             function
             for function in functions
-            if function.cyclomatic_complexity > config.complexity_threshold
+            if function.complexity_for(metric.scope.cohort) > config.complexity_threshold
         ),
         key=lambda function: (
             -function.mass,
@@ -77,7 +77,7 @@ def _render_erosion(
         console.print(
             f"    {function.path.root}:{function.span.start_line}-{function.span.end_line} "
             f"{function.qualified_name}: CC {function.cyclomatic_complexity}, "
-            f"SLOC {function.sloc}, mass {function.mass:g}"
+            f"SLOC {function.sloc}, mass {function.mass:g}" + _assertion_detail(function)
         )
 
 
@@ -280,6 +280,8 @@ def _metric_row(view: _View, metric: MeasuredMetric) -> None:
         text = f"  {label}  {metric.raw.value:g} source lines"
     if metric.metric_id in {"m2.pattern-verbosity", "m3.clone-verbosity", "verbosity.combined"}:
         text += f"  {metric.raw.numerator:g} / {metric.raw.denominator:g} SLOC"
+    if metric.metric_id == "m4.erosion":
+        text += f"  {metric.raw.numerator:g} / {metric.raw.denominator:g} mass"
     if view.verbose and metric.score is not None:
         text += f" | percentile {metric.score.points:.1f}"
     view.console.print(text, style="cyan")
@@ -377,6 +379,14 @@ def _score_row(view: _View, score: SnapshotScore, *, details: bool = False) -> N
         f"  Score {score.points:.1f}/100 {view.bar(score.points / 100)}; lower is better"
     )
     view.console.print(f"  {score.band} | profile {score.profile_id} | model {score.model_id}")
+    _reference_support(view, score)
+    if score.points == 0 and any(item.raw_value > 0 for item in score.contributions):
+        cause = (
+            "rounded to zero"
+            if any(item.percentile > 0 and item.raw_value > 0 for item in score.contributions)
+            else "percentile zero"
+        )
+        view.console.print(f"  {cause}: zero points does not mean zero raw evidence")
     if details:
         view.console.print("  Score contributions")
         for contribution in score.contributions:
@@ -390,6 +400,23 @@ def _score_row(view: _View, score: SnapshotScore, *, details: bool = False) -> N
                     else ""
                 )
             )
+
+
+def _reference_support(view: _View, score: MeasuredSnapshotScore) -> None:
+    support = score.reference_support
+    if not isinstance(support, RecordedReferenceSupport):
+        view.console.print("  Reference support not recorded")
+        return
+    population = support.population
+    text = f"  Reference: {population.sample_count} {population.kind} observations"
+    if population.kind == "file":
+        upper = f"< {population.max_sloc}" if population.max_sloc is not None else "no upper limit"
+        text += f" | SLOC >= {population.min_sloc}, {upper}"
+    view.console.print(text)
+    view.console.print(
+        f"  Nominal percentile step: {support.nominal_percentile_step:.1f} percentile points"
+        " | domain match: not assessed"
+    )
 
 
 def _heading(view: _View, cohort: SnapshotCohortReport) -> None:
@@ -599,11 +626,20 @@ def render_tree(  # noqa: PLR0913
     return stream.getvalue()
 
 
+def _assertion_detail(function: FunctionEvidence) -> str:
+    if function.assertion_count is None:
+        return ""
+    return (
+        f", assertions {function.assertion_count}, "
+        f"control-flow CC {function.control_flow_complexity}"
+    )
+
+
 def _callable_row(view: _View, function: FunctionEvidence) -> None:
     view.console.print(
         f"  {function.path.root}:{function.span.start_line}-{function.span.end_line} "
         f"{function.qualified_name}: CC {function.cyclomatic_complexity}, "
-        f"SLOC {function.sloc}, mass {function.mass:g}"
+        f"SLOC {function.sloc}, mass {function.mass:g}" + _assertion_detail(function)
     )
 
 

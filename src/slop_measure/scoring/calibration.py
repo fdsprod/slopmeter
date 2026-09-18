@@ -194,7 +194,7 @@ def build_profile(
                         transform=(
                             ScoreTransform.SEVERITY_WEIGHTED
                             if any(
-                                item.metric_id == "m4.erosion" and item.version == "2"
+                                item.metric_id == "m4.erosion" and item.version in {"2", "3"}
                                 for item in versions
                             )
                             else ScoreTransform.PERCENTILE

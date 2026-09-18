@@ -20,11 +20,11 @@ def _callables(node: ast.AST, ancestors: tuple[str, ...] = ()) -> Iterator[tuple
         yield from _callables(child, ancestors)
 
 
-def _complexity(node: _Callable) -> int:
+def _complexity(node: _Callable, *, no_assert: bool = False) -> int:
     # Visit each callable directly: module-level Radon results omit local classes.
     records = [
         record
-        for record in cc_visit_ast(node)
+        for record in cc_visit_ast(node, no_assert=no_assert)
         if isinstance(record, Function)
         and record.name == node.name
         and record.lineno == node.lineno
@@ -42,12 +42,15 @@ def extract_functions(tree: ast.Module, file: FileEvidence) -> tuple[FunctionEvi
         if node.end_lineno is None:
             raise ValueError("callable AST must include its end line")
         span = SourceSpan(start_line=node.lineno, end_line=node.end_lineno)
+        complexity = _complexity(node)
+        assertion_count = complexity - _complexity(node, no_assert=True)
         functions.append(
             FunctionEvidence(
                 path=file.path,
                 qualified_name=qualified_name,
                 span=span,
-                cyclomatic_complexity=_complexity(node),
+                cyclomatic_complexity=complexity,
+                assertion_count=assertion_count,
                 sloc_lines=tuple(
                     line for line in file.sloc_lines if span.start_line <= line <= span.end_line
                 ),

@@ -1,8 +1,9 @@
 # Python reference corpus
 
-`corpus-2026.2.toml` pins six source snapshots and the source-selection policy for
-`py-2026.2` with gradual M4 version 2. Historical `corpus.toml` and `py-2026.1`
-resources retain the version 1 baseline. The source cache was acquired on
+`corpus-2026.3.toml` pins six source snapshots and the source-selection policy for
+`py-2026.3` with assertion-aware test M4 version 3. Historical `corpus.toml` and `py-2026.1`
+resources retain the version 1 baseline. `corpus-2026.2.toml` and `py-2026.2`
+retain the version 2 baseline. The source cache was acquired on
 2026-09-18. Keep the cache outside
 the package. Do not install or execute code from the reference projects.
 
@@ -20,7 +21,7 @@ commit and clean worktree before analysis.
 Run the builder from the repository root in the locked development environment:
 
 ```text
-uv run python tools/calibrate.py --manifest calibration/python/corpus-2026.2.toml --cache .tmp/calibration --output .tmp/calibration-output/py-2026.2.json --evidence-dir .tmp/calibration-2026.2-evidence
+uv run python tools/calibrate.py --manifest calibration/python/corpus-2026.3.toml --cache .tmp/calibration --output .tmp/calibration-output/py-2026.3.json --evidence-dir .tmp/calibration-2026.3-evidence
 ```
 
 The output contains the profile and an exact copy of its corpus manifest. The
@@ -76,5 +77,16 @@ The reviewed populations have these complete observation counts:
 
 Test callable-free populations do not meet the minimum. Neither cohort has a
 callable-free project reference. These missing populations remain unavailable.
-The profile uses metric version `1`, rule set `py-patterns-1`, and normalization
-`py-clones-1`. No source files are redistributed in the profile package.
+The current profile uses M4 version `3` and version `1` for the other metrics.
+It uses rule set `py-patterns-1` and normalization `py-clones-1`. No source files are redistributed in the profile package.
+
+M4 version 3 uses assertion-excluded complexity for test excess and total mass.
+Production uses full complexity. This is a measurement correction, not a threshold
+fit to an external repository. The weights, source pins, and selection policy are
+unchanged. Separate test populations are rebuilt from source under this definition.
+
+Reference counts and nominal percentile steps are support metadata, not statistical
+confidence or evidence of domain fit. Future corpus work must include independent
+service and contract projects, known positive pattern cases, and holdouts grouped by
+repository lineage. Overlapping subscans and copied providers are not independent
+projects. Private external evaluation source, paths, and hashes are not packaged.

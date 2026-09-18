@@ -171,6 +171,68 @@ class ProjectPopulation(_Population):
 ReferencePopulation = Annotated[FilePopulation | ProjectPopulation, Field(discriminator="kind")]
 
 
+class UnknownReferenceSupport(_CalibrationModel):
+    """Historical scores without recorded reference population facts."""
+
+    state: Literal["not-recorded"] = "not-recorded"
+
+
+class FileReferencePopulation(_CalibrationModel):
+    """The count and source-size band of selected file observations."""
+
+    kind: Literal["file"] = "file"
+    sample_count: _PositiveInt
+    min_sloc: _PositiveInt
+    max_sloc: _PositiveInt | None = None
+
+    @model_validator(mode="after")
+    def validate_band(self) -> Self:
+        if self.max_sloc is not None and self.max_sloc <= self.min_sloc:
+            raise ValueError("file reference support requires a nonempty SLOC band")
+        return self
+
+
+class ProjectReferencePopulation(_CalibrationModel):
+    """The count of selected project observations, not their file count."""
+
+    kind: Literal["project"] = "project"
+    sample_count: _PositiveInt
+
+
+class RecordedReferenceSupport(_CalibrationModel):
+    """Reference facts without a claim of confidence or domain suitability."""
+
+    state: Literal["recorded"] = "recorded"
+    population: Annotated[
+        FileReferencePopulation | ProjectReferencePopulation, Field(discriminator="kind")
+    ]
+    domain_match: Literal["not-assessed"] = "not-assessed"
+
+    @computed_field
+    @property
+    def nominal_percentile_step(self) -> float:
+        return 100 / self.population.sample_count
+
+    @model_validator(mode="wrap")
+    @classmethod
+    def validate_projection(cls, value: object, handler: ModelWrapValidatorHandler[Self]) -> Self:
+        if not isinstance(value, Mapping):
+            return handler(value)
+        fields = dict(value)
+        step = fields.pop("nominal_percentile_step", None)
+        result = handler(fields)
+        if "nominal_percentile_step" in value and (
+            isinstance(step, bool) or step != result.nominal_percentile_step
+        ):
+            raise ValueError("nominal percentile step must match the reference sample count")
+        return result
+
+
+ReferenceSupport = Annotated[
+    UnknownReferenceSupport | RecordedReferenceSupport, Field(discriminator="state")
+]
+
+
 class ScoreBand(_CalibrationModel):
     """A profile-owned label beginning at the inclusive lower point value."""
 

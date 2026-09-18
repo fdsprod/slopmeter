@@ -42,7 +42,7 @@ class AnalysisConfig(BaseModel):
     clone_min_statements: _PositiveInt = 2
     clone_min_sloc: _PositiveInt = 6
     complexity_threshold: _PositiveInt = 10
-    calibration_profile: _Text = "py-2026.2"
+    calibration_profile: _Text = "py-2026.3"
     default_hotspot_count: _PositiveInt = 5
     strict: Annotated[bool, Field(strict=True)] = False
 

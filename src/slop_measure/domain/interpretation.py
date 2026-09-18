@@ -24,18 +24,21 @@ class ReportInterpretation(BaseModel):
         "M1 measures source-line change, not quality. Growth alone is not a regression.",
         "M2 is the share of source lines matched by pattern rules. Matches are review "
         "suggestions, not proven defects.",
-        "M3 is the share of source lines in detected clone groups. Duplication can be "
-        "intentional; check whether shared behavior should actually change together.",
+        "M3 is the share of source lines in detected clone groups. Clone lines include all "
+        "occurrences, not removable lines. Duplication can be intentional; check whether "
+        "shared behavior should actually change together.",
         "Combined verbosity is the union of M2 and M3 lines, not their sum. It avoids "
         "counting a line twice.",
-        "Check metric versions in provenance. M4 version 2 is gradual excess complexity: "
+        "Check metric versions in provenance. M4 v3 uses assertion-excluded control-flow CC "
+        "for test files and full CC for production. M4 version 2 uses full CC for both. "
+        "Both use gradual excess complexity: "
         "sum(max(0, CC - threshold) * sqrt(SLOC)) / sum(CC * sqrt(SLOC)). "
         "Size weights the result; a single CC11 callable at threshold 10 measures 1/11. "
         "Legacy M4 version 1 is binary: all mass of each above-threshold callable counts.",
         "Project metrics combine their underlying totals, not an average of file scores. "
         "The score model and contribution weights are recorded with each scored result.",
-        "A severity-weighted contribution is percentile * raw value * weight. The new "
-        "py-2026.2 profile uses this for erosion so a small excess does not dominate just "
+        "A severity-weighted contribution is percentile * raw value * weight. Profiles "
+        "py-2026.2 and py-2026.3 use this for erosion so a small excess does not dominate just "
         "because it is uncommon. Individual metric percentiles remain reference ranks; "
         "they are not the adjusted contribution or the overall score.",
         "A rules catalog lists enabled checks; it is not evidence that source was scanned.",
@@ -49,6 +52,16 @@ class ReportInterpretation(BaseModel):
         "extraction. Moving branches into helpers can lower a score without improving code.",
         "File rankings identify statistical hotspots, not a guaranteed order of useful "
         "fixes. A change in analyzed scope can change totals without a source-quality change.",
+        "Reference observation counts and nominal percentile steps describe support, not "
+        "confidence intervals. Domain match is not assessed. A small historical population "
+        "does not establish representative service or contract scores.",
+        "All-zero pattern findings do not establish detector sensitivity. Evaluate known "
+        "positive examples and independent holdout projects before tuning rules or weights.",
+        "Classification uses file paths. Embedded self-check code in a production file "
+        "stays production. Separate tooling and demo strata when assembling evaluation data.",
+        "Assertion counts are plain assert increments, not all checks. Radon skips boolean "
+        "expressions inside assert but counts them in unittest method-call arguments. "
+        "Historical unknown counts retain full CC; this is not complete test-style normalization.",
         "The gradual erosion formula was initially reviewed against nine examples in "
         "slop.measure. That is a provisional tuning baseline, not validation on all projects.",
     )

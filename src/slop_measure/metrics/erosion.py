@@ -29,9 +29,11 @@ def measure_erosion(
         return UnavailableMetric(
             metric_id="m4.erosion", scope=scope, reason=UnavailableReason.NO_FUNCTIONS
         )
-    total = fsum(function.mass for function in functions)
+    total = fsum(
+        function.complexity_for(scope.cohort) * sqrt(function.sloc) for function in functions
+    )
     eroded = fsum(
-        max(0, function.cyclomatic_complexity - threshold) * sqrt(function.sloc)
+        max(0, function.complexity_for(scope.cohort) - threshold) * sqrt(function.sloc)
         for function in functions
     )
     return MeasuredMetric(

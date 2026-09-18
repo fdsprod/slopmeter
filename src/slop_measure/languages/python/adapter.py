@@ -149,7 +149,7 @@ class PythonAdapter:
             EvidenceCapability.CLONES,
         }
     )
-    adapter_version = "python-clones-1"
+    adapter_version = "python-complexity-2"
     rule_set_version = RULE_SET_VERSION
     clone_normalization_version = NORMALIZATION_VERSION
 

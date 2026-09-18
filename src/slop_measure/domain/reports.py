@@ -30,7 +30,7 @@ from slop_measure.domain.metrics import (
     ProjectMetricScope,
     UnavailableMetric,
 )
-from slop_measure.domain.scoring import ScoreContribution
+from slop_measure.domain.scoring import ReferenceSupport, ScoreContribution, UnknownReferenceSupport
 from slop_measure.domain.source import Cohort, SourceIdentity
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -100,6 +100,7 @@ class ScoreUnavailableReason(StrEnum):
 
     CALIBRATION_MISSING = "calibration-missing"
     CALIBRATION_INCOMPATIBLE = "calibration-incompatible"
+    CALIBRATION_POPULATION_MISSING = "calibration-population-missing"
     NO_SOURCE_LINES = "no-source-lines"
     REQUIRED_METRIC_UNAVAILABLE = "required-metric-unavailable"
 
@@ -113,6 +114,10 @@ class MeasuredSnapshotScore(_ReportModel):
     model_id: _Text
     band: _Text
     contributions: Annotated[tuple[ScoreContribution, ...], Field(min_length=1)]
+    reference_support: ReferenceSupport = Field(
+        default_factory=UnknownReferenceSupport,
+        exclude_if=lambda value: isinstance(value, UnknownReferenceSupport),
+    )
 
     @model_validator(mode="after")
     def validate_contributions(self) -> Self:

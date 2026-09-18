@@ -134,7 +134,24 @@ class FunctionEvidence(_Evidence):
     qualified_name: _Text
     span: SourceSpan
     cyclomatic_complexity: Annotated[int, Field(ge=1, strict=True)]
+    assertion_count: Annotated[int, Field(ge=0, strict=True)] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     sloc_lines: tuple[_Line, ...]
+
+    @computed_field
+    @property
+    def control_flow_complexity(self) -> int | None:
+        """Remove known assertion increments without guessing absent evidence."""
+        if self.assertion_count is None:
+            return None
+        return self.cyclomatic_complexity - self.assertion_count
+
+    def complexity_for(self, cohort: Cohort) -> int:
+        """Use assertion-independent complexity for test evidence when known."""
+        if cohort is Cohort.TEST and self.control_flow_complexity is not None:
+            return self.control_flow_complexity
+        return self.cyclomatic_complexity
 
     @computed_field
     @property
@@ -154,7 +171,11 @@ class FunctionEvidence(_Evidence):
         if not isinstance(value, Mapping):
             return handler(value)
         values = dict(value)
-        projections = {name: values.pop(name) for name in ("sloc", "mass") if name in values}
+        projections = {
+            name: values.pop(name)
+            for name in ("sloc", "mass", "control_flow_complexity")
+            if name in values
+        }
         result = handler(values)
         for name, supplied in projections.items():
             if isinstance(supplied, bool) or supplied != getattr(result, name):
@@ -163,6 +184,8 @@ class FunctionEvidence(_Evidence):
 
     @model_validator(mode="after")
     def validate_lines(self) -> Self:
+        if self.assertion_count is not None and self.assertion_count >= self.cyclomatic_complexity:
+            raise ValueError("assertion count must be less than total complexity")
         if not self.sloc_lines or self.sloc_lines != tuple(sorted(set(self.sloc_lines))):
             raise ValueError("function source lines must be nonempty, sorted, and unique")
         if self.sloc_lines[0] < self.span.start_line or self.sloc_lines[-1] > self.span.end_line:

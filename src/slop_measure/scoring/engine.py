@@ -27,7 +27,10 @@ from slop_measure.domain.scoring import (
     CalibrationProfile,
     CalibrationSettings,
     FilePopulation,
+    FileReferencePopulation,
     MetricDistribution,
+    ProjectReferencePopulation,
+    RecordedReferenceSupport,
     ReferencePopulation,
     ScoreContribution,
     ScoreInput,
@@ -60,7 +63,7 @@ def percentile(value: float, distribution: MetricDistribution) -> Decimal:
 
 def _eligible_model(
     profile: CalibrationProfile, metrics: dict[str, MetricResult]
-) -> ScoreModel | None:
+) -> ScoreModel | UnavailableSnapshotScore:
     erosion = metrics.get("m4.erosion")
     eligibility = (
         "no-functions"
@@ -68,11 +71,16 @@ def _eligible_model(
         and erosion.reason is UnavailableReason.NO_FUNCTIONS
         else "all-metrics"
     )
+    required = (
+        ("verbosity.combined",)
+        if eligibility == "no-functions"
+        else ("verbosity.combined", "m4.erosion")
+    )
+    if any(not isinstance(metrics.get(metric_id), MeasuredMetric) for metric_id in required):
+        return _missing(ScoreUnavailableReason.REQUIRED_METRIC_UNAVAILABLE)
     model = next((item for item in profile.score_models if item.eligibility == eligibility), None)
-    if model is None or any(
-        not isinstance(metrics.get(item.metric_id), MeasuredMetric) for item in model.inputs
-    ):
-        return None
+    if model is None:
+        return _missing(ScoreUnavailableReason.CALIBRATION_POPULATION_MISSING)
     return model
 
 
@@ -156,6 +164,18 @@ def _missing(reason: ScoreUnavailableReason) -> UnavailableSnapshotScore:
     return UnavailableSnapshotScore(reason=reason)
 
 
+def _reference_support(population: ReferencePopulation) -> RecordedReferenceSupport:
+    count = population.distributions[0].sample_count
+    support = (
+        FileReferencePopulation(
+            sample_count=count, min_sloc=population.min_sloc, max_sloc=population.max_sloc
+        )
+        if isinstance(population, FilePopulation)
+        else ProjectReferencePopulation(sample_count=count)
+    )
+    return RecordedReferenceSupport(population=support)
+
+
 def _context_failure(
     sloc: int, language: str, provenance: Provenance, profile: CalibrationProfile | None
 ) -> UnavailableSnapshotScore | None:
@@ -187,15 +207,11 @@ def score_snapshot(
     if len(by_id) != len(metrics) or any(item.scope != metrics[0].scope for item in metrics):
         raise ValueError("scoring requires unique metrics in one scope")
     model = _eligible_model(profile, by_id)
-    if model is None:
-        return _missing(ScoreUnavailableReason.REQUIRED_METRIC_UNAVAILABLE)
+    if isinstance(model, UnavailableSnapshotScore):
+        return model
     population = select_population(profile, model.model_id, metrics[0].scope, sloc)
     if population is None:
-        return _missing(
-            ScoreUnavailableReason.REQUIRED_METRIC_UNAVAILABLE
-            if model.eligibility == "no-functions"
-            else ScoreUnavailableReason.CALIBRATION_INCOMPATIBLE
-        )
+        return _missing(ScoreUnavailableReason.CALIBRATION_POPULATION_MISSING)
     contributions = _contributions(model, population, by_id)
     total = sum((Decimal(str(item.points)) for item in contributions), Decimal(0))
     band = next(band.label for band in reversed(profile.bands) if total >= Decimal(str(band.lower)))
@@ -205,6 +221,7 @@ def score_snapshot(
         model_id=model.model_id,
         band=band,
         contributions=contributions,
+        reference_support=_reference_support(population),
     )
 
 

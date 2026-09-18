@@ -134,7 +134,7 @@ def _eroded(
         for file in result.files
         if path is None or file.evidence.path == path
         for function in file.functions
-        if function.cyclomatic_complexity > report.provenance.config.complexity_threshold
+        if function.complexity_for(cohort) > report.provenance.config.complexity_threshold
     )
     return tuple(
         sorted(
