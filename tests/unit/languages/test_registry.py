@@ -118,7 +118,7 @@ def test_extension_collision_rejects_registration_atomically() -> None:
         registry.get("other")
 
 
-@pytest.mark.parametrize("language_id", ["", " ", "\t\n"])
+@pytest.mark.parametrize("language_id", ["", " ", "\t\n", " python", "python "])
 def test_registry_rejects_blank_language_ids(language_id: str) -> None:
     registry = LanguageRegistry()
 
@@ -129,7 +129,9 @@ def test_registry_rejects_blank_language_ids(language_id: str) -> None:
     assert registry.for_path(ProjectPath("app.py")) is None
 
 
-@pytest.mark.parametrize("extension", ["", ".", "py", ".p/y", ".p\\y"])
+@pytest.mark.parametrize(
+    "extension", ["", ".", "py", ".p/y", ".p\\y", ".d.ts", "..py", ". py", ".py ", ".py\0"]
+)
 def test_registry_rejects_invalid_extensions_without_adding_routes(extension: str) -> None:
     registry = LanguageRegistry()
 

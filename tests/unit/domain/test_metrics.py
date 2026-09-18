@@ -197,6 +197,7 @@ def test_zero_is_a_measured_value_and_not_an_unavailable_state() -> None:
         "no-source-lines",
         "no-functions",
         "unsupported-language",
+        "unsupported-capability",
         "parse-failed",
         "analyzer-failed",
         "calibration-missing",
