@@ -7,7 +7,7 @@ revisions. It does not execute target code or apply fixes.
 
 The command is **`slop`**, the Python package is **`slop-measure`**, and the import
 name is **`slop_measure`**. Terminal reports use the internal name `slop.measure`.
-Only Python analysis is currently implemented. This is an early 0.1.0 project;
+Only Python analysis is currently implemented. This is an early 0.2.0 project;
 scores are review signals, not defect probabilities or proof of AI authorship.
 
 ## Quick start
