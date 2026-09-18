@@ -1,0 +1,1 @@
+"""Language-neutral domain contracts."""
