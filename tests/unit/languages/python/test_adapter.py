@@ -39,7 +39,7 @@ def test_python_adapter_declares_its_exact_capabilities() -> None:
             EvidenceCapability.CLONES,
         }
     )
-    assert PythonAdapter().adapter_version == "python-clones-1"
+    assert PythonAdapter().adapter_version == "python-complexity-2"
     assert PythonAdapter().rule_set_version == "py-patterns-1"
 
 

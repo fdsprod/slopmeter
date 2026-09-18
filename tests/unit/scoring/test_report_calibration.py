@@ -171,7 +171,11 @@ def test_multiple_cohorts_and_languages_do_not_borrow_python_production_populati
     assert measured(result.cohorts[0].current.score).points == 33.3
     for cohort in result.cohorts[1:]:
         assert isinstance(cohort.current.score, UnavailableSnapshotScore)
-        assert cohort.current.score.reason == "calibration-incompatible"
+        assert cohort.current.score.reason == (
+            "calibration-population-missing"
+            if cohort.language == "python"
+            else "calibration-incompatible"
+        )
         assert all(
             isinstance(file.score, UnavailableSnapshotScore) for file in cohort.current.files
         )

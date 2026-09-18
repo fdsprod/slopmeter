@@ -159,7 +159,11 @@ def test_only_no_functions_can_select_explicit_verbosity_model() -> None:
 def test_missing_erosion_never_redistributes_full_model_weight(erosion: str) -> None:
     result = run_score(0.3, erosion)
     assert isinstance(result, UnavailableSnapshotScore)
-    assert result.reason == "required-metric-unavailable"
+    assert result.reason == (
+        "calibration-population-missing"
+        if erosion == "no-functions"
+        else "required-metric-unavailable"
+    )
 
 
 @pytest.mark.parametrize(
@@ -228,10 +232,10 @@ def test_missing_profile_and_no_source_have_explicit_unavailable_states() -> Non
     assert empty.reason == "no-source-lines"
 
 
-def test_outside_calibrated_sloc_band_is_incompatible() -> None:
+def test_outside_calibrated_sloc_band_has_missing_population() -> None:
     result = run_score(0.3, 0.3, sloc=100)
     assert isinstance(result, UnavailableSnapshotScore)
-    assert result.reason == "calibration-incompatible"
+    assert result.reason == "calibration-population-missing"
 
 
 def test_pattern_and_clone_raw_metrics_do_not_contribute_again() -> None:

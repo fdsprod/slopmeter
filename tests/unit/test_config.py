@@ -32,7 +32,7 @@ def test_analysis_config_has_conservative_python_defaults() -> None:
     assert config.clone_min_statements == 2
     assert config.clone_min_sloc == 6
     assert config.complexity_threshold == 10
-    assert config.calibration_profile == "py-2026.2"
+    assert config.calibration_profile == "py-2026.3"
     assert config.default_hotspot_count == 5
     assert config.strict is False
 

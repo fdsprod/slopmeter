@@ -80,7 +80,7 @@ def test_verbose_summary_exposes_owned_mass_threshold_and_versions(
     assert "mass:" in output
     assert "callables: 4; eroded: 1; CC threshold: > 10" in output
     assert "src/b.py:1-2 high: CC 11, SLOC 2, mass 15.5563" in output
-    assert "python-clones-1" in output
+    assert "python-complexity-2" in output
     assert "py-patterns-1" in output
     assert "Provenance" in output
 

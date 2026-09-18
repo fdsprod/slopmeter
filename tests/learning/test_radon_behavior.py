@@ -252,7 +252,9 @@ def test_nested_class_assertions_do_not_change_enclosing_function_complexity() -
     assert cc_visit_ast(tree, no_assert=False)[0].complexity == 2
     assert cc_visit_ast(tree, no_assert=True)[0].complexity == 1
     # The locally declared class requires separate AST-based callable enumeration.
-    local = tree.body[0].body[1]
+    outer = tree.body[0]
+    assert isinstance(outer, ast.FunctionDef)
+    local = outer.body[1]
     full = cc_visit_ast(local, no_assert=False)
     reduced = cc_visit_ast(local, no_assert=True)
     assert next(block for block in full if isinstance(block, Function)).complexity == 3

@@ -90,8 +90,11 @@ def test_transform_values_are_closed_and_nondefault_policy_round_trips() -> None
         )
 
 
-@pytest.mark.parametrize("version,expected", [("1", "percentile"), ("2", "severity-weighted")])
-def test_corpus_builder_selects_severity_only_for_version_two_erosion(
+@pytest.mark.parametrize(
+    "version,expected",
+    [("1", "percentile"), ("2", "severity-weighted"), ("3", "severity-weighted")],
+)
+def test_corpus_builder_selects_severity_for_gradual_erosion_versions(
     version: str, expected: str
 ) -> None:
     source = corpus_payload()
@@ -111,7 +114,11 @@ def test_corpus_builder_selects_severity_only_for_version_two_erosion(
 
 
 def test_packaged_profiles_preserve_their_versioned_transform_policies() -> None:
-    for identifier, expected in (("py-2026.1", "percentile"), ("py-2026.2", "severity-weighted")):
+    for identifier, expected in (
+        ("py-2026.1", "percentile"),
+        ("py-2026.2", "severity-weighted"),
+        ("py-2026.3", "severity-weighted"),
+    ):
         profile = load_profile(identifier)
         assert profile is not None
         for model in profile.score_models:

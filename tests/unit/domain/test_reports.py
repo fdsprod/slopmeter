@@ -179,6 +179,7 @@ def test_source_sides_and_score_unavailability_reasons_are_closed() -> None:
     assert {reason.value for reason in ScoreUnavailableReason} == {
         "calibration-missing",
         "calibration-incompatible",
+        "calibration-population-missing",
         "no-source-lines",
         "required-metric-unavailable",
     }
