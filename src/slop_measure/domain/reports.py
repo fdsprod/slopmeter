@@ -12,6 +12,8 @@ from slop_measure.domain.evidence import (
     Diagnostic,
     FileEvidence,
     FunctionEvidence,
+    PatternFinding,
+    pattern_source_lines,
     validate_function_evidence,
 )
 from slop_measure.domain.metrics import (
@@ -220,6 +222,14 @@ class ReportDiagnostic(_ReportModel):
     detail: Diagnostic
 
 
+class ReportFinding(_ReportModel):
+    """A unique report-owned finding associated with one source state."""
+
+    id: _Text
+    source: SourceSide = SourceSide.CURRENT
+    detail: PatternFinding
+
+
 def _source_results(cohort: CohortReport) -> Iterator[tuple[SourceSide, CohortResult]]:
     yield SourceSide.CURRENT, cohort.current
     if isinstance(cohort, ComparisonCohortReport):
@@ -263,7 +273,7 @@ class AnalysisReport(_ReportModel):
     provenance: Provenance
     coverage: tuple[ReportCoverage, ...] = ()
     cohorts: tuple[CohortReport, ...] = ()
-    findings: tuple[()] = ()
+    findings: tuple[ReportFinding, ...] = ()
     clone_groups: tuple[()] = ()
     diagnostics: tuple[ReportDiagnostic, ...] = ()
 
@@ -281,6 +291,35 @@ class AnalysisReport(_ReportModel):
             ),
             "source file path",
         )
+        return self
+
+    @model_validator(mode="after")
+    def validate_findings(self) -> Self:
+        _require_unique((finding.id for finding in self.findings), "finding ID")
+        _require_unique(
+            (
+                (
+                    finding.source,
+                    finding.detail.path.root,
+                    finding.detail.rule_id,
+                    finding.detail.span.start_line,
+                    finding.detail.span.end_line,
+                )
+                for finding in self.findings
+            ),
+            "finding identity",
+        )
+        files = {
+            (source, file.evidence.path.root): file.evidence
+            for cohort in self.cohorts
+            for source, result in _source_results(cohort)
+            for file in result.files
+        }
+        for finding in self.findings:
+            file = files.get((finding.source, finding.detail.path.root))
+            if file is None:
+                raise ValueError("finding must refer to an existing file in its source state")
+            pattern_source_lines(file, finding.detail)
         return self
 
     @model_validator(mode="after")

@@ -6,17 +6,21 @@ from slop_measure import __version__
 from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
     AnalyzedFunctions,
+    AnalyzedPatterns,
     Coverage,
     CoverageState,
     Diagnostic,
     DiagnosticSeverity,
     EvidenceCapability,
     FailedFunctions,
+    FailedPatterns,
     FileEvidence,
     FunctionAnalysis,
     FunctionEvidence,
     LanguageEvidence,
     ParseState,
+    PatternAnalysis,
+    PatternFinding,
 )
 from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.metrics import (
@@ -36,6 +40,7 @@ from slop_measure.domain.reports import (
     Provenance,
     ReportCoverage,
     ReportDiagnostic,
+    ReportFinding,
     ScoreUnavailableReason,
     SnapshotAnalysis,
     SnapshotCohortReport,
@@ -43,6 +48,7 @@ from slop_measure.domain.reports import (
 )
 from slop_measure.domain.source import Cohort, SourceIdentity
 from slop_measure.metrics.erosion import measure_erosion
+from slop_measure.metrics.verbosity import measure_patterns
 
 _SNAPSHOT_METRICS = ("m2.pattern-verbosity", "m3.clone-verbosity", "m4.erosion")
 
@@ -97,14 +103,58 @@ class _ErosionContext:
             )
         return measure_erosion(self.functions(files), base.scope, self.threshold)
 
-    def metrics(
+
+@dataclass(frozen=True)
+class _PatternContext:
+    """Keep pattern failures separate from callable analysis."""
+
+    analyses: tuple[PatternAnalysis, ...] | None
+    diagnostics: tuple[ReportDiagnostic, ...]
+
+    def measure(self, base: UnavailableMetric, files: tuple[FileEvidence, ...]) -> MetricResult:
+        if self.analyses is None or base.reason in {
+            UnavailableReason.PARSE_FAILED,
+            UnavailableReason.ANALYZER_FAILED,
+        }:
+            return base
+        paths = {file.path.root for file in files}
+        outcomes = tuple(item for item in self.analyses if item.path.root in paths)
+        failures = tuple(item.diagnostic for item in outcomes if isinstance(item, FailedPatterns))
+        if failures:
+            diagnostic = next(item for item in self.diagnostics if item.detail in failures)
+            return UnavailableMetric(
+                metric_id="m2.pattern-verbosity",
+                scope=base.scope,
+                reason=UnavailableReason.ANALYZER_FAILED,
+                diagnostic_id=diagnostic.id,
+            )
+        findings = tuple(
+            finding
+            for item in outcomes
+            if isinstance(item, AnalyzedPatterns)
+            for finding in item.findings
+        )
+        return measure_patterns(files, findings, base.scope)
+
+
+@dataclass(frozen=True)
+class _SnapshotMetrics:
+    erosion: _ErosionContext
+    patterns: _PatternContext
+
+    def measure(
         self,
         scope: MetricScope,
         files: tuple[FileEvidence, ...],
         failure: tuple[UnavailableReason, str | None],
     ) -> tuple[MetricResult, ...]:
         base = _metrics(scope, *failure)
-        return (*base[:-1], self.measure(base[-1], files))
+        return (
+            base[0],
+            self.patterns.measure(base[1], files),
+            base[2],
+            self.erosion.measure(base[3], files),
+        )
 
 
 def _diagnostic_key(item: Diagnostic) -> tuple[str, int, int, str, str, str]:
@@ -179,7 +229,7 @@ def _cohort_result(
     cohort: Cohort,
     diagnostics: tuple[ReportDiagnostic, ...],
     project_errors: tuple[ReportDiagnostic, ...],
-    erosion: _ErosionContext,
+    metrics: _SnapshotMetrics,
 ) -> CohortResult:
     results: list[FileResult] = []
     for file in files:
@@ -187,8 +237,8 @@ def _cohort_result(
         results.append(
             FileResult(
                 evidence=file,
-                functions=erosion.functions((file,)),
-                metrics=erosion.metrics(
+                functions=metrics.erosion.functions((file,)),
+                metrics=metrics.measure(
                     FileMetricScope(path=file.path, cohort=cohort), (file,), (reason, diagnostic_id)
                 ),
                 score=_score(reason),
@@ -199,7 +249,7 @@ def _cohort_result(
         reason, diagnostic_id = _failure_reason(project_errors[0].detail), project_errors[0].id
     return CohortResult(
         files=tuple(results),
-        metrics=erosion.metrics(ProjectMetricScope(cohort=cohort), files, (reason, diagnostic_id)),
+        metrics=metrics.measure(ProjectMetricScope(cohort=cohort), files, (reason, diagnostic_id)),
         score=_score(reason),
     )
 
@@ -232,6 +282,62 @@ def _project_errors(
     return tuple(item for item in diagnostics if _diagnostic_key(item.detail) in unassigned)
 
 
+def _snapshot_metrics(
+    language: str,
+    evidence: tuple[LanguageEvidence, ...],
+    diagnostics: tuple[ReportDiagnostic, ...],
+    config: AnalysisConfig,
+) -> _SnapshotMetrics:
+    functions = tuple(
+        item
+        for item in evidence
+        if item.language == language and EvidenceCapability.FUNCTIONS in item.capabilities
+    )
+    patterns = tuple(
+        item
+        for item in evidence
+        if item.language == language and EvidenceCapability.PATTERNS in item.capabilities
+    )
+    return _SnapshotMetrics(
+        erosion=_ErosionContext(
+            tuple(analysis for item in functions for analysis in item.function_analyses)
+            if functions
+            else None,
+            diagnostics,
+            config.complexity_threshold,
+        ),
+        patterns=_PatternContext(
+            tuple(analysis for item in patterns for analysis in item.pattern_analyses)
+            if patterns
+            else None,
+            diagnostics,
+        ),
+    )
+
+
+def _findings(evidence: tuple[LanguageEvidence, ...]) -> tuple[ReportFinding, ...]:
+    def key(finding: PatternFinding) -> tuple[str, int, int, str]:
+        return (finding.path.root, finding.span.start_line, finding.span.end_line, finding.rule_id)
+
+    ordered = sorted((finding for item in evidence for finding in item.patterns), key=key)
+    return tuple(
+        ReportFinding(id=f"finding-{index:04d}", detail=finding)
+        for index, finding in enumerate(ordered, start=1)
+    )
+
+
+def _versions(evidence: tuple[LanguageEvidence, ...]) -> tuple[MetricVersion, ...]:
+    families = (
+        (EvidenceCapability.PATTERNS, "m2.pattern-verbosity"),
+        (EvidenceCapability.FUNCTIONS, "m4.erosion"),
+    )
+    return tuple(
+        MetricVersion(metric_id=metric_id, version="1")
+        for capability, metric_id in families
+        if any(capability in item.capabilities for item in evidence)
+    )
+
+
 def aggregate_snapshot(
     identity: SourceIdentity,
     inventory: SourceInventory,
@@ -250,6 +356,12 @@ def aggregate_snapshot(
             for analysis in language.function_analyses
             if isinstance(analysis, FailedFunctions)
         )
+        + tuple(
+            analysis.diagnostic
+            for language in evidence
+            for analysis in language.pattern_analyses
+            if isinstance(analysis, FailedPatterns)
+        )
     )
     files = tuple(
         sorted(
@@ -267,18 +379,7 @@ def aggregate_snapshot(
     coverage = [ReportCoverage(detail=item) for item in inventory.coverage]
     for language in languages:
         project_errors = _project_errors(language, inventory, evidence, diagnostics)
-        supported = tuple(
-            item
-            for item in evidence
-            if item.language == language and EvidenceCapability.FUNCTIONS in item.capabilities
-        )
-        erosion = _ErosionContext(
-            tuple(analysis for item in supported for analysis in item.function_analyses)
-            if supported
-            else None,
-            diagnostics,
-            config.complexity_threshold,
-        )
+        metrics = _snapshot_metrics(language, evidence, diagnostics, config)
         for cohort in Cohort:
             members = tuple(
                 file for file in files if file.language == language and file.cohort is cohort
@@ -287,7 +388,7 @@ def aggregate_snapshot(
                 SnapshotCohortReport(
                     language=language,
                     cohort=cohort,
-                    current=_cohort_result(members, cohort, diagnostics, project_errors, erosion),
+                    current=_cohort_result(members, cohort, diagnostics, project_errors, metrics),
                 )
             )
             coverage.append(
@@ -307,11 +408,10 @@ def aggregate_snapshot(
             tool_version=__version__,
             config=config,
             analyzers=tuple(sorted(analyzers, key=lambda item: item.language)),
-            metrics=(MetricVersion(metric_id="m4.erosion", version="1"),)
-            if any(EvidenceCapability.FUNCTIONS in item.capabilities for item in evidence)
-            else (),
+            metrics=_versions(evidence),
         ),
         cohorts=tuple(cohorts),
         coverage=tuple(sorted(coverage, key=_coverage_key)),
         diagnostics=diagnostics,
+        findings=_findings(evidence),
     )

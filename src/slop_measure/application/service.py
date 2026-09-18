@@ -83,6 +83,10 @@ class AnalysisService:
         """Analyze a directory and apply strict failure policy after collecting evidence."""
         if not isinstance(request.target, DirectorySourceReference):
             raise ValueError("Git revision scans are not available yet")
+        for adapter in self.registry.adapters:
+            validate_config = getattr(adapter, "validate_config", None)
+            if validate_config is not None:
+                validate_config(request.config)
         provider = FilesystemSourceProvider(request.target.root, request.config, self.registry)
         inventory = provider.inventory()
         evidence: list[LanguageEvidence] = []
@@ -101,6 +105,7 @@ class AnalysisService:
                 AnalyzerVersion(
                     language=adapter.language_id,
                     adapter_version=getattr(adapter, "adapter_version", "unversioned"),
+                    rule_set_version=getattr(adapter, "rule_set_version", None),
                 )
             )
         report = aggregate_snapshot(

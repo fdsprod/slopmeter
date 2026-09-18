@@ -4,8 +4,8 @@
 release targets Python and provides the `slop` command plus an importable API.
 
 The raw scan reports Python source lines, production and test coverage, excluded
-files, diagnostics, and M4 structural erosion. M1-M3 metrics and calibrated scores
-remain explicitly unavailable. Directory comparisons and Git revision scans arrive
+files, diagnostics, M2 pattern verbosity, and M4 structural erosion. M1, M3, and
+calibrated scores remain explicitly unavailable. Directory comparisons and Git revision scans arrive
 in later slices. See `.specs/python-slop-detector/` for the design and checkpoint.
 
 ## Scan a directory
@@ -40,6 +40,24 @@ print(report.model_dump_json(indent=2))
 CLI settings merge in this order: defaults, `[tool.slop]` in the target root's
 `pyproject.toml`, the target root's `slop.toml`, then explicit CLI arguments. API
 requests receive resolved configuration and do not load files implicitly.
+
+M2 measures the fraction of source lines flagged by the twenty Python pattern rules.
+Overlapping findings count each line once. Rules cover redundant expressions,
+control flow, defensive code, and small abstraction patterns. JSON includes each
+finding's rule ID, category, severity, source span, message, and review suggestion.
+These findings identify code to review. They do not prove bugs or apply fixes.
+
+Use rule IDs from the [catalog](.specs/python-slop-detector/pattern-catalog.md) in
+`slop.toml` to select or disable rules:
+
+```toml
+disabled_rules = ["py.single-use-return-binding", "py.trivial-wrapper"]
+```
+
+An empty `enabled_rules` set selects all rules. A nonempty set selects only those
+IDs. Disabled rules are then removed. Unknown IDs are configuration errors.
+The report records the selection and rule-set version. A pattern analyzer failure
+makes M2 unavailable for that file and its cohort while preserving M4 results.
 
 M4 measures the share of callable mass above the complexity threshold. Each
 function, method, or nested function contributes `CC * sqrt(SLOC)` mass. The default

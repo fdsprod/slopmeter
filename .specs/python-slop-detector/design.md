@@ -705,7 +705,7 @@ fields:
   - { name: language, type: LanguageId, required: true, description: Adapter identity }
   - { name: capabilities, type: set[EvidenceCapability], required: true, description: Evidence families supplied }
   - { name: files, type: list[FileEvidence], required: true, description: Source line and parse facts }
-  - { name: patterns, type: list[PatternFinding], required: true, description: Pattern source spans }
+  - { name: pattern_analyses, type: tuple[PatternAnalysis], required: true, description: One explicit pattern outcome per parsed file when patterns are supported }
   - { name: function_analyses, type: tuple[FunctionAnalysis], required: true, description: One explicit outcome per parsed file when functions are supported }
   - { name: clone_candidates, type: list[CloneCandidate], required: true, description: Normalized duplicate candidates }
   - { name: diagnostics, type: list[Diagnostic], required: true, description: Adapter warnings and failures }
@@ -770,6 +770,54 @@ Python rules run in three layers:
 
 The MVP starts with node and scope rules. Each rule emits one or more source spans.
 Aggregation unions their SLOC line sets before dividing by scope SLOC.
+
+TB-3 uses the conservative catalog in [pattern-catalog.md](pattern-catalog.md).
+The adapter runs rules against its existing AST. Rules cannot execute analyzed code.
+An empty `enabled_rules` set selects the full catalog. A nonempty set is an allowlist.
+`disabled_rules` removes rules from that selection. Unknown IDs are configuration
+errors. The report records the catalog version and the resolved configuration.
+
+Each finding owns source evidence and a stable rule identity. It does not store a
+second flagged-line count that could disagree with the file SLOC set.
+
+```datamodel
+name: PatternFinding
+store: in-memory
+summary: Describes redundant syntax found by one rule.
+fields:
+  - { name: path, type: ProjectPath, required: true, description: Owning source file }
+  - { name: rule_id, type: string, required: true, description: Stable catalog identifier }
+  - { name: category, type: PatternCategory, required: true, description: Redundancy or control-flow or defensive or abstraction }
+  - { name: severity, type: DiagnosticSeverity, required: true, description: Finding priority without analyzer failure semantics }
+  - { name: span, type: SourceSpan, required: true, description: Inclusive physical lines containing the matched syntax }
+  - { name: message, type: string, required: true, description: Direct explanation of the finding }
+  - { name: remediation, type: optional string, description: Suggested review action without automatic rewriting }
+```
+
+Pattern analysis has explicit successful and failed outcomes. A successful empty
+result means no selected rules matched. A failure does not mean a clean file.
+
+```datamodel
+name: PatternAnalysis
+store: in-memory
+summary: Records the pattern engine outcome for one parsed file.
+fields:
+  - { name: state, type: analyzed | failed, required: true, description: Union discriminator }
+  - { name: path, type: ProjectPath, required: true, description: Owning parsed file }
+  - { name: findings, type: tuple[PatternFinding], description: Present only for analyzed outcomes }
+  - { name: diagnostic, type: Diagnostic, description: Required same-file error for failed outcomes }
+```
+
+`LanguageEvidence.patterns` is a read-only view of successful outcomes. The report
+stores each finding once in its top-level collection, with a report ID and source
+side. Ownership checks require a parsed file and at least one SLOC line in the span.
+Stable rule IDs and source positions support later suppression and detail views.
+TB-3 does not interpret suppression comments.
+
+M2 intersects every finding span with the owning file SLOC set and unions the
+resulting `(path, line)` identities. A positive source denominator with no findings
+produces measured zero. Zero SLOC produces `no-source-lines`. Pattern failures make
+file and cohort M2 unavailable while M4 and other files retain their own results.
 
 ### M3 clone verbosity
 

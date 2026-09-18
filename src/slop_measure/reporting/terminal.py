@@ -5,6 +5,7 @@ from io import StringIO
 from rich.console import Console
 
 from slop_measure.config import AnalysisConfig
+from slop_measure.domain.evidence import DiagnosticSeverity, PatternFinding, pattern_source_lines
 from slop_measure.domain.metrics import MeasuredMetric
 from slop_measure.domain.reports import (
     AnalysisReport,
@@ -47,12 +48,51 @@ def _render_erosion(
         )
 
 
-def _render_metrics(console: Console, result: CohortResult, config: AnalysisConfig) -> None:
+def _render_patterns(
+    console: Console, metric: MeasuredMetric, result: CohortResult, report: AnalysisReport
+) -> None:
+    files = {file.evidence.path.root: file.evidence for file in result.files}
+    severity_order = {
+        DiagnosticSeverity.ERROR: 0,
+        DiagnosticSeverity.WARNING: 1,
+        DiagnosticSeverity.INFO: 2,
+    }
+
+    def key(finding: PatternFinding) -> tuple[int, int, str, int, int, str]:
+        return (
+            severity_order[finding.severity],
+            -len(pattern_source_lines(files[finding.path.root], finding)),
+            finding.path.root,
+            finding.span.start_line,
+            finding.span.end_line,
+            finding.rule_id,
+        )
+
+    findings = sorted(
+        (finding.detail for finding in report.findings if finding.detail.path.root in files),
+        key=key,
+    )
+    console.print(
+        f"  pattern SLOC: {metric.raw.numerator:g} / {metric.raw.denominator:g}; "
+        f"findings: {len(findings)}"
+    )
+    if findings:
+        console.print("  pattern findings")
+    for finding in findings[: report.provenance.config.default_hotspot_count]:
+        console.print(
+            f"    {finding.path.root}:{finding.span.start_line}-{finding.span.end_line} "
+            f"{finding.rule_id}: {finding.message}"
+        )
+
+
+def _render_metrics(console: Console, result: CohortResult, report: AnalysisReport) -> None:
     for metric in result.metrics:
         if isinstance(metric, MeasuredMetric):
             console.print(f"  {metric.metric_id}: {metric.raw.value:g} {metric.raw.unit.value}")
             if metric.metric_id == "m4.erosion":
-                _render_erosion(console, metric, result, config)
+                _render_erosion(console, metric, result, report.provenance.config)
+            elif metric.metric_id == "m2.pattern-verbosity":
+                _render_patterns(console, metric, result, report)
         else:
             console.print(f"  {metric.metric_id}: unavailable ({metric.reason.value})")
 
@@ -97,7 +137,7 @@ def render_snapshot(
             console.print(f"  snapshot slop {score.points:g}/100")
         else:
             console.print(f"  snapshot slop unavailable: {score.reason.value}")
-        _render_metrics(console, cohort.current, report.provenance.config)
+        _render_metrics(console, cohort.current, report)
     if report.diagnostics:
         console.print()
         console.print(f"diagnostics: {len(report.diagnostics)} (see --json for full details)")

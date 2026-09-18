@@ -3,6 +3,11 @@
 **Design**: `.specs/python-slop-detector/design.md`
 **Status**: In Progress
 
+> [!NOTE]
+> After TB-3 passes its gate, read the user's
+> [output and CLI direction](https://chatgpt.com/share/6aacd885-7c24-83e8-bc3c-aaf72a1c65f3).
+> Update the remaining output and command plan before starting another tracer bullet.
+
 ## Delivery Strategy
 
 Implementation proceeds through production tracer bullets. Each bullet adds one
@@ -10,8 +15,8 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q07 and T01-T27 are complete through TB-2. The raw scan
-reports callable evidence and M4 through the CLI and public API. Comparison has a
+Current checkpoint: Q01-Q07 and T01-T37 are complete through TB-3. The raw scan
+reports pattern findings, M2, callable evidence, and M4 through the CLI and public API. Comparison has a
 public entry point that explicitly raises `NotImplementedError` until TB-6. The retained learning tests
 record the external behavior that production adapters rely on.
 
@@ -44,14 +49,24 @@ The independent test author wrote the domain, extractor, and report contracts be
 implementation. Three final checks for configuration, hotspot ranking, and cohort
 isolation used blind test-after review. The ordering regression failed before its fix.
 
+TB-3 passes its validation gate:
+
+- [x] T28-T33: Validated rule metadata, explicit pattern outcomes, and twenty Python rules.
+- [x] T34-T37: Union-based file and cohort M2, versioned findings, and terminal/JSON evidence.
+- [x] Independent positive and keep-case tests cover each rule. Review regressions cover
+  format specifications, generic bindings, indirect helper calls, and type comments.
+- [x] Unknown rule IDs are configuration errors. Pattern failures preserve M4 and valid files.
+- [x] 633 deterministic tests and 30 retained learning tests pass. Coverage is 97.72 percent.
+- [x] Ruff, Pyright, four import contracts, dependency audit, builds, and CLI checks pass.
+
 The malformed basic fixture is excluded from lint/type checks and normal test
 collection. Its source remains directly scannable with `slop scan tests/fixtures/basic`.
 The normal test command excludes learning tests. Architecture tests inject each of
 the 16 forbidden dependency directions into isolated package copies.
 
-Language evidence accepts only empty pattern and clone collections until their
-owned contracts exist. TB-2 adds explicit per-file function outcomes and immutable
-callable facts. File SLOC counts are checked immutable projections of exact line
+Language evidence accepts only empty clone collections until their owned contract
+exists. TB-2 and TB-3 add explicit per-file function and pattern outcomes.
+File SLOC counts are checked immutable projections of exact line
 identities. Metric values are immutable calculation projections with ratio inputs
 checked at construction.
 
@@ -64,10 +79,11 @@ The report contracts now resolve the decisions required before aggregation:
 - [x] The `unsupported-capability` metric reason distinguishes missing evidence
   support from a failed analyzer.
 
-Next is TB-3: T28-T37 adds pattern rules and raw M2 verbosity through the existing
-scan. TB-2 retains Radon learning tests for AST traversal and complete callable spans.
+Before the next implementation slice, review the linked output and CLI direction.
+The existing sequence puts TB-4 clone detection next, subject to that revision.
+TB-2 retains Radon learning tests for AST traversal and complete callable spans.
 The scoring package's import-linter source contract must be added when that package
-exists. M1-M3 and calibrated snapshot scores remain explicitly unavailable.
+exists. M1, M3, and calibrated snapshot scores remain explicitly unavailable.
 
 The dependency graph keeps M1 work independent from M2-M4 after the first working
 scan. The quality gate is established before dependency characterization. Calibration
@@ -170,10 +186,10 @@ union, M2, and evidence rendering.
 
 **Validation:**
 
-- [ ] Every rule has positive and negative fixtures.
-- [ ] The initial catalog contains at least twenty high-confidence rules.
-- [ ] Multiple findings on one line contribute one flagged SLOC.
-- [ ] Every finding includes a stable rule identifier and source span.
+- [x] Every rule has positive and negative fixtures.
+- [x] The initial catalog contains at least twenty high-confidence rules.
+- [x] Multiple findings on one line contribute one flagged SLOC.
+- [x] Every finding includes a stable rule identifier and source span.
 
 **Dependencies:** TB-2.
 

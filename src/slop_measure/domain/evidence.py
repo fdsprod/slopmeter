@@ -222,6 +222,79 @@ class FailedFunctions(_Evidence):
 FunctionAnalysis = Annotated[AnalyzedFunctions | FailedFunctions, Field(discriminator="state")]
 
 
+class PatternCategory(StrEnum):
+    """The four source-pattern families in the Python catalog."""
+
+    REDUNDANCY = "redundancy"
+    CONTROL_FLOW = "control-flow"
+    DEFENSIVE = "defensive"
+    ABSTRACTION = "abstraction"
+
+
+class PatternFinding(_Evidence):
+    """A rule's source location and explanation, without parser objects."""
+
+    path: ProjectPath
+    rule_id: _Text
+    category: PatternCategory
+    severity: DiagnosticSeverity
+    span: SourceSpan
+    message: _Text
+    remediation: _Text | None = None
+
+
+def pattern_source_lines(file: FileEvidence, finding: PatternFinding) -> tuple[int, ...]:
+    """Resolve a finding to its owning parsed file's physical source lines."""
+    if finding.path != file.path or file.parse_state is not ParseState.PARSED:
+        raise ValueError("pattern finding requires its owning parsed source file")
+    lines = tuple(
+        line for line in file.sloc_lines if finding.span.start_line <= line <= finding.span.end_line
+    )
+    if not lines:
+        raise ValueError("pattern finding must intersect source lines")
+    return lines
+
+
+class AnalyzedPatterns(_Evidence):
+    """Successful pattern analysis, including a file with no findings."""
+
+    state: Literal["analyzed"] = "analyzed"
+    path: ProjectPath
+    findings: tuple[PatternFinding, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_findings(self) -> Self:
+        identities = {
+            (finding.rule_id, finding.span.start_line, finding.span.end_line)
+            for finding in self.findings
+        }
+        if len(identities) != len(self.findings):
+            raise ValueError("duplicate pattern finding identity")
+        if any(finding.path != self.path for finding in self.findings):
+            raise ValueError("pattern finding path must match its analysis")
+        return self
+
+
+class FailedPatterns(_Evidence):
+    """A pattern analyzer failure after source parsing succeeded."""
+
+    state: Literal["failed"] = "failed"
+    path: ProjectPath
+    diagnostic: Diagnostic
+
+    @model_validator(mode="after")
+    def validate_diagnostic(self) -> Self:
+        if (
+            self.diagnostic.path != self.path
+            or self.diagnostic.severity is not DiagnosticSeverity.ERROR
+        ):
+            raise ValueError("failed pattern analysis requires a same-file error diagnostic")
+        return self
+
+
+PatternAnalysis = Annotated[AnalyzedPatterns | FailedPatterns, Field(discriminator="state")]
+
+
 class LanguageEvidence(_Evidence):
     """Owned facts from one language adapter, without parser objects."""
 
@@ -229,10 +302,20 @@ class LanguageEvidence(_Evidence):
     capabilities: frozenset[EvidenceCapability]
     files: tuple[FileEvidence, ...]
     # Later metric slices replace empty-only collections with their owned models.
-    patterns: tuple[()] = ()
+    pattern_analyses: tuple[PatternAnalysis, ...] = ()
     function_analyses: tuple[FunctionAnalysis, ...] = ()
     clone_candidates: tuple[()] = ()
     diagnostics: tuple[Diagnostic, ...] = ()
+
+    @property
+    def patterns(self) -> tuple[PatternFinding, ...]:
+        """Read findings from the authoritative per-file pattern outcomes."""
+        return tuple(
+            finding
+            for analysis in self.pattern_analyses
+            if isinstance(analysis, AnalyzedPatterns)
+            for finding in analysis.findings
+        )
 
     @property
     def functions(self) -> tuple[FunctionEvidence, ...]:
@@ -272,4 +355,22 @@ class LanguageEvidence(_Evidence):
         for analysis in self.function_analyses:
             if isinstance(analysis, AnalyzedFunctions):
                 validate_function_evidence(files[analysis.path.root], analysis.functions)
+        return self
+
+    @model_validator(mode="after")
+    def validate_pattern_analyses(self) -> Self:
+        if EvidenceCapability.PATTERNS not in self.capabilities:
+            if self.pattern_analyses:
+                raise ValueError("pattern outcomes require the patterns capability")
+            return self
+        files = {
+            file.path.root: file for file in self.files if file.parse_state is ParseState.PARSED
+        }
+        paths = [analysis.path.root for analysis in self.pattern_analyses]
+        if len(paths) != len(set(paths)) or set(paths) != set(files):
+            raise ValueError("pattern outcomes must cover each parsed file exactly once")
+        for analysis in self.pattern_analyses:
+            if isinstance(analysis, AnalyzedPatterns):
+                for finding in analysis.findings:
+                    pattern_source_lines(files[analysis.path.root], finding)
         return self

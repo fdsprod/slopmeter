@@ -12,7 +12,7 @@ from slop_measure.api import scan
 from slop_measure.config import load_analysis_config
 from slop_measure.domain.requests import SnapshotRequest
 from slop_measure.domain.source import DirectorySourceReference
-from slop_measure.errors import AnalysisFailure
+from slop_measure.errors import AnalysisFailure, InvalidRuleSelection
 from slop_measure.reporting.json import serialize_report
 from slop_measure.reporting.terminal import render_snapshot
 
@@ -52,7 +52,7 @@ def scan_command(
     ] = _Scope.PRODUCTION,
     no_color: Annotated[bool, typer.Option("--no-color", help="Disable terminal colors.")] = False,
 ) -> None:
-    """Scan a Python directory for raw source coverage and analysis diagnostics."""
+    """Scan Python source for pattern verbosity and structural erosion."""
     try:
         overrides = {"strict": strict} if strict is not None else {}
         config = load_analysis_config(path, cli_overrides=overrides)
@@ -62,6 +62,9 @@ def scan_command(
         raise typer.Exit(2) from error
     try:
         report = scan(request)
+    except InvalidRuleSelection as error:
+        typer.echo(f"Invalid analysis input: {error}", err=True)
+        raise typer.Exit(2) from error
     except AnalysisFailure as error:
         typer.echo(str(error), err=True)
         raise typer.Exit(3) from error

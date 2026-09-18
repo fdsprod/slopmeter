@@ -11,14 +11,23 @@ from slop_measure.domain.evidence import (
     DiagnosticSeverity,
     EvidenceCapability,
     FailedFunctions,
+    FailedPatterns,
     FileEvidence,
     FunctionAnalysis,
     LanguageEvidence,
     ParseState,
+    PatternAnalysis,
     SourceSpan,
 )
 from slop_measure.domain.source import SourceDocument
 from slop_measure.languages.python.complexity import extract_functions
+from slop_measure.languages.python.patterns import (
+    PythonParsedUnit,
+    PythonProjectContext,
+    run_patterns,
+    select_rules,
+)
+from slop_measure.languages.python.rules import RULE_SET_VERSION, RULES
 from slop_measure.languages.python.sloc import classify_sloc
 
 
@@ -64,9 +73,9 @@ def _analyze_functions(tree: ast.Module, file: FileEvidence) -> FunctionAnalysis
         )
 
 
-def _analyze_document(
+def _parse_document(
     document: SourceDocument,
-) -> tuple[FileEvidence, Diagnostic | FunctionAnalysis]:
+) -> tuple[FileEvidence, Diagnostic | PythonParsedUnit]:
     try:
         encoding, _ = tokenize.detect_encoding(io.BytesIO(document.content).readline)
         source = document.content.decode(encoding)
@@ -85,7 +94,24 @@ def _analyze_document(
         sloc_lines=lines,
         parse_state=ParseState.PARSED,
     )
-    return file, _analyze_functions(tree, file)
+    return file, PythonParsedUnit(tree=tree, file=file, source=source)
+
+
+def _analyze_patterns(
+    unit: PythonParsedUnit, context: PythonProjectContext, config: AnalysisConfig
+) -> PatternAnalysis:
+    try:
+        return run_patterns(unit, context, config)
+    except Exception as error:
+        return FailedPatterns(
+            path=unit.file.path,
+            diagnostic=Diagnostic(
+                severity=DiagnosticSeverity.ERROR,
+                code="python.pattern-error",
+                message=str(error) or "Python pattern analysis failed.",
+                path=unit.file.path,
+            ),
+        )
 
 
 class PythonAdapter:
@@ -93,13 +119,21 @@ class PythonAdapter:
 
     language_id = "python"
     extensions = frozenset({".py", ".pyi"})
-    capabilities = frozenset({EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS})
-    adapter_version = "python-functions-1"
+    capabilities = frozenset(
+        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS, EvidenceCapability.PATTERNS}
+    )
+    adapter_version = "python-patterns-1"
+    rule_set_version = RULE_SET_VERSION
+
+    def validate_config(self, config: AnalysisConfig) -> None:
+        """Reject unknown rule selections before any file analysis."""
+        select_rules(RULES, config)
 
     def analyze(
         self, documents: tuple[SourceDocument, ...], config: AnalysisConfig
     ) -> LanguageEvidence:
         """Return deterministic evidence. The service owns strict failure policy."""
+        self.validate_config(config)
         if any(document.language != self.language_id for document in documents):
             raise ValueError("Python adapter requires Python source documents")
         if len({document.path.root for document in documents}) != len(documents):
@@ -107,17 +141,22 @@ class PythonAdapter:
         files: list[FileEvidence] = []
         diagnostics: list[Diagnostic] = []
         function_analyses: list[FunctionAnalysis] = []
-        for document in sorted(documents, key=lambda item: item.path.root):
-            file, outcome = _analyze_document(document)
+        pattern_analyses: list[PatternAnalysis] = []
+        ordered = tuple(sorted(documents, key=lambda item: item.path.root))
+        context = PythonProjectContext(paths=tuple(document.path for document in ordered))
+        for document in ordered:
+            file, outcome = _parse_document(document)
             files.append(file)
             if isinstance(outcome, Diagnostic):
                 diagnostics.append(outcome)
             else:
-                function_analyses.append(outcome)
+                function_analyses.append(_analyze_functions(outcome.tree, file))
+                pattern_analyses.append(_analyze_patterns(outcome, context, config))
         return LanguageEvidence(
             language=self.language_id,
             capabilities=self.capabilities,
             files=tuple(files),
             function_analyses=tuple(function_analyses),
+            pattern_analyses=tuple(pattern_analyses),
             diagnostics=tuple(diagnostics),
         )
