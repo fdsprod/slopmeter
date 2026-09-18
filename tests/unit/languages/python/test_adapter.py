@@ -9,9 +9,11 @@ import pytest
 from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
     AnalyzedFunctions,
+    AnalyzedPatterns,
     DiagnosticSeverity,
     EvidenceCapability,
     FailedFunctions,
+    FailedPatterns,
     ParseState,
 )
 from slop_measure.domain.source import Cohort, ProjectPath, SourceDocument
@@ -30,9 +32,10 @@ def test_python_adapter_declares_its_exact_capabilities() -> None:
     assert adapter.language_id == "python"
     assert adapter.extensions == frozenset({".py", ".pyi"})
     assert adapter.capabilities == frozenset(
-        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS}
+        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS, EvidenceCapability.PATTERNS}
     )
-    assert PythonAdapter().adapter_version == "python-functions-1"
+    assert PythonAdapter().adapter_version == "python-patterns-1"
+    assert PythonAdapter().rule_set_version == "py-patterns-1"
 
 
 @pytest.mark.parametrize(
@@ -53,12 +56,14 @@ def test_valid_sources_produce_exact_owned_file_evidence(
     result = PythonAdapter().analyze((document(content),), AnalysisConfig())
     assert result.language == "python"
     assert result.capabilities == frozenset(
-        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS}
+        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS, EvidenceCapability.PATTERNS}
     )
     assert result.diagnostics == ()
     assert result.patterns == result.clone_candidates == ()
     assert len(result.function_analyses) == 1
     assert isinstance(result.function_analyses[0], AnalyzedFunctions)
+    assert len(result.pattern_analyses) == 1
+    assert isinstance(result.pattern_analyses[0], AnalyzedPatterns)
     assert len(result.files) == 1
     file = result.files[0]
     assert file.path == ProjectPath("src/app.py")
@@ -102,6 +107,8 @@ def test_bad_source_does_not_prevent_other_files_and_strictness_is_service_owned
     assert diagnostic.message
     assert len(result.function_analyses) == 1
     assert result.function_analyses[0].path == ProjectPath("good.py")
+    assert len(result.pattern_analyses) == 1
+    assert result.pattern_analyses[0].path == ProjectPath("good.py")
 
 
 def test_syntax_error_diagnostic_preserves_available_line_location() -> None:
@@ -192,4 +199,32 @@ def test_complexity_failure_retains_file_sloc_and_other_successful_outcomes(
     assert failed.diagnostic.severity is DiagnosticSeverity.ERROR
     assert isinstance(succeeded, AnalyzedFunctions)
     assert succeeded.functions[0].qualified_name == "g"
+    assert evidence.diagnostics == ()
+
+
+def test_pattern_failure_preserves_sloc_and_complexity_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from slop_measure.languages.python.patterns import run_patterns  # noqa: PLC0415
+
+    def run(unit, context, config):
+        if unit.file.path == ProjectPath("bad.py"):
+            raise RuntimeError("fixture pattern failure")
+        return run_patterns(unit, context, config)
+
+    monkeypatch.setattr("slop_measure.languages.python.adapter.run_patterns", run)
+    documents = (
+        document(b"def f():\n    return 1\n", "bad.py"),
+        document(b"def g():\n    return 2\n", "good.py"),
+    )
+    adapter = PythonAdapter()
+    evidence = adapter.analyze(documents, AnalysisConfig())
+    assert evidence == adapter.analyze(documents, AnalysisConfig(strict=True))
+    assert all(item.parse_state is ParseState.PARSED and item.sloc == 2 for item in evidence.files)
+    assert len(evidence.functions) == 2
+    failed, successful = evidence.pattern_analyses
+    assert isinstance(failed, FailedPatterns)
+    assert failed.diagnostic.code == "python.pattern-error"
+    assert failed.diagnostic.path == ProjectPath("bad.py")
+    assert isinstance(successful, AnalyzedPatterns)
     assert evidence.diagnostics == ()
