@@ -8,6 +8,7 @@ Coverage
   Unsupported Production md: 1 file | no language adapter
 
 Production | Python | 2 files | 4 SLOC
+  Score unavailable | required metric unavailable
 
 Files (path order)
   File | Patterns | Erosion

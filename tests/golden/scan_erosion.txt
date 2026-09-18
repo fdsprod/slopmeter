@@ -6,6 +6,7 @@ Coverage
   Tests Python: 1 file, 2 SLOC | analyzed
 
 Production | Python | 3 files | 5 SLOC
+  Score unavailable | calibration missing
   Pattern verbosity  0.0% [--------------------]  0 / 5 SLOC
   Clone verbosity  0.0% [--------------------]  0 / 5 SLOC
   Erosion  91.7% [##################--]

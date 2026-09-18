@@ -6,6 +6,7 @@ Coverage
   Tests Python: 0 files, 0 SLOC | analyzed
 
 Production | Python | 2 files | 4 SLOC
+  Score unavailable | required metric unavailable
   Pattern verbosity  25.0% [#####---------------]  1 / 4 SLOC
   Clone verbosity  0.0% [--------------------]  0 / 4 SLOC
   Combined verbosity  25.0% [#####---------------]  1 / 4 SLOC
