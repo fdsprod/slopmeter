@@ -209,6 +209,7 @@ def test_empty_scan_retains_both_python_cohorts(tmp_path: Path) -> None:
             "no-source-lines",
             "no-source-lines",
             "no-functions",
+            "no-source-lines",
         ]
 
 

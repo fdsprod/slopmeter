@@ -39,6 +39,7 @@ def test_each_parsed_file_has_one_clone_outcome_in_stable_order() -> None:
         "z.py",
     )
     assert all(isinstance(item, AnalyzedClones) for item in result.clone_analyses)
+    assert isinstance(result.clone_analyses[0], AnalyzedClones)
     assert result.clone_analyses[0].candidates == ()
     assert tuple(item.path.root for item in result.clone_candidates) == ("encoded.py", "z.py")
     assert result.clone_candidates[0].sloc_lines == (2, 3)

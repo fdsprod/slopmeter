@@ -50,6 +50,10 @@ def aggregate(tmp_path: Path, payload: dict):
     )
 
 
+def erosion(result: dict) -> dict:
+    return next(item for item in result["metrics"] if item["metric_id"] == "m4.erosion")
+
+
 def test_supported_erosion_projects_callables_and_combines_mass_across_files(
     tmp_path: Path,
 ) -> None:
@@ -72,9 +76,9 @@ def test_supported_erosion_projects_callables_and_combines_mass_across_files(
     assert metric["raw"]["numerator"] == pytest.approx(11 * 2**0.5)
     assert metric["raw"]["denominator"] == pytest.approx(12 * 2**0.5)
     by_path = {item["evidence"]["path"]: item for item in values["files"]}
-    assert by_path["constant.py"]["metrics"][-1]["reason"] == "no-functions"
+    assert erosion(by_path["constant.py"])["reason"] == "no-functions"
     assert by_path["high.py"]["functions"][0]["cyclomatic_complexity"] == 11
-    assert by_path["low.py"]["metrics"][-1]["raw"]["value"] == 0
+    assert erosion(by_path["low.py"])["raw"]["value"] == 0
     assert [(item.metric_id, item.version) for item in report.provenance.metrics] == [
         ("m4.erosion", "1")
     ]
@@ -92,7 +96,7 @@ def test_supported_empty_callable_population_is_no_functions_even_without_sloc(
     }
     report = aggregate(tmp_path, payload)
     for cohort in report.cohorts:
-        assert cohort.current.model_dump(mode="json")["metrics"][-1]["reason"] == "no-functions"
+        assert erosion(cohort.current.model_dump(mode="json"))["reason"] == "no-functions"
 
 
 def test_complexity_failure_only_invalidates_m4_and_flattens_diagnostic_once(
@@ -126,11 +130,12 @@ def test_complexity_failure_only_invalidates_m4_and_flattens_diagnostic_once(
         "unsupported-capability",
         "unsupported-capability",
         "analyzer-failed",
+        "unsupported-capability",
     ]
-    assert payload["metrics"][-1]["diagnostic_id"] == report.diagnostics[0].id
+    assert erosion(payload)["diagnostic_id"] == report.diagnostics[0].id
     assert payload["files"][0]["evidence"]["sloc"] == 2
-    assert payload["files"][0]["metrics"][-1]["reason"] == "analyzer-failed"
-    assert payload["files"][1]["metrics"][-1]["raw"]["value"] == 0
+    assert erosion(payload["files"][0])["reason"] == "analyzer-failed"
+    assert erosion(payload["files"][1])["raw"]["value"] == 0
 
 
 def test_strict_service_notices_embedded_complexity_errors(

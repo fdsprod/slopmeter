@@ -53,6 +53,7 @@ def test_cross_file_clone_union_and_test_cohort_separation(clone_project: Path) 
     assert measured["m2.pattern-verbosity"]["raw"]["numerator"] == 2
     assert measured["verbosity.combined"]["raw"]["numerator"] == 4
     assert measured["m4.erosion"]["state"] == "measured"
+    assert production.score.state == "unavailable"
     assert production.score.reason.value == "calibration-missing"
     assert metrics(tests)["m3.clone-verbosity"]["raw"]["value"] == 0
     assert len(report.clone_groups) == 1

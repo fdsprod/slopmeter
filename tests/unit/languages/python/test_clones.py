@@ -151,3 +151,18 @@ def test_later_bare_string_is_executable_and_not_a_docstring_separator() -> None
     assert len(result) == 1
     assert result[0].statement_count == 3
     assert result[0].sloc_lines == (1, 2, 3)
+
+
+def test_explicit_line_continuation_is_formatting_trivia() -> None:
+    compact = candidates("a = source + 1\nb = a\n")[0]
+    continued = candidates("a = source + \\\n    1\nb = a\n")[0]
+    assert compact.normalized_tokens == continued.normalized_tokens
+    assert continued.sloc_lines == (1, 2, 3)
+
+
+def test_match_case_container_is_not_an_executable_sibling_run() -> None:
+    result = candidates(
+        "match source:\n    case 1:\n        a = 1\n        consume(a)\n"
+        "    case 2:\n        b = 2\n        consume(b)\n"
+    )
+    assert {(item.span.start_line, item.span.end_line) for item in result} == {(3, 4), (6, 7)}

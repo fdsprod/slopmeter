@@ -117,7 +117,8 @@ def test_failed_pattern_batch_only_invalidates_m2_and_keeps_other_findings(tmp_p
     values = production.model_dump(mode="json")
     assert values["metrics"][1]["reason"] == "analyzer-failed"
     assert values["metrics"][1]["diagnostic_id"] == report.diagnostics[0].id
-    assert values["metrics"][-1]["raw"]["value"] == 0
+    erosion = next(item for item in values["metrics"] if item["metric_id"] == "m4.erosion")
+    assert erosion["raw"]["value"] == 0
     assert values["files"][0]["metrics"][1]["reason"] == "analyzer-failed"
     assert values["files"][1]["metrics"][1]["raw"]["value"] == 0.5
 

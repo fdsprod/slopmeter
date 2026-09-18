@@ -42,7 +42,11 @@ def test_erosion_scan_matches_exact_callables_and_mass_totals(erosion_project: P
         (item["path"], item["qualified_name"], item["cyclomatic_complexity"], item["sloc_lines"])
         for item in functions
     ] == [("high.py", "high", 11, [1, 2]), ("low.py", "low", 1, [1, 2])]
-    raw = production.model_dump(mode="json")["metrics"][-1]["raw"]
+    raw = next(
+        item
+        for item in production.model_dump(mode="json")["metrics"]
+        if item["metric_id"] == "m4.erosion"
+    )["raw"]
     assert raw == pytest.approx(
         {
             "numerator": 11 * math.sqrt(2),
@@ -84,8 +88,16 @@ def test_configured_threshold_changes_end_to_end_erosion(erosion_project: Path) 
     boundary_production = next(
         item.current for item in boundary.cohorts if item.cohort.value == "production"
     )
-    default_raw = default_production.model_dump(mode="json")["metrics"][-1]["raw"]
-    boundary_raw = boundary_production.model_dump(mode="json")["metrics"][-1]["raw"]
+    default_raw = next(
+        item
+        for item in default_production.model_dump(mode="json")["metrics"]
+        if item["metric_id"] == "m4.erosion"
+    )["raw"]
+    boundary_raw = next(
+        item
+        for item in boundary_production.model_dump(mode="json")["metrics"]
+        if item["metric_id"] == "m4.erosion"
+    )["raw"]
 
     assert default_raw["value"] == pytest.approx(11 / 12)
     assert boundary_raw["value"] == boundary_raw["numerator"] == 0
@@ -135,8 +147,12 @@ def test_production_and_test_erosion_have_independent_mass_totals(
         SnapshotRequest(target=DirectorySourceReference(root=tmp_path), config=AnalysisConfig())
     )
     cohorts = {item.cohort.value: item.current.model_dump(mode="json") for item in report.cohorts}
-    production = cohorts["production"]["metrics"][-1]["raw"]
-    tests = cohorts["test"]["metrics"][-1]["raw"]
+    production = next(
+        item for item in cohorts["production"]["metrics"] if item["metric_id"] == "m4.erosion"
+    )["raw"]
+    tests = next(item for item in cohorts["test"]["metrics"] if item["metric_id"] == "m4.erosion")[
+        "raw"
+    ]
 
     assert production["value"] == 1
     assert production["numerator"] == production["denominator"] == pytest.approx(11 * math.sqrt(2))
