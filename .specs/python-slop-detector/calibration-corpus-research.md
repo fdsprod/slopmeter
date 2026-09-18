@@ -71,6 +71,16 @@ exclusion policy targets wholesale incorporated files, not every historical
 contribution from another project. Sphinx's incorporated JQuery and Underscore
 assets are non-Python and outside the Python population.
 
+The final source-header review on 2026-09-18 also identified
+`sphinx/util/stemmer/porter.py` as a whole incorporated Python port, attributed
+to Vivake Gupta in 2001 and released to the public domain. Apply the same
+whole-file exclusion policy to it. This corrects a missed attribution in the
+initial path audit. The first candidate profile is rejected and rebuilt with
+this exclusion; the change is based on provenance, not measured values.
+The same review found the explicit generated-source header in
+`sphinx/search/jssplitter.py`. Its lowercase marker does not match the scanner's
+configured default markers, so the manifest excludes this file explicitly.
+
 This is a bounded root/license/notice audit, not proof that all generated or
 mixed-origin material has been identified. Record any further exclusions before
 examining metric values. Preserve the discovered and excluded path inventory in

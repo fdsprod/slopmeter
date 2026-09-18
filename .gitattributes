@@ -1,0 +1,4 @@
+# Calibration manifests are hashed as bytes. Preserve LF on every platform.
+calibration/**/*.toml text eol=lf
+src/slop_measure/scoring/resources/*.corpus.toml text eol=lf
+src/slop_measure/scoring/resources/*.json text eol=lf

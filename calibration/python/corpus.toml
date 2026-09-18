@@ -56,7 +56,7 @@ license = "BSD-2-Clause"
 license_file = "LICENSE"
 production_patterns = ["sphinx/**/*.py"]
 test_patterns = ["tests/**/*.py", "sphinx/**/tests/**/*.py"]
-exclusions = [".git/**", "tests/roots/**", "sphinx/util/smartypants.py"]
+exclusions = [".git/**", "tests/roots/**", "sphinx/util/smartypants.py", "sphinx/util/stemmer/porter.py", "sphinx/search/jssplitter.py"]
 
 [[projects]]
 name = "attrs"
