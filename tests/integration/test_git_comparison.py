@@ -139,3 +139,71 @@ def test_git_baseline_can_compare_with_current_worktree(history):
     assert {f.evidence.path.root for f in production.current.files} == {"new.py", "untracked.py"}
     assert production.line_delta.state == "measured"
     assert production.line_delta.net == -12
+
+
+def test_git_and_directory_comparisons_have_identical_same_path_m1_and_raw_deltas(
+    history,
+    tmp_path: Path,
+) -> None:
+    root, _, _, old, current = history
+    (root / "new.py").write_text(old, encoding="utf-8", newline="\n")
+    git(root, "add", "new.py")
+    git(root, "commit", "-m", "same-path modification")
+    request = ComparisonRequest(
+        baseline=GitSourceReference(root=root, revision="current"),
+        current=GitSourceReference(root=root, revision="HEAD"),
+        config=config(),
+    )
+    index = (root / ".git" / "index").read_bytes()
+    status = git(root, "status", "--porcelain=v1", "--ignored")
+    contents = {path.name: path.read_bytes() for path in root.glob("*.py")}
+    actual = compare(request)
+    roots = []
+    for name, source in (("directory-base", current), ("directory-current", old)):
+        directory = tmp_path / name
+        directory.mkdir()
+        (directory / "new.py").write_text(source, encoding="utf-8", newline="\n")
+        roots.append(directory)
+    expected = compare(
+        ComparisonRequest(
+            baseline=DirectorySourceReference(root=roots[0]),
+            current=DirectorySourceReference(root=roots[1]),
+            config=config(),
+        )
+    )
+    assert actual.cohorts == expected.cohorts
+    assert (root / ".git" / "index").read_bytes() == index
+    assert git(root, "status", "--porcelain=v1", "--ignored") == status
+    assert {path.name: path.read_bytes() for path in root.glob("*.py")} == contents
+
+
+def test_staged_rename_with_unstaged_edit_is_recognized_without_checkout_mutation(history):
+    root, _, _, _, current = history
+    (root / "new.py").write_text(current, encoding="utf-8", newline="\n")
+    git(root, "mv", "new.py", "staged.py")
+    (root / "staged.py").write_text(
+        current.replace("return step_10", "return step_9"),
+        encoding="utf-8",
+        newline="\n",
+    )
+    index = (root / ".git" / "index").read_bytes()
+    status = git(root, "status", "--porcelain=v1", "--ignored")
+    contents = {path.name: path.read_bytes() for path in root.glob("*.py")}
+    report = compare(
+        ComparisonRequest(
+            baseline=GitSourceReference(root=root, revision="current"),
+            current=DirectorySourceReference(root=root),
+            config=config(),
+        )
+    )
+    production = next(c for c in report.cohorts if c.cohort.value == "production")
+    assert production.kind == "comparison"
+    renamed = next(change for change in production.changes if change.pair.kind == "renamed")
+    assert renamed.pair.kind == "renamed"
+    assert renamed.pair.baseline_path.root == "new.py"
+    assert renamed.pair.current_path.root == "staged.py"
+    assert renamed.lines.state == "measured"
+    assert renamed.lines.added_lines == renamed.lines.deleted_lines == (14,)
+    assert (root / ".git" / "index").read_bytes() == index
+    assert git(root, "status", "--porcelain=v1", "--ignored") == status
+    assert {path.name: path.read_bytes() for path in root.glob("*.py")} == contents

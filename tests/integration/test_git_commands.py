@@ -58,3 +58,32 @@ def test_git_root_must_be_repository_top_level(history):  # noqa: F811
     result = CliRunner().invoke(app, ["scan", str(nested), "--rev", "HEAD"])
     assert result.exit_code == 2
     assert "root" in result.output.lower() or "top" in result.output.lower()
+
+
+def test_git_comparison_display_options_preserve_json_and_disable_ansi(history):  # noqa: F811
+    root, _, _, _, _ = history
+    runner = CliRunner()
+    arguments = ["compare", "baseline", "current", "--repo", str(root)]
+    plain = runner.invoke(app, [*arguments, "--json"])
+    selected = runner.invoke(
+        app,
+        [
+            *arguments,
+            "--json",
+            "--top",
+            "1",
+            "--scope",
+            "test",
+            "--ascii",
+            "--no-color",
+            "--verbose",
+        ],
+    )
+    assert plain.exit_code == selected.exit_code == 0
+    original, changed = json.loads(plain.stdout), json.loads(selected.stdout)
+    for field in ("analysis", "cohorts", "findings", "clone_groups", "diagnostics", "coverage"):
+        assert original[field] == changed[field]
+    rendered = runner.invoke(app, [*arguments, "--ascii", "--no-color"])
+    assert rendered.exit_code == 0, rendered.output
+    assert "\x1b[" not in rendered.output
+    assert rendered.output.isascii()
