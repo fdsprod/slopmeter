@@ -10,7 +10,8 @@ import pytest
 
 _ROOT = Path(__file__).resolve().parents[2]
 _FORBIDDEN = {
-    "domain": ("application", "languages", "sources", "reporting", "api", "cli"),
+    "domain": ("application", "languages", "sources", "reporting", "api", "cli", "scoring"),
+    "scoring": ("application", "languages", "sources", "reporting", "api", "cli"),
     "metrics": ("languages", "sources", "reporting", "cli"),
     "languages": ("application", "reporting", "api", "cli"),
     "reporting": ("languages", "sources"),
@@ -50,11 +51,11 @@ def run_contracts(root: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_current_package_keeps_all_four_architecture_contracts(isolated_package: Path) -> None:
+def test_current_package_keeps_all_five_architecture_contracts(isolated_package: Path) -> None:
     result = run_contracts(isolated_package)
     output = result.stdout + result.stderr
     assert result.returncode == 0, output
-    assert "4 kept, 0 broken" in output
+    assert "5 kept, 0 broken" in output
 
 
 @pytest.mark.parametrize(
