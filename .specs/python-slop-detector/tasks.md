@@ -10,12 +10,12 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q07 and T01-T22 are complete for TB-1. The first raw scan
-runs through the CLI and public API. Comparison has a public entry point that
-explicitly raises `NotImplementedError` until TB-6. The retained learning tests
+Current checkpoint: Q01-Q07 and T01-T27 are complete through TB-2. The raw scan
+reports callable evidence and M4 through the CLI and public API. Comparison has a
+public entry point that explicitly raises `NotImplementedError` until TB-6. The retained learning tests
 record the external behavior that production adapters rely on.
 
-The raw-scan slice has passed its end-to-end checks:
+The TB-1 raw-scan slice passed these end-to-end checks:
 
 - [x] T06: Immutable snapshot and comparison request unions.
 - [x] T07: Diagnostics, coverage, exact file SLOC evidence, and language evidence.
@@ -31,14 +31,27 @@ The raw-scan slice has passed its end-to-end checks:
   package build, and CLI smoke checks pass.
 - [x] Coverage is 97.90 percent with branch measurement enabled; CI enforces 90 percent.
 
+TB-2 passes its validation gate:
+
+- [x] T23-T24: Owned callable evidence, explicit function-analysis outcomes, and exact M4 mass.
+- [x] T25-T27: File and cohort M4, deterministic JSON, terminal evidence, and golden fixtures.
+- [x] Complexity failures preserve SLOC and successful file results. Strict scans detect them.
+- [x] Custom adapters produce stable callable order regardless of emission order.
+- [x] 460 deterministic tests and 30 separate learning tests pass. Coverage is 97.97 percent.
+- [x] Ruff, Pyright, four import contracts, dependency audit, package build, and CLI checks pass.
+
+The independent test author wrote the domain, extractor, and report contracts before
+implementation. Three final checks for configuration, hotspot ranking, and cohort
+isolation used blind test-after review. The ordering regression failed before its fix.
+
 The malformed basic fixture is excluded from lint/type checks and normal test
 collection. Its source remains directly scannable with `slop scan tests/fixtures/basic`.
 The normal test command excludes learning tests. Architecture tests inject each of
 the 16 forbidden dependency directions into isolated package copies.
 
-Language evidence currently accepts only empty pattern, function, and clone
-collections. T23, T28, and the clone slice add their owned element contracts before adapters
-emit those facts. File SLOC counts are checked immutable projections of exact line
+Language evidence accepts only empty pattern and clone collections until their
+owned contracts exist. TB-2 adds explicit per-file function outcomes and immutable
+callable facts. File SLOC counts are checked immutable projections of exact line
 identities. Metric values are immutable calculation projections with ratio inputs
 checked at construction.
 
@@ -51,10 +64,10 @@ The report contracts now resolve the decisions required before aggregation:
 - [x] The `unsupported-capability` metric reason distinguishes missing evidence
   support from a failed analyzer.
 
-Next is TB-2: T23-T27 adds callable evidence and raw M4 structural erosion through
-the existing scan. The retained Radon learning tests are its dependency evidence.
+Next is TB-3: T28-T37 adds pattern rules and raw M2 verbosity through the existing
+scan. TB-2 retains Radon learning tests for AST traversal and complete callable spans.
 The scoring package's import-linter source contract must be added when that package
-exists. Snapshot metrics and scores remain explicitly unavailable in TB-1.
+exists. M1-M3 and calibrated snapshot scores remain explicitly unavailable.
 
 The dependency graph keeps M1 work independent from M2-M4 after the first working
 scan. The quality gate is established before dependency characterization. Calibration
@@ -135,10 +148,10 @@ and eroded-function evidence.
 
 **Validation:**
 
-- [ ] Golden fixtures produce exact callable spans, CC values, SLOC, and mass.
-- [ ] Class aggregate values do not double-count method complexity.
-- [ ] A file with no callables reports M4 as not applicable.
-- [ ] Project M4 derives from total project mass rather than average file ratios.
+- [x] Golden fixtures produce exact callable spans, CC values, SLOC, and mass.
+- [x] Class aggregate values do not double-count method complexity.
+- [x] A file with no callables reports M4 as not applicable.
+- [x] Project M4 derives from total project mass rather than average file ratios.
 
 **Dependencies:** TB-1.
 
@@ -499,9 +512,9 @@ TB-7 through TB-9
 | CLI text, errors, and README | golden tests and `apply_patch` | `ste` |
 | Current dependency behavior | Official documentation and isolated executable tests | `learning-tests` if authorized |
 
-No MCP application is required for the MVP. Network access is required only for
-dependency installation and the approved calibration corpus. Those actions require
-normal sandbox approval when execution reaches them.
+No MCP application is required for the MVP. Network access is required for dependency
+installation, dependency audits, and the approved calibration corpus. Follow the
+active session permissions. Full-access sessions need no routine approval prompts.
 
 ## Completion Definition
 

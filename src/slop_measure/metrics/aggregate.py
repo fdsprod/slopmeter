@@ -1,19 +1,27 @@
 """Build deterministic raw snapshot reports from source and adapter facts."""
 
+from dataclasses import dataclass
+
 from slop_measure import __version__
 from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
+    AnalyzedFunctions,
     Coverage,
     CoverageState,
     Diagnostic,
     DiagnosticSeverity,
+    EvidenceCapability,
+    FailedFunctions,
     FileEvidence,
+    FunctionAnalysis,
+    FunctionEvidence,
     LanguageEvidence,
     ParseState,
 )
 from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.metrics import (
     FileMetricScope,
+    MetricResult,
     MetricScope,
     ProjectMetricScope,
     UnavailableMetric,
@@ -24,6 +32,7 @@ from slop_measure.domain.reports import (
     AnalyzerVersion,
     CohortResult,
     FileResult,
+    MetricVersion,
     Provenance,
     ReportCoverage,
     ReportDiagnostic,
@@ -33,8 +42,69 @@ from slop_measure.domain.reports import (
     UnavailableSnapshotScore,
 )
 from slop_measure.domain.source import Cohort, SourceIdentity
+from slop_measure.metrics.erosion import measure_erosion
 
 _SNAPSHOT_METRICS = ("m2.pattern-verbosity", "m3.clone-verbosity", "m4.erosion")
+
+
+@dataclass(frozen=True)
+class _ErosionContext:
+    """Keep function outcomes and diagnostic ownership for one language."""
+
+    analyses: tuple[FunctionAnalysis, ...] | None
+    diagnostics: tuple[ReportDiagnostic, ...]
+    threshold: int
+
+    def functions(self, files: tuple[FileEvidence, ...]) -> tuple[FunctionEvidence, ...]:
+        paths = {file.path.root for file in files}
+        functions = (
+            function
+            for analysis in self.analyses or ()
+            if isinstance(analysis, AnalyzedFunctions) and analysis.path.root in paths
+            for function in analysis.functions
+        )
+        return tuple(
+            sorted(
+                functions,
+                key=lambda function: (
+                    function.path.root,
+                    function.span.start_line,
+                    function.span.end_line,
+                    function.qualified_name,
+                ),
+            )
+        )
+
+    def measure(self, base: UnavailableMetric, files: tuple[FileEvidence, ...]) -> MetricResult:
+        if self.analyses is None or base.reason in {
+            UnavailableReason.PARSE_FAILED,
+            UnavailableReason.ANALYZER_FAILED,
+        }:
+            return base
+        paths = {file.path.root for file in files}
+        failures = tuple(
+            analysis.diagnostic
+            for analysis in self.analyses
+            if isinstance(analysis, FailedFunctions) and analysis.path.root in paths
+        )
+        if failures:
+            diagnostic = next(item for item in self.diagnostics if item.detail in failures)
+            return UnavailableMetric(
+                metric_id="m4.erosion",
+                scope=base.scope,
+                reason=UnavailableReason.ANALYZER_FAILED,
+                diagnostic_id=diagnostic.id,
+            )
+        return measure_erosion(self.functions(files), base.scope, self.threshold)
+
+    def metrics(
+        self,
+        scope: MetricScope,
+        files: tuple[FileEvidence, ...],
+        failure: tuple[UnavailableReason, str | None],
+    ) -> tuple[MetricResult, ...]:
+        base = _metrics(scope, *failure)
+        return (*base[:-1], self.measure(base[-1], files))
 
 
 def _diagnostic_key(item: Diagnostic) -> tuple[str, int, int, str, str, str]:
@@ -109,6 +179,7 @@ def _cohort_result(
     cohort: Cohort,
     diagnostics: tuple[ReportDiagnostic, ...],
     project_errors: tuple[ReportDiagnostic, ...],
+    erosion: _ErosionContext,
 ) -> CohortResult:
     results: list[FileResult] = []
     for file in files:
@@ -116,8 +187,9 @@ def _cohort_result(
         results.append(
             FileResult(
                 evidence=file,
-                metrics=_metrics(
-                    FileMetricScope(path=file.path, cohort=cohort), reason, diagnostic_id
+                functions=erosion.functions((file,)),
+                metrics=erosion.metrics(
+                    FileMetricScope(path=file.path, cohort=cohort), (file,), (reason, diagnostic_id)
                 ),
                 score=_score(reason),
             )
@@ -127,7 +199,7 @@ def _cohort_result(
         reason, diagnostic_id = _failure_reason(project_errors[0].detail), project_errors[0].id
     return CohortResult(
         files=tuple(results),
-        metrics=_metrics(ProjectMetricScope(cohort=cohort), reason, diagnostic_id),
+        metrics=erosion.metrics(ProjectMetricScope(cohort=cohort), files, (reason, diagnostic_id)),
         score=_score(reason),
     )
 
@@ -168,10 +240,16 @@ def aggregate_snapshot(
     *,
     analyzers: tuple[AnalyzerVersion, ...] = (),
 ) -> AnalysisReport:
-    """Aggregate raw coverage. Snapshot metric algorithms arrive in later slices."""
+    """Aggregate source coverage and raw metrics without averaging file ratios."""
     diagnostics = _diagnostics(
         inventory.diagnostics
         + tuple(item for language in evidence for item in language.diagnostics)
+        + tuple(
+            analysis.diagnostic
+            for language in evidence
+            for analysis in language.function_analyses
+            if isinstance(analysis, FailedFunctions)
+        )
     )
     files = tuple(
         sorted(
@@ -189,6 +267,18 @@ def aggregate_snapshot(
     coverage = [ReportCoverage(detail=item) for item in inventory.coverage]
     for language in languages:
         project_errors = _project_errors(language, inventory, evidence, diagnostics)
+        supported = tuple(
+            item
+            for item in evidence
+            if item.language == language and EvidenceCapability.FUNCTIONS in item.capabilities
+        )
+        erosion = _ErosionContext(
+            tuple(analysis for item in supported for analysis in item.function_analyses)
+            if supported
+            else None,
+            diagnostics,
+            config.complexity_threshold,
+        )
         for cohort in Cohort:
             members = tuple(
                 file for file in files if file.language == language and file.cohort is cohort
@@ -197,7 +287,7 @@ def aggregate_snapshot(
                 SnapshotCohortReport(
                     language=language,
                     cohort=cohort,
-                    current=_cohort_result(members, cohort, diagnostics, project_errors),
+                    current=_cohort_result(members, cohort, diagnostics, project_errors, erosion),
                 )
             )
             coverage.append(
@@ -217,6 +307,9 @@ def aggregate_snapshot(
             tool_version=__version__,
             config=config,
             analyzers=tuple(sorted(analyzers, key=lambda item: item.language)),
+            metrics=(MetricVersion(metric_id="m4.erosion", version="1"),)
+            if any(EvidenceCapability.FUNCTIONS in item.capabilities for item in evidence)
+            else (),
         ),
         cohorts=tuple(cohorts),
         coverage=tuple(sorted(coverage, key=_coverage_key)),

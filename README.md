@@ -3,8 +3,8 @@
 `slop.measure` detects redundant and structurally eroded source code. The first
 release targets Python and provides the `slop` command plus an importable API.
 
-The first raw scan is available. It reports Python source lines, production and test
-coverage, excluded files, and parse diagnostics. M1-M4 metrics and calibrated scores
+The raw scan reports Python source lines, production and test coverage, excluded
+files, diagnostics, and M4 structural erosion. M1-M3 metrics and calibrated scores
 remain explicitly unavailable. Directory comparisons and Git revision scans arrive
 in later slices. See `.specs/python-slop-detector/` for the design and checkpoint.
 
@@ -40,6 +40,16 @@ print(report.model_dump_json(indent=2))
 CLI settings merge in this order: defaults, `[tool.slop]` in the target root's
 `pyproject.toml`, the target root's `slop.toml`, then explicit CLI arguments. API
 requests receive resolved configuration and do not load files implicitly.
+
+M4 measures the share of callable mass above the complexity threshold. Each
+function, method, or nested function contributes `CC * sqrt(SLOC)` mass. The default
+threshold is `CC > 10`. Set `complexity_threshold` in `slop.toml` or `[tool.slop]`
+to change it. Project M4 uses summed mass, not an average of file ratios.
+
+JSON records every callable's name, source span, complexity, exact SLOC lines, and
+mass. Terminal output shows mass totals and the largest eroded callables. Files
+without callables report `no-functions`. A complexity failure preserves source-line
+counts and makes M4 unavailable for that file and its cohort.
 
 Test patterns take precedence over production patterns. Exclusions, Git-ignore
 rules, and generated markers apply before parsing. Tracked Git files remain eligible

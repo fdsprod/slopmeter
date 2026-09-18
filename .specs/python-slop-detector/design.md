@@ -706,7 +706,7 @@ fields:
   - { name: capabilities, type: set[EvidenceCapability], required: true, description: Evidence families supplied }
   - { name: files, type: list[FileEvidence], required: true, description: Source line and parse facts }
   - { name: patterns, type: list[PatternFinding], required: true, description: Pattern source spans }
-  - { name: functions, type: list[FunctionEvidence], required: true, description: Callable size and complexity facts }
+  - { name: function_analyses, type: tuple[FunctionAnalysis], required: true, description: One explicit outcome per parsed file when functions are supported }
   - { name: clone_candidates, type: list[CloneCandidate], required: true, description: Normalized duplicate candidates }
   - { name: diagnostics, type: list[Diagnostic], required: true, description: Adapter warnings and failures }
 ```
@@ -790,9 +790,52 @@ to clone verbosity.
 
 ### M4 structural erosion
 
-Radon returns cyclomatic complexity and callable spans. The adapter computes callable
-SLOC by intersecting each span with the shared file SLOC set. Functions, methods, and
-nested closures contribute. Class aggregate complexity records do not contribute.
+The existing Python AST supplies lexical callable names and complete source spans.
+Radon supplies cyclomatic complexity from direct visits to each callable node.
+Whole-module Radon results can omit methods in function-local classes. Radon end
+lines can also omit closing delimiters, so the AST owns source positions.
+The adapter intersects each span with the shared file SLOC set. Functions, methods,
+and nested closures contribute. Class aggregate complexity records do not contribute.
+
+Each callable has one immutable evidence record. Serialized count and mass fields
+are checked projections of the source facts.
+
+```datamodel
+name: FunctionEvidence
+store: in-memory
+summary: Records the source facts for one lexical callable.
+fields:
+  - { name: path, type: ProjectPath, required: true, description: Owning file }
+  - { name: qualified_name, type: string, required: true, description: Dot-separated lexical class and function names }
+  - { name: span, type: SourceSpan, required: true, description: Inclusive AST definition span without decorators }
+  - { name: cyclomatic_complexity, type: positive integer, required: true, description: Callable decision complexity }
+  - { name: sloc_lines, type: tuple[positive integer], required: true, description: Exact nonempty file SLOC intersection }
+  - { name: sloc, type: computed integer, description: Number of SLOC line identities }
+  - { name: mass, type: computed float, description: Complexity times square root of SLOC }
+```
+
+The function-analysis union distinguishes an empty successful result from a failed
+analyzer. Parse failures have no function-analysis outcome.
+
+```datamodel
+name: FunctionAnalysis
+store: in-memory
+summary: Records success or failure for one parsed file.
+fields:
+  - { name: state, type: analyzed | failed, required: true, description: Union discriminator }
+  - { name: path, type: ProjectPath, required: true, description: Owning parsed file }
+  - { name: functions, type: tuple[FunctionEvidence], description: Present only in analyzed outcomes and can be empty }
+  - { name: diagnostic, type: Diagnostic, description: Required same-file error in failed outcomes }
+```
+
+Callable identities combine path, qualified name, and span. Duplicate names at
+different spans remain separate. Nested callable spans can overlap. Each callable
+contributes its own mass once. `LanguageEvidence.functions` is a read-only flattened
+view. JSON stores only the authoritative `function_analyses` outcomes.
+
+A complexity failure preserves file SLOC. It makes file and cohort M4 unavailable,
+while successful files retain their M4 values. Other metric families keep their own
+states. A successful scope with no callables reports `no-functions`.
 
 ```text
 mass(function) = CC(function) × sqrt(SLOC(function))

@@ -7,7 +7,13 @@ from typing import Annotated, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, StringConstraints, model_validator
 
 from slop_measure.config import AnalysisConfig
-from slop_measure.domain.evidence import Coverage, Diagnostic, FileEvidence
+from slop_measure.domain.evidence import (
+    Coverage,
+    Diagnostic,
+    FileEvidence,
+    FunctionEvidence,
+    validate_function_evidence,
+)
 from slop_measure.domain.metrics import (
     FileMetricScope,
     MetricResult,
@@ -117,11 +123,13 @@ class FileResult(_ReportModel):
     """Source facts and derived results for one file."""
 
     evidence: FileEvidence
+    functions: tuple[FunctionEvidence, ...] = ()
     metrics: tuple[MetricResult, ...] = ()
     score: SnapshotScore
 
     @model_validator(mode="after")
     def validate_metrics(self) -> Self:
+        validate_function_evidence(self.evidence, self.functions)
         _require_unique((metric.metric_id for metric in self.metrics), "file metric")
         for metric in self.metrics:
             if not isinstance(metric.scope, FileMetricScope):

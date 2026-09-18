@@ -4,8 +4,57 @@ from io import StringIO
 
 from rich.console import Console
 
+from slop_measure.config import AnalysisConfig
 from slop_measure.domain.metrics import MeasuredMetric
-from slop_measure.domain.reports import AnalysisReport, MeasuredSnapshotScore, SnapshotAnalysis
+from slop_measure.domain.reports import (
+    AnalysisReport,
+    CohortResult,
+    MeasuredSnapshotScore,
+    SnapshotAnalysis,
+)
+
+
+def _render_erosion(
+    console: Console, metric: MeasuredMetric, result: CohortResult, config: AnalysisConfig
+) -> None:
+    functions = tuple(function for file in result.files for function in file.functions)
+    eroded = sorted(
+        (
+            function
+            for function in functions
+            if function.cyclomatic_complexity > config.complexity_threshold
+        ),
+        key=lambda function: (
+            -function.mass,
+            function.path.root,
+            function.span.start_line,
+            function.span.end_line,
+            function.qualified_name,
+        ),
+    )
+    console.print(f"  mass: {metric.raw.numerator:g} / {metric.raw.denominator:g}")
+    console.print(
+        f"  callables: {len(functions)}; eroded: {len(eroded)}; "
+        f"CC threshold: > {config.complexity_threshold}"
+    )
+    if eroded:
+        console.print("  eroded callables")
+    for function in eroded[: config.default_hotspot_count]:
+        console.print(
+            f"    {function.path.root}:{function.span.start_line}-{function.span.end_line} "
+            f"{function.qualified_name}: CC {function.cyclomatic_complexity}, "
+            f"SLOC {function.sloc}, mass {function.mass:g}"
+        )
+
+
+def _render_metrics(console: Console, result: CohortResult, config: AnalysisConfig) -> None:
+    for metric in result.metrics:
+        if isinstance(metric, MeasuredMetric):
+            console.print(f"  {metric.metric_id}: {metric.raw.value:g} {metric.raw.unit.value}")
+            if metric.metric_id == "m4.erosion":
+                _render_erosion(console, metric, result, config)
+        else:
+            console.print(f"  {metric.metric_id}: unavailable ({metric.reason.value})")
 
 
 def render_snapshot(
@@ -48,11 +97,7 @@ def render_snapshot(
             console.print(f"  snapshot slop {score.points:g}/100")
         else:
             console.print(f"  snapshot slop unavailable: {score.reason.value}")
-        for metric in cohort.current.metrics:
-            if isinstance(metric, MeasuredMetric):
-                console.print(f"  {metric.metric_id}: {metric.raw.value:g} {metric.raw.unit.value}")
-            else:
-                console.print(f"  {metric.metric_id}: unavailable ({metric.reason.value})")
+        _render_metrics(console, cohort.current, report.provenance.config)
     if report.diagnostics:
         console.print()
         console.print(f"diagnostics: {len(report.diagnostics)} (see --json for full details)")
