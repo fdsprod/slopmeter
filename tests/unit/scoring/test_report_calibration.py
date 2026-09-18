@@ -8,7 +8,11 @@ from test_calibration_contract import profile_payload
 from test_snapshot_engine import measured, metrics, provenance_payload
 
 from slop_measure.domain.metrics import MeasuredMetric, UnavailableMetric
-from slop_measure.domain.reports import AnalysisReport, UnavailableSnapshotScore
+from slop_measure.domain.reports import (
+    AnalysisReport,
+    MeasuredSnapshotScore,
+    UnavailableSnapshotScore,
+)
 from slop_measure.domain.scoring import CalibrationProfile
 from slop_measure.scoring.engine import score_report
 
@@ -171,3 +175,66 @@ def test_multiple_cohorts_and_languages_do_not_borrow_python_production_populati
         assert all(
             isinstance(file.score, UnavailableSnapshotScore) for file in cohort.current.files
         )
+
+
+@pytest.mark.parametrize("context", ["missing", "incompatible"])
+def test_recalibration_clears_stale_metric_scores_when_profile_is_unusable(context: str) -> None:
+    calibrated = score_report(AnalysisReport.model_validate(report_payload()), profile())
+    payload = profile_payload()
+    payload["rule_set_version"] = "incompatible-rules"
+    reference = None if context == "missing" else CalibrationProfile.model_validate(payload)
+    result = score_report(calibrated, reference)
+    cohort = result.cohorts[0].current
+    reason = "calibration-missing" if context == "missing" else "calibration-incompatible"
+    for scope in (cohort, *cohort.files):
+        assert isinstance(scope.score, UnavailableSnapshotScore)
+        assert scope.score.reason == reason
+        for metric in scope.metrics:
+            if isinstance(metric, MeasuredMetric):
+                assert metric.score is None
+    assert isinstance(calibrated.cohorts[0].current.score, MeasuredSnapshotScore)
+
+
+def test_no_functions_uses_its_own_population_without_changing_unavailable_metric() -> None:
+    payload = report_payload()
+    file = payload["cohorts"][0]["current"]["files"][0]
+    file["metrics"][1] = {
+        "state": "unavailable",
+        "metric_id": "m4.erosion",
+        "reason": "no-functions",
+        "scope": {"kind": "file", "path": "b.py", "cohort": "production"},
+    }
+    reference = profile_payload()
+    population = deepcopy(reference["populations"][0])
+    population["model_id"] = "verbosity-only"
+    population["distributions"] = [
+        {"metric_id": "verbosity.combined", "values": [0, 0.1, 0.1, 0.9]}
+    ]
+    reference["populations"].append(population)
+    result = score_report(
+        AnalysisReport.model_validate(payload), CalibrationProfile.model_validate(reference)
+    )
+    no_functions = result.cohorts[0].current.files[0]
+    assert measured(no_functions.score).model_id == "verbosity-only"
+    assert measured(no_functions.score).points == 75
+    assert len(measured(no_functions.score).contributions) == 1
+    metric = no_functions.metrics[1]
+    assert isinstance(metric, UnavailableMetric)
+    assert metric.reason == "no-functions"
+    assert measured(result.cohorts[0].current.files[1].score).model_id == "snapshot"
+
+
+def test_missing_optional_reference_keeps_raw_metric_without_fabricated_calibration() -> None:
+    payload = report_payload()
+    file = payload["cohorts"][0]["current"]["files"][0]
+    optional = deepcopy(file["metrics"][0])
+    optional["metric_id"] = "m2.pattern-verbosity"
+    optional["score"] = {"points": 99, "profile_id": "obsolete"}
+    file["metrics"].append(optional)
+    result = score_report(AnalysisReport.model_validate(payload), profile())
+    output = result.cohorts[0].current.files[0]
+    assert measured(output.score).points == 25
+    metric = output.metrics[-1]
+    assert isinstance(metric, MeasuredMetric)
+    assert metric.raw.value == 0.2
+    assert metric.score is None

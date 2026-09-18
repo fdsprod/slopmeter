@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+from pathlib import Path
 
 import pytest
 from test_calibration_contract import profile_payload
@@ -44,3 +45,48 @@ def test_invalid_profile_metadata_is_rejected(change: str) -> None:
 )
 def test_loader_only_accepts_known_packaged_identifiers(identifier: str) -> None:
     assert load_profile(identifier) is None
+
+
+@pytest.fixture
+def packaged_resources(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    resources = tmp_path / "resources"
+    resources.mkdir()
+    manifest = b"corpus = 'synthetic'\n"
+    payload = profile_payload()
+    payload["corpus_manifest_hash"] = hashlib.sha256(manifest).hexdigest()
+    (resources / "synthetic-1.json").write_text(json.dumps(payload), encoding="utf-8")
+    (resources / "synthetic-1.corpus.toml").write_bytes(manifest)
+    monkeypatch.setattr("slop_measure.scoring.profiles.files", lambda _package: tmp_path)
+    return resources
+
+
+def test_packaged_loader_verifies_profile_and_manifest(packaged_resources: Path) -> None:
+    loaded = load_profile("synthetic-1")
+    assert loaded is not None
+    assert loaded.profile_id == "synthetic-1"
+    assert (
+        loaded.corpus_manifest_hash
+        == hashlib.sha256((packaged_resources / "synthetic-1.corpus.toml").read_bytes()).hexdigest()
+    )
+
+
+@pytest.mark.parametrize(
+    "change", ["malformed-json", "missing-manifest", "wrong-id", "tampered-manifest"]
+)
+def test_corrupt_packaged_profile_raises_instead_of_returning_missing(
+    packaged_resources: Path, change: str
+) -> None:
+    profile_path = packaged_resources / "synthetic-1.json"
+    manifest_path = packaged_resources / "synthetic-1.corpus.toml"
+    if change == "malformed-json":
+        profile_path.write_text("{invalid", encoding="utf-8")
+    elif change == "missing-manifest":
+        manifest_path.unlink()
+    elif change == "wrong-id":
+        payload = json.loads(profile_path.read_text(encoding="utf-8"))
+        payload["profile_id"] = "other"
+        profile_path.write_text(json.dumps(payload), encoding="utf-8")
+    else:
+        manifest_path.write_bytes(b"changed")
+    with pytest.raises(ValueError):
+        load_profile("synthetic-1")
