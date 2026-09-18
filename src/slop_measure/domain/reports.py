@@ -8,6 +8,8 @@ from typing import Annotated, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, StringConstraints, model_validator
 
 from slop_measure.config import AnalysisConfig
+from slop_measure.domain.changes import FileChange, LineTotals, MetricDelta
+from slop_measure.domain.comparison_validation import validate_cohort_changes
 from slop_measure.domain.evidence import (
     CloneGroup,
     Coverage,
@@ -203,6 +205,9 @@ class ComparisonCohortReport(_CohortReport):
 
     kind: Literal["comparison"] = "comparison"
     baseline: CohortResult
+    line_delta: LineTotals
+    changes: tuple[FileChange, ...] = ()
+    deltas: tuple[MetricDelta, ...] = ()
     metrics: tuple[MetricResult, ...] = ()
 
     @model_validator(mode="after")
@@ -211,6 +216,7 @@ class ComparisonCohortReport(_CohortReport):
         _validate_project_metrics(self.metrics)
         if any(metric.scope.cohort is not self.cohort for metric in self.metrics):
             raise ValueError("comparison metric must match its owning cohort")
+        validate_cohort_changes(self)
         return self
 
 

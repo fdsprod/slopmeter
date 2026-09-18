@@ -10,13 +10,14 @@ from typing import Annotated
 
 import typer
 
-from slop_measure.api import scan
+from slop_measure.api import compare, scan
 from slop_measure.config import load_analysis_config
 from slop_measure.domain.reports import AnalysisReport
-from slop_measure.domain.requests import SnapshotRequest
+from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
 from slop_measure.domain.source import DirectorySourceReference
 from slop_measure.errors import AnalysisFailure, InvalidRuleSelection, SelectionError
 from slop_measure.reporting import terminal
+from slop_measure.reporting.comparison import render_comparison
 from slop_measure.reporting.json import serialize_report
 from slop_measure.reporting.queries import select_callable, select_file
 
@@ -72,8 +73,12 @@ def _scan_report(path: Path, strict: bool | None) -> AnalysisReport:
     except (ValueError, OSError) as error:
         typer.echo(f"Invalid analysis input: {error}", err=True)
         raise typer.Exit(2) from error
+    return _analyze(request)
+
+
+def _analyze(request: SnapshotRequest | ComparisonRequest) -> AnalysisReport:
     try:
-        return scan(request)
+        return scan(request) if isinstance(request, SnapshotRequest) else compare(request)
     except InvalidRuleSelection as error:
         typer.echo(f"Invalid analysis input: {error}", err=True)
         raise typer.Exit(2) from error
@@ -93,6 +98,58 @@ _NoColor = Annotated[bool, typer.Option("--no-color", help="Disable terminal col
 _Ascii = Annotated[bool, typer.Option("--ascii", help="Use plain bars and tree connectors.")]
 _Verbose = Annotated[bool, typer.Option("--verbose", help="Show counts, evidence, and provenance.")]
 _Top = Annotated[int | None, typer.Option("--top", min=1, help="Limit terminal file rows.")]
+
+
+def _compare_report(baseline: Path, current: Path, strict: bool | None) -> AnalysisReport:
+    try:
+        config = load_analysis_config(
+            current, cli_overrides={"strict": strict} if strict is not None else {}
+        )
+        request = ComparisonRequest(
+            baseline=DirectorySourceReference(root=baseline),
+            current=DirectorySourceReference(root=current),
+            config=config,
+        )
+    except (ValueError, OSError) as error:
+        typer.echo(f"Invalid analysis input: {error}", err=True)
+        raise typer.Exit(2) from error
+    return _analyze(request)
+
+
+@app.command("compare")
+# Source selection and terminal controls are independent public options.
+def compare_command(  # noqa: PLR0913
+    baseline: _Directory,
+    current: _Directory,
+    *,
+    json_output: _Json = False,
+    strict: _Strict = None,
+    scope: Annotated[
+        _Scope, typer.Option(help="Select terminal results; JSON stays complete.")
+    ] = _Scope.PRODUCTION,
+    color: _ColorOption = _Color.AUTO,
+    no_color: _NoColor = False,
+    ascii: _Ascii = False,
+    verbose: _Verbose = False,
+    top: _Top = None,
+) -> None:
+    """Compare two directories under the current directory's analysis settings."""
+    display = _display(color, no_color, ascii, verbose, top)
+    report = _compare_report(baseline, current, strict)
+    output = (
+        serialize_report(report)
+        if json_output
+        else render_comparison(
+            report,
+            scope=scope.value,
+            width=display.width,
+            color=display.color,
+            ascii=display.ascii,
+            verbose=display.verbose,
+            top=display.top,
+        )
+    )
+    typer.echo(output, nl=False, color=display.color)
 
 
 @app.command("score")

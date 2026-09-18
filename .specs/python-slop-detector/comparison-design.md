@@ -9,8 +9,9 @@ public command, as recorded in [cli-output.md](cli-output.md).
 
 ## Owned changes
 
-Each comparison cohort owns `changes`, ordered by current path, then baseline
-path. A tagged file pair records one of five states:
+Each comparison cohort owns `changes`, ordered by its current path when present,
+otherwise its baseline path, then baseline path and kind. A tagged file pair
+records five normal states plus an explicit unreadable-content state:
 
 | Kind | Required paths | Meaning |
 |---|---|---|
@@ -19,6 +20,7 @@ path. A tagged file pair records one of five states:
 | unchanged | baseline and current | Same path and complete source content |
 | modified | baseline and current | Same path with changed content |
 | renamed | baseline and current | Different paths, paired by content or Git metadata |
+| unresolved | equal baseline and current paths | At least one side's bytes could not be read |
 
 Directory matching pairs equal paths first. It then pairs equal content among
 unmatched paths, in lexical order. Hashes narrow candidates; full content equality
@@ -64,7 +66,7 @@ name: FileChange
 store: ComparisonCohortReport.changes
 summary: One paired change with exact line evidence and derived metric deltas.
 fields:
-  - { name: pair, type: FilePair, required: true, description: AddedFile or DeletedFile or ModifiedFile or RenamedFile or UnchangedFile }
+  - { name: pair, type: FilePair, required: true, description: AddedFile or DeletedFile or ModifiedFile or RenamedFile or UnchangedFile or UnresolvedFile }
   - { name: lines, type: LineDelta, required: true, description: MeasuredLineDelta or UnavailableLineDelta }
   - { name: deltas, type: tuple[MetricDelta], required: true, description: Unique metric IDs for comparable or unavailable changes }
 ```
@@ -98,10 +100,13 @@ For measured M1, the line-unit raw value is net, numerator is added SLOC, and
 denominator is deleted SLOC. This is not a ratio. Snapshot M1 remains unavailable.
 Report validation checks unique complete path pairing, line membership, net
 reconciliation, and delta agreement with the source results.
-Assembly requires equal snapshot provenance because the report envelope has one
-shared provenance record. The comparison service analyzes both sides with one
-resolved configuration, registry, and calibration profile. It must reject
-incompatible independently supplied snapshots rather than hide side versions.
+Assembly requires equal tool, configuration, and adapter provenance because the
+report envelope has one shared provenance record. Common metric versions must
+agree. A failed adapter can omit version records only for unavailable metrics;
+assembly retains the union of known versions. Every measured input must name its
+version. The service uses one resolved configuration, registry, and calibration
+profile for both sides. It rejects real definition conflicts while preserving a
+failed side's evidence and diagnostics.
 
 ## Source pipeline
 

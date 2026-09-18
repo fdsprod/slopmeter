@@ -16,10 +16,9 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q07, T01-T53, and T79-T84 are complete through TB-5. The scan
-reports patterns, clones, callable evidence, M2-M4, and combined verbosity through the CLI and public API. Comparison has a
-public entry point that explicitly raises `NotImplementedError` until TB-6. The retained learning tests
-record the external behavior that production adapters rely on.
+Current checkpoint: Q01-Q07, T01-T60, and T79-T84 are complete through TB-6.
+Snapshot and directory comparison share the same analysis and calibration pipeline.
+The retained learning tests record the external behavior that adapters rely on.
 
 The TB-1 raw-scan slice passed these end-to-end checks:
 
@@ -112,7 +111,15 @@ TB-5 passes its validation gate:
 - [x] Real corpus validation exposed the Tree-sitter 0.26.0 coordinate defect. A retained
   subprocess regression proves the failure and verifies locked 0.25.2.
 
-Next is TB-6 directory comparison. [comparison-design.md](comparison-design.md) records
+TB-6 passes its validation gate:
+
+- [x] T54-T60: Owned file changes, exact line accounting, raw and score deltas,
+  directory API/CLI, complete JSON and terminal goldens.
+- [x] Failed source states preserve the other side. Cohort moves become delete/add.
+- [x] 1,023 deterministic tests and 38 retained learning tests pass. Branch coverage
+  is 96.71 percent. Ruff, Pyright, five import contracts, builds, and CLI smoke pass.
+
+Next is TB-7 Git comparison. [comparison-design.md](comparison-design.md) records
 the owned change data contract. Continue through TB-9, with quality gates between slices.
 TB-2 retains Radon learning tests for AST traversal and complete callable spans.
 The scoring package now has its own import boundary. M1 remains unavailable for snapshots.
@@ -309,10 +316,10 @@ and largest regressions.
 
 **Validation:**
 
-- [ ] Per-file M1 values reconcile with the project M1 value.
-- [ ] Added and deleted SLOC use the shared language SLOC definition.
-- [ ] Exact-content directory renames do not appear as full deletion and addition.
-- [ ] Baseline and current M2-M4 use the same snapshot pipeline as `scan`.
+- [x] Per-file M1 values reconcile with the project M1 value.
+- [x] Added and deleted SLOC use the shared language SLOC definition.
+- [x] Exact-content directory renames do not appear as full deletion and addition.
+- [x] Baseline and current M2-M4 use the same snapshot pipeline as `scan`.
 
 **Dependencies:** TB-1. This bullet can proceed while TB-2 through TB-4 are in progress,
 then add their deltas after each metric becomes stable.

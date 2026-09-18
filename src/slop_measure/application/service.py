@@ -1,5 +1,9 @@
 """Run a snapshot through source discovery, adapters, and owned aggregation."""
 
+from dataclasses import dataclass
+
+from slop_measure.application.comparison import assemble_comparison
+from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
     Diagnostic,
     DiagnosticSeverity,
@@ -7,8 +11,10 @@ from slop_measure.domain.evidence import (
     LanguageEvidence,
     ParseState,
 )
+from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.reports import AnalysisReport, AnalyzerVersion, ScoreUnavailableReason
-from slop_measure.domain.requests import SnapshotRequest
+from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
+from slop_measure.domain.scoring import CalibrationProfile
 from slop_measure.domain.source import DirectorySourceReference, SourceDocument
 from slop_measure.errors import AnalysisFailure
 from slop_measure.languages.base import LanguageAdapter
@@ -75,6 +81,21 @@ def _validate_evidence(
         raise ValueError("failed adapter files require an error diagnostic")
 
 
+@dataclass(frozen=True)
+class _Snapshot:
+    report: AnalysisReport
+    inventory: SourceInventory
+
+
+def _calibration(
+    config: AnalysisConfig,
+) -> tuple[CalibrationProfile | None, ScoreUnavailableReason | None]:
+    try:
+        return load_profile(config.calibration_profile), None
+    except ValueError:
+        return None, ScoreUnavailableReason.CALIBRATION_INCOMPATIBLE
+
+
 class AnalysisService:
     """Coordinate an explicit registry without putting language rules in the core."""
 
@@ -83,6 +104,23 @@ class AnalysisService:
 
     def scan(self, request: SnapshotRequest) -> AnalysisReport:
         """Analyze a directory and apply strict failure policy after collecting evidence."""
+        snapshot = self._scan(request)
+        profile, failure = _calibration(request.config)
+        return score_report(snapshot.report, profile, failure=failure)
+
+    def compare(self, request: ComparisonRequest) -> AnalysisReport:
+        """Compare two retained snapshots using one configuration and calibration."""
+        baseline = self._scan(SnapshotRequest(target=request.baseline, config=request.config))
+        current = self._scan(SnapshotRequest(target=request.current, config=request.config))
+        profile, failure = _calibration(request.config)
+        return assemble_comparison(
+            score_report(baseline.report, profile, failure=failure),
+            score_report(current.report, profile, failure=failure),
+            baseline.inventory,
+            current.inventory,
+        )
+
+    def _scan(self, request: SnapshotRequest) -> _Snapshot:
         if not isinstance(request.target, DirectorySourceReference):
             raise ValueError("Git revision scans are not available yet")
         for adapter in self.registry.adapters:
@@ -129,10 +167,4 @@ class AnalysisService:
             first = failures[0]
             location = f"{first.path.root}: " if first.path else ""
             raise AnalysisFailure(f"Strict analysis failed: {location}{first.message}")
-        try:
-            profile = load_profile(request.config.calibration_profile)
-        except ValueError:
-            return score_report(
-                report, None, failure=ScoreUnavailableReason.CALIBRATION_INCOMPATIBLE
-            )
-        return score_report(report, profile)
+        return _Snapshot(report, inventory)

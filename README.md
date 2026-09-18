@@ -6,8 +6,9 @@ release targets Python and provides the `slop` command plus an importable API.
 The raw scan reports Python source lines, production and test coverage, excluded
 files, diagnostics, M2 pattern verbosity, M3 clone verbosity, their combined line
 union, and M4 structural erosion. Compatible calibration profiles add file and
-project scores. M1 remains unavailable for snapshots. Directory comparisons and Git revision scans arrive
-in later slices. See `.specs/python-slop-detector/` for the design and checkpoint.
+project scores. Directory comparisons add exact M1 and metric changes. M1 remains
+unavailable for snapshots. Git revision scans arrive in the next slice. See
+`.specs/python-slop-detector/` for the design and checkpoint.
 
 ## Read a snapshot
 
@@ -129,6 +130,31 @@ Test patterns take precedence over production patterns. Exclusions, Git-ignore
 rules, and generated markers apply before parsing. Tracked Git files remain eligible
 even if an ignore pattern matches them. The scanner does not execute source files
 or traverse symbolic links and Windows junctions.
+
+## Compare directories
+
+```text
+uv run slop compare path/to/before path/to/after
+uv run slop compare path/to/before path/to/after --scope all --ascii --no-color
+uv run slop compare path/to/before path/to/after --json
+```
+
+Both sides use the current directory's resolved configuration. The comparison
+retains both complete snapshots and their source-owned evidence. M1 records
+baseline and current SLOC, added and deleted source lines, net change, and growth
+rate. Growth is unavailable when baseline SLOC is zero. Size growth is not a
+quality judgment, and M1 has no calibrated change-pressure score.
+
+Equal paths match first. Remaining exact-content files can match as renames.
+Duplicate content pairs in stable path order. Moves between production and test
+populations are separate deletions and additions. Line comparisons ignore line
+terminator differences, but exact directory rename matching uses complete bytes.
+
+Raw metric changes are current minus baseline. Score changes require the same
+profile and model. Added or deleted files have unavailable ratio comparisons;
+their missing side is not treated as zero. Source failures preserve successful
+results and diagnostics. The default view bounds file details; JSON keeps every
+change, including unchanged files.
 
 ## Development checks
 

@@ -24,5 +24,5 @@ def scan(request: SnapshotRequest) -> AnalysisReport:
 
 
 def compare(request: ComparisonRequest) -> AnalysisReport:
-    """Reserve the comparison entry point until directory comparison is implemented."""
-    raise NotImplementedError("Comparison analysis is not available yet")
+    """Compare two source states under one resolved configuration."""
+    return AnalysisService().compare(request)
