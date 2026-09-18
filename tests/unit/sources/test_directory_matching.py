@@ -42,7 +42,7 @@ def test_duplicate_content_renames_pair_lexically_regardless_of_input_order() ->
 @pytest.mark.parametrize("field,value", [("cohort", "test"), ("language", "other")])
 def test_path_or_content_never_matches_across_population_boundary(field: str, value: str) -> None:
     old = document("same.py", b"same")
-    new = old.model_copy(update={field: value})
+    new = SourceDocument.model_validate({**old.model_dump(exclude={"content_hash"}), field: value})
     results = pairs((old,), (new,))
     assert {item["kind"] for item in results} == {"added", "deleted"}
     assert len(results) == 2

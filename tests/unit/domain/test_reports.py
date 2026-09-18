@@ -94,6 +94,20 @@ def report_payload(*, comparison: bool = False) -> dict:
     if comparison:
         analysis.update(kind="comparison", baseline={"kind": "directory", "root": "before"})
         cohort.update(kind="comparison", baseline=cohort_result(), metrics=[metric()])
+        for side in ("baseline", "current"):
+            cohort[side]["files"][0]["evidence"].update(sloc=0, sloc_lines=[], parse_state="failed")
+        cohort["metrics"][0]["metric_id"] = "m1.loc-delta"
+        cohort["line_delta"] = {"state": "unavailable", "reason": "parse-failed"}
+        cohort["changes"] = [
+            {
+                "pair": {
+                    "kind": "unchanged",
+                    "baseline_path": "src/app.py",
+                    "current_path": "src/app.py",
+                },
+                "lines": {"state": "unavailable", "reason": "parse-failed"},
+            }
+        ]
     return {
         "analysis": analysis,
         "provenance": {"tool_version": "0.1.0", "config": {}},

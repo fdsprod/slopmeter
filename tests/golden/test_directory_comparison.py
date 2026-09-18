@@ -10,6 +10,7 @@ from slop_measure.api import AnalysisConfig, ComparisonRequest, DirectorySourceR
 from slop_measure.cli import app
 from slop_measure.errors import AnalysisFailure
 from slop_measure.reporting.json import serialize_report
+from slop_measure.sources.filesystem import FilesystemSourceProvider
 
 
 @pytest.fixture
@@ -104,3 +105,43 @@ def test_parse_failures_keep_owned_side_diagnostics_and_strict_mode_fails(direct
                 assert metric.diagnostic_id in {item.id for item in report.diagnostics}
     with pytest.raises(AnalysisFailure):
         compare(request(before, after, strict=True))
+
+
+def test_comparison_reads_each_inventory_once_and_uses_retained_source_bytes(
+    directories,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    before, after = directories
+    original = FilesystemSourceProvider.inventory
+    calls = []
+
+    def inventory(provider):
+        result = original(provider)
+        calls.append(result)
+        # Mutate both roots only after both original inventories have been read.
+        if len(calls) == 2:
+            for root in directories:
+                for path in root.glob("*.py"):
+                    path.write_text("changed = 1\n", encoding="utf-8")
+        return result
+
+    monkeypatch.setattr(FilesystemSourceProvider, "inventory", inventory)
+    report = compare(request(before, after))
+    assert len(calls) == 2
+    production = next(item for item in report.cohorts if item.cohort.value == "production")
+    assert production.kind == "comparison"
+    assert production.line_delta.state == "measured"
+    assert (
+        production.line_delta.added,
+        production.line_delta.deleted,
+        production.line_delta.net,
+    ) == (3, 1, 2)
+
+
+def test_cli_comparison_missing_input_and_strict_failure_exit_codes(directories) -> None:
+    before, after = directories
+    missing = CliRunner().invoke(app, ["compare", str(before / "missing"), str(after)])
+    assert missing.exit_code == 2
+    (after / "bad.py").write_text("x = (\n", encoding="utf-8")
+    strict = CliRunner().invoke(app, ["compare", str(before), str(after), "--strict"])
+    assert strict.exit_code == 3

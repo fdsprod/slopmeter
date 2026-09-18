@@ -231,14 +231,14 @@ def test_git_scan_and_comparison_are_explicitly_unavailable(tmp_path: Path) -> N
             )
         )
     reference = DirectorySourceReference(root=tmp_path)
-    with pytest.raises(NotImplementedError):
-        compare(
-            ComparisonRequest(
-                baseline=reference,
-                current=reference,
-                config=AnalysisConfig(calibration_profile="__raw__"),
-            )
+    report = compare(
+        ComparisonRequest(
+            baseline=reference,
+            current=reference,
+            config=AnalysisConfig(calibration_profile="__raw__"),
         )
+    )
+    assert report.analysis.kind == "comparison"
 
 
 def test_public_api_exports_a_complete_directory_scan_interface(tmp_path: Path) -> None:
