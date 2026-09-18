@@ -243,3 +243,27 @@ def test_unrelated_configuration_does_not_expire_raw_clone_review(
     store = record(clone_root.parent / "reviews.json", report)
     changed = analyze(clone_root, **options)
     assert apply_reviews(changed, store).review_results[0].state == "current"
+
+
+def test_failed_atomic_replacement_preserves_store_and_releases_lock(
+    clone_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    report = analyze(clone_root)
+    path = clone_root.parent / "reviews.json"
+    record(path, report)
+    before = path.read_bytes()
+
+    def fail_replace(*args, **kwargs):
+        raise OSError("simulated replacement failure")
+
+    monkeypatch.setattr("os.replace", fail_replace)
+    with pytest.raises(InputError):
+        write_clone_review(
+            path,
+            report,
+            report.clone_groups[0].id,
+            disposition=ReviewDisposition.ACTIONABLE,
+            reason="Unify shared behavior.",
+        )
+    assert path.read_bytes() == before
+    assert not path.with_name(path.name + ".lock").exists()
