@@ -200,4 +200,4 @@ def test_cli_toml_annotations_reach_json_and_both_clone_views(project: Path) -> 
     )
     invalid = runner.invoke(app, ["score", str(project)])
     assert invalid.exit_code == 2
-    assert "Invalid analysis input:" in invalid.stdout
+    assert "Invalid analysis input:" in invalid.stderr
