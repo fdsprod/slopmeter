@@ -1,5 +1,6 @@
 """Command-line navigation through one immutable analysis report."""
 
+import json
 import os
 import shutil
 import sys
@@ -11,15 +12,18 @@ from typing import Annotated
 import typer
 
 from slop_measure.api import compare, scan
+from slop_measure.application.catalog import rule_catalog
 from slop_measure.config import load_analysis_config
-from slop_measure.domain.reports import AnalysisReport
+from slop_measure.domain.evidence import DiagnosticSeverity
+from slop_measure.domain.reports import AnalysisReport, SourceSide
 from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
 from slop_measure.domain.source import DirectorySourceReference, GitSourceReference
 from slop_measure.errors import AnalysisFailure, InvalidRuleSelection, InvalidSource, SelectionError
 from slop_measure.reporting import terminal
 from slop_measure.reporting.comparison import render_comparison
+from slop_measure.reporting.evidence import render_findings, render_rules
 from slop_measure.reporting.json import serialize_report
-from slop_measure.reporting.queries import select_callable, select_file
+from slop_measure.reporting.queries import query_findings, select_callable, select_file
 
 _DESCRIPTION = "Measure redundant and structurally eroded source code."
 app = typer.Typer(name="slop", help=f"slop.measure - {_DESCRIPTION}", no_args_is_help=True)
@@ -103,6 +107,48 @@ _NoColor = Annotated[bool, typer.Option("--no-color", help="Disable terminal col
 _Ascii = Annotated[bool, typer.Option("--ascii", help="Use plain bars and tree connectors.")]
 _Verbose = Annotated[bool, typer.Option("--verbose", help="Show counts, evidence, and provenance.")]
 _Top = Annotated[int | None, typer.Option("--top", min=1, help="Limit terminal file rows.")]
+_Root = Annotated[Path, typer.Option("--root", exists=True, file_okay=False, resolve_path=True)]
+_Revision = Annotated[str | None, typer.Option("--rev", help="Read the current Git revision.")]
+_BaselineRoot = Annotated[
+    Path | None, typer.Option("--baseline-root", exists=True, file_okay=False, resolve_path=True)
+]
+_BaselineRevision = Annotated[
+    str | None, typer.Option("--baseline-rev", help="Compare with this Git revision.")
+]
+_Source = Annotated[
+    SourceSide, typer.Option("--source", help="Select baseline or current evidence.")
+]
+
+
+def _evidence_report(
+    root: Path,
+    strict: bool | None,
+    revision: str | None,
+    baseline_root: Path | None,
+    baseline_revision: str | None,
+) -> AnalysisReport:
+    if baseline_root is not None and baseline_revision is not None:
+        raise SelectionError("Use only one of --baseline-root and --baseline-rev.")
+    if baseline_root is None and baseline_revision is None:
+        return _scan_report(root, strict, revision)
+    try:
+        config = load_analysis_config(
+            root, cli_overrides={"strict": strict} if strict is not None else {}
+        )
+        current = (
+            DirectorySourceReference(root=root)
+            if revision is None
+            else GitSourceReference(root=root, revision=revision)
+        )
+        baseline = (
+            DirectorySourceReference(root=baseline_root)
+            if baseline_root is not None
+            else GitSourceReference(root=root, revision=baseline_revision or "")
+        )
+        request = ComparisonRequest(baseline=baseline, current=current, config=config)
+    except (ValueError, OSError) as error:
+        raise SelectionError(f"Invalid analysis input: {error}") from error
+    return _analyze(request)
 
 
 def _compare_report(
@@ -231,9 +277,11 @@ def _relative_selector(root: Path, selector: str) -> str:
 def explain_command(  # noqa: PLR0913
     file: Annotated[str, typer.Argument(help="File inside the analysis root.")],
     *,
-    root_path: Annotated[
-        Path, typer.Option("--root", exists=True, file_okay=False, resolve_path=True)
-    ] = Path("."),
+    root_path: _Root = Path("."),
+    revision: _Revision = None,
+    baseline_root: _BaselineRoot = None,
+    baseline_revision: _BaselineRevision = None,
+    source: _Source = SourceSide.CURRENT,
     symbol: Annotated[
         str | None, typer.Option("--symbol", help="Exact qualified callable name.")
     ] = None,
@@ -252,9 +300,12 @@ def explain_command(  # noqa: PLR0913
     try:
         if line is not None and symbol is None:
             raise SelectionError("--line requires --symbol.")
-        path = _relative_selector(root_path, file)
-        report = _scan_report(root_path, strict)
-        selected = select_file(report, path)
+        selector_root = (
+            baseline_root if source is SourceSide.BASELINE and baseline_root else root_path
+        )
+        path = _relative_selector(selector_root, file)
+        report = _evidence_report(root_path, strict, revision, baseline_root, baseline_revision)
+        selected = select_file(report, path, source=source)
         if symbol is not None:
             select_callable(selected, symbol, line=line)
         output = (
@@ -263,6 +314,7 @@ def explain_command(  # noqa: PLR0913
             else terminal.render_explanation(
                 report,
                 path,
+                source=source,
                 symbol=symbol,
                 line=line,
                 width=display.width,
@@ -275,6 +327,91 @@ def explain_command(  # noqa: PLR0913
         typer.echo(str(error), err=True)
         raise typer.Exit(2) from error
     typer.echo(output, nl=False, color=display.color)
+
+
+@app.command("findings")
+# Source, evidence filters, and display settings are independent user choices.
+def findings_command(  # noqa: PLR0913
+    *,
+    root_path: _Root = Path("."),
+    revision: _Revision = None,
+    baseline_root: _BaselineRoot = None,
+    baseline_revision: _BaselineRevision = None,
+    source: _Source = SourceSide.CURRENT,
+    path: Annotated[str | None, typer.Option("--path", help="Exact project-relative path.")] = None,
+    metric: Annotated[str | None, typer.Option("--metric", help="m2, m3, m4, or combined.")] = None,
+    rule: Annotated[str | None, typer.Option("--rule", help="Exact pattern rule ID.")] = None,
+    severity: Annotated[DiagnosticSeverity | None, typer.Option("--severity")] = None,
+    json_output: _Json = False,
+    strict: _Strict = None,
+    color: _ColorOption = _Color.AUTO,
+    no_color: _NoColor = False,
+    ascii: _Ascii = False,
+    verbose: _Verbose = False,
+    top: _Top = None,
+) -> None:
+    """List matching patterns, clones, and eroded callables from one source state."""
+    display = _display(color, no_color, ascii, verbose, top)
+    try:
+        report = _evidence_report(root_path, strict, revision, baseline_root, baseline_revision)
+        selection = query_findings(
+            report, path=path, metric=metric, rule=rule, severity=severity, source=source
+        )
+        if json_output:
+            payload = {
+                "schema_version": report.schema_version,
+                "analysis": report.analysis.model_dump(mode="json"),
+                "provenance": report.provenance.model_dump(mode="json"),
+                "selection": selection.model_dump(mode="json"),
+            }
+            typer.echo(json.dumps(payload, indent=2, ensure_ascii=True, sort_keys=True))
+            return
+        output = render_findings(
+            report,
+            selection,
+            width=display.width,
+            color=display.color,
+            ascii=display.ascii,
+            verbose=display.verbose,
+            top=display.top,
+        )
+    except SelectionError as error:
+        typer.echo(str(error), err=True)
+        raise typer.Exit(2) from error
+    typer.echo(output, nl=False, color=display.color)
+
+
+@app.command("rules")
+def rules_command(  # noqa: PLR0913 - independent catalog display options
+    *,
+    root_path: _Root = Path("."),
+    json_output: _Json = False,
+    color: _ColorOption = _Color.AUTO,
+    no_color: _NoColor = False,
+    ascii: _Ascii = False,
+    verbose: _Verbose = False,
+) -> None:
+    """List versioned rule metadata and the configured enabled state."""
+    display = _display(color, no_color, ascii, verbose, None)
+    try:
+        catalog = rule_catalog(load_analysis_config(root_path))
+    except (ValueError, OSError) as error:
+        typer.echo(f"Invalid analysis input: {error}", err=True)
+        raise typer.Exit(2) from error
+    if json_output:
+        typer.echo(catalog.model_dump_json(indent=2))
+        return
+    typer.echo(
+        render_rules(
+            catalog,
+            width=display.width,
+            color=display.color,
+            ascii=display.ascii,
+            verbose=display.verbose,
+        ),
+        nl=False,
+        color=display.color,
+    )
 
 
 def main() -> None:

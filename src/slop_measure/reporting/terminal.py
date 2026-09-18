@@ -7,6 +7,7 @@ from pathlib import PurePosixPath
 from rich.console import Console
 
 from slop_measure.config import AnalysisConfig
+from slop_measure.domain.changes import AddedFile, DeletedFile, FileChange
 from slop_measure.domain.evidence import (
     CoverageState,
     DiagnosticSeverity,
@@ -24,6 +25,7 @@ from slop_measure.domain.metrics import (
 from slop_measure.domain.reports import (
     AnalysisReport,
     CohortResult,
+    ComparisonAnalysis,
     FileResult,
     MeasuredSnapshotScore,
     ReportCloneGroup,
@@ -34,7 +36,13 @@ from slop_measure.domain.reports import (
 )
 from slop_measure.domain.source import Cohort
 from slop_measure.errors import SelectionError
-from slop_measure.reporting.queries import findings_for_file, select_callable, select_file
+from slop_measure.reporting.queries import (
+    change_for_file,
+    clones_for_file,
+    findings_for_file,
+    select_callable,
+    select_file,
+)
 from slop_measure.scoring.hotspots import rank_hotspots
 
 
@@ -573,11 +581,16 @@ def _callable_row(view: _View, function: FunctionEvidence) -> None:
 
 
 def _explain_findings(
-    view: _View, report: AnalysisReport, file: FileResult, function: FunctionEvidence | None
+    view: _View,
+    report: AnalysisReport,
+    file: FileResult,
+    function: FunctionEvidence | None,
+    *,
+    source: SourceSide = SourceSide.CURRENT,
 ) -> None:
     findings = tuple(
         record.detail
-        for record in findings_for_file(report, file.evidence.path.root)
+        for record in findings_for_file(report, file.evidence.path.root, source=source)
         if function is None
         or (
             record.detail.span.start_line <= function.span.end_line
@@ -612,11 +625,92 @@ def _explain_file(view: _View, file: FileResult, config: AnalysisConfig) -> None
         _callable_row(view, function)
 
 
+def _explanation_clones(
+    report: AnalysisReport, file: FileResult, function: FunctionEvidence | None, source: SourceSide
+) -> tuple[ReportCloneGroup, ...]:
+    groups = clones_for_file(report, file.evidence.path.root, source=source)
+    if function is not None:
+        groups = tuple(
+            group
+            for group in groups
+            if any(
+                member.path == file.evidence.path
+                and member.span.start_line <= function.span.end_line
+                and member.span.end_line >= function.span.start_line
+                for member in group.detail.members
+            )
+        )
+    return tuple(
+        sorted(
+            groups,
+            key=lambda group: (
+                -len(
+                    {
+                        (member.path.root, line)
+                        for member in group.detail.members
+                        for line in member.sloc_lines
+                    }
+                ),
+                group.id,
+            ),
+        )
+    )
+
+
+def _explain_change(view: _View, change: FileChange) -> None:
+    pair = change.pair
+    baseline = view.missing if isinstance(pair, AddedFile) else pair.baseline_path.root
+    current = view.missing if isinstance(pair, DeletedFile) else pair.current_path.root
+    view.console.print()
+    view.console.print(f"File change | {pair.kind}")
+    view.console.print(f"  {baseline} -> {current}")
+    lines = change.lines
+    if lines.state == "measured":
+        view.console.print(
+            f"  M1 LOC delta  +{lines.added} added | -{lines.deleted} deleted | {lines.net:+d} net"
+        )
+        view.console.print(f"  Source lines: {lines.baseline_sloc} -> {lines.current_sloc} SLOC")
+        growth = (
+            f"{lines.growth.value:+.1%}"
+            if lines.growth.state == "measured"
+            else "unavailable: no baseline SLOC"
+        )
+        view.console.print(f"  Growth {growth}")
+    else:
+        view.console.print(f"  M1 LOC delta: {view.missing} | {_REASONS[lines.reason]}")
+    for delta in change.deltas:
+        label = _LABELS.get(
+            delta.metric_id,
+            "Score change" if delta.metric_id == "snapshot.score" else delta.metric_id,
+        )
+        if delta.state == "measured":
+            value = (
+                f"{delta.value * 100:+.1f} percentage points"
+                if delta.unit == "ratio"
+                else f"{delta.value:+.1f} {delta.unit}"
+            )
+            direction = "worse" if delta.value > 0 else "better" if delta.value < 0 else "unchanged"
+            view.console.print(f"  {label}: {value} | {direction}")
+        else:
+            view.console.print(f"  {label}: {view.missing} | {delta.reason.replace('-', ' ')}")
+
+
+def _explain_diagnostics(
+    view: _View, report: AnalysisReport, file: FileResult, source: SourceSide
+) -> None:
+    for record in report.diagnostics:
+        if record.source is source and (
+            record.detail.path is None or record.detail.path == file.evidence.path
+        ):
+            view.console.print(f"  {record.detail.severity.value}: {record.detail.message}")
+
+
 # Callable selectors and terminal presentation are separate public options.
 def render_explanation(  # noqa: PLR0913
     report: AnalysisReport,
     path: str,
     *,
+    source: SourceSide = SourceSide.CURRENT,
     symbol: str | None = None,
     line: int | None = None,
     width: int = 80,
@@ -627,12 +721,15 @@ def render_explanation(  # noqa: PLR0913
     """Explain exact file or callable evidence without fabricating callable scores."""
     if line is not None and symbol is None:
         raise SelectionError("--line requires --symbol.")
-    file = select_file(report, path)
+    file = select_file(report, path, source=source)
+    source = SourceSide(source)
     function = select_callable(file, symbol, line=line) if symbol is not None else None
     stream, view = _view(
         width, color, ascii, verbose, report.provenance.config.default_hotspot_count
     )
     view.console.print(f"slop.measure  {file.evidence.path.root}", style="bold")
+    if isinstance(report.analysis, ComparisonAnalysis):
+        view.console.print(f"Source: {source.value}")
     view.console.print(
         view.separator.join((_population(file.evidence.cohort), _language(file.evidence.language)))
     )
@@ -640,11 +737,11 @@ def render_explanation(  # noqa: PLR0913
         _callable_row(view, function)
     else:
         _explain_file(view, file, report.provenance.config)
-    _explain_findings(view, report, file, function)
-    _render_clone_groups(view, _groups_for(report, {file.evidence.path.root}, function))
-    for record in report.diagnostics:
-        if record.detail.path is None or record.detail.path == file.evidence.path:
-            view.console.print(f"  {record.detail.severity.value}: {record.detail.message}")
+    _explain_findings(view, report, file, function, source=source)
+    _render_clone_groups(view, _explanation_clones(report, file, function, source))
+    if isinstance(report.analysis, ComparisonAnalysis):
+        _explain_change(view, change_for_file(report, file.evidence.path.root, source=source))
+    _explain_diagnostics(view, report, file, source)
     if verbose:
         _provenance(view, report)
     return stream.getvalue()

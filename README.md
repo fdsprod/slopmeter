@@ -174,6 +174,38 @@ Git rename metadata can match edited renames. Missing revisions return exit code
 Analysis does not change the index or working tree, fetch objects, or run source
 files. Symbolic links and submodules are excluded.
 
+## Follow the evidence
+
+```text
+uv run slop findings --root . --metric m2 --severity warning
+uv run slop findings --root . --path src/slop_measure/api.py --json
+uv run slop findings --root . --metric m4 --top 10
+uv run slop rules --root .
+uv run slop rules --root . --json
+uv run slop explain old.py --root after --baseline-root before --source baseline
+uv run slop explain src/app.py --root . --rev HEAD --baseline-rev HEAD~1
+uv run slop findings --root . --baseline-rev HEAD --source baseline --json
+```
+
+`findings` lists pattern findings, complete clone groups, and callables above the
+configured complexity threshold. Filters compose: `--path` selects an exact
+project-relative path, `--metric` selects `m2`, `m3`, `m4`, or `combined`, and
+`--rule` selects an exact pattern rule ID. `--severity` accepts `info`, `warning`,
+or `error`. Rule and severity filters select patterns only because clone groups
+and callables have no rule ID or severity. Selecting a clone member keeps its
+complete group visible. `--top` limits terminal records only.
+
+Findings JSON contains analysis identity, provenance, and all matching evidence.
+`explain --json` continues to return the complete analysis report. `rules` lists
+the installed catalog version, metadata, and configured enabled state without
+analyzing source files.
+
+Comparison explanations select current evidence by default. Use `--source baseline`
+for deleted files or the old path of a rename. The view includes the selected file's
+evidence and its whole-file change. Callable views show raw facts, not a callable
+score or callable-level LOC delta. `--baseline-root` and `--baseline-rev` cannot be
+combined. A baseline revision uses the repository given by `--root`.
+
 ## Development checks
 
 Use uv 0.11.14, the version pinned in `pyproject.toml`. Create or update the locked

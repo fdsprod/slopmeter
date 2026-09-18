@@ -2,9 +2,7 @@
 
 import ast
 from dataclasses import dataclass
-from typing import Annotated, Protocol
-
-from pydantic import BaseModel, ConfigDict, StringConstraints
+from typing import Protocol
 
 from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
@@ -14,26 +12,14 @@ from slop_measure.domain.evidence import (
     FailedPatterns,
     FileEvidence,
     PatternAnalysis,
-    PatternCategory,
     PatternFinding,
     pattern_source_lines,
 )
+from slop_measure.domain.rules import RuleMetadata
 from slop_measure.domain.source import ProjectPath
 from slop_measure.errors import InvalidRuleSelection
 
-_Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-
-
-class RuleMetadata(BaseModel):
-    """Stable identity and explanation for one source pattern."""
-
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    rule_id: _Text
-    category: PatternCategory
-    severity: DiagnosticSeverity = DiagnosticSeverity.WARNING
-    message: _Text
-    remediation: _Text | None = None
+__all__ = ["RuleMetadata"]
 
 
 @dataclass(frozen=True)

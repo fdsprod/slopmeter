@@ -16,7 +16,7 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q07, T01-T64, and T79-T84 are complete through TB-7.
+Current checkpoint: Q01-Q07, T01-T70, and T79-T84 are complete through TB-8.
 Snapshot and directory comparison share the same analysis and calibration pipeline.
 The retained learning tests record the external behavior that adapters rely on.
 
@@ -128,7 +128,18 @@ TB-7 passes its validation gate:
 - [x] 1,058 deterministic tests and 41 retained learning tests pass. Branch coverage
   is 96.58 percent. Ruff, Pyright, five import contracts, builds, and Git CLI smoke pass.
 
-Next is TB-8 explainability. [comparison-design.md](comparison-design.md) records
+TB-8 passes its validation gate:
+
+- [x] T65-T70: Source-aware file/change queries, complete native evidence selection,
+  findings filters, versioned rule catalog, and comparison-aware explanations.
+- [x] Baseline/current evidence stays separate. Clone selections retain all members.
+  Callable views show raw facts and distinguish whole-file changes.
+- [x] Exact 38-column and 100-column ASCII goldens cover findings, rules, and baseline
+  explanations. Text states better/worse/unchanged; M1 remains neutral.
+- [x] 1,095 deterministic tests and 41 retained learning tests pass. Branch coverage
+  is 96.59 percent. Ruff, Pyright, five import contracts, builds, and CLI smoke pass.
+
+Next is TB-9 release hardening. [comparison-design.md](comparison-design.md) records
 the owned change data contract. Continue through TB-9, with quality gates between slices.
 TB-2 retains Radon learning tests for AST traversal and complete callable spans.
 The scoring package now has its own import boundary. M1 remains unavailable for snapshots.
@@ -359,7 +370,7 @@ comparison report.
 **Question answered:** Can a user move from a score to all contributing evidence without
 reading the complete JSON document?
 
-**Layers touched:** Report query services to `inspect`, `findings`, and `rules` commands
+**Layers touched:** Report query services to `explain`, `findings`, and `rules` commands
 to adaptive terminal renderers.
 
 **Scope:** File detail, filtering, full rule inventory, score provenance, narrow terminal
@@ -369,10 +380,10 @@ behavior, and plain output.
 
 **Validation:**
 
-- [ ] Every contribution links to raw metrics and evidence.
-- [ ] `slop explain FILE` shows all findings and eroded callables for that file.
-- [ ] `slop findings` filters by path, metric, rule, and severity.
-- [ ] `NO_COLOR` and narrow terminals remain readable.
+- [x] Every contribution links to raw metrics and evidence.
+- [x] `slop explain FILE` shows all findings and eroded callables for that file.
+- [x] `slop findings` filters by path, metric, rule, and severity.
+- [x] `NO_COLOR` and narrow terminals remain readable.
 
 **Dependencies:** TB-5 and TB-7.
 
