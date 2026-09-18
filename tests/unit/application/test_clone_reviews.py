@@ -267,3 +267,104 @@ def test_failed_atomic_replacement_preserves_store_and_releases_lock(
         )
     assert path.read_bytes() == before
     assert not path.with_name(path.name + ".lock").exists()
+
+
+@pytest.mark.parametrize(
+    "tamper", ["group-id", "source-hash", "policy", "analysis", "detail", "missing-member-hash"]
+)
+def test_imported_current_review_must_match_every_anchor_component(
+    clone_root: Path, tamper: str
+) -> None:
+    report = analyze(clone_root)
+    store = record(clone_root.parent / "reviews.json", report)
+    payload = apply_reviews(report, store).model_dump(mode="json")
+    result = payload["review_results"][0]
+    anchor = result["decision"]["anchor"]
+    if tamper == "group-id":
+        result["group_id"] = "nonexistent-group"
+    elif tamper == "source-hash":
+        anchor["source_hashes"][0]["sha256"] = "0" * 64
+    elif tamper == "policy":
+        anchor["policy_fingerprint"] = "0" * 64
+    elif tamper == "analysis":
+        anchor["analysis_fingerprint"] = "0" * 64
+    elif tamper == "detail":
+        anchor["detail"]["normalization_version"] = "another-normalization"
+    else:
+        anchor["source_hashes"].pop()
+    with pytest.raises(ValidationError):
+        AnalysisReport.model_validate(payload)
+
+
+def test_imported_report_rejects_duplicate_review_decision_ids(clone_root: Path) -> None:
+    report = analyze(clone_root)
+    store = record(clone_root.parent / "reviews.json", report)
+    payload = apply_reviews(report, store).model_dump(mode="json")
+    payload["review_results"].append(payload["review_results"][0])
+    with pytest.raises(ValidationError):
+        AnalysisReport.model_validate(payload)
+
+
+@pytest.mark.parametrize("state", ["current", "stale"])
+@pytest.mark.parametrize("candidate", ["baseline", "nonexistent"])
+def test_imported_review_references_only_existing_current_groups(
+    clone_root: Path, state: str, candidate: str
+) -> None:
+    from slop_measure.api import ComparisonRequest, compare  # noqa: PLC0415
+
+    report = compare(
+        ComparisonRequest(
+            baseline=DirectorySourceReference(root=clone_root),
+            current=DirectorySourceReference(root=clone_root),
+            config=AnalysisConfig(calibration_profile="__raw__", clone_min_sloc=2),
+        )
+    )
+    current = next(group for group in report.clone_groups if group.source.value == "current")
+    baseline = next(group for group in report.clone_groups if group.source.value == "baseline")
+    store = write_clone_review(
+        clone_root.parent / "reviews.json",
+        report,
+        current.id,
+        disposition=ReviewDisposition.DEFER,
+        reason="Await contract review.",
+    )
+    payload = apply_reviews(report, store).model_dump(mode="json")
+    result = payload["review_results"][0]
+    identifier = baseline.id if candidate == "baseline" else "nonexistent-group"
+    if state == "current":
+        result["group_id"] = identifier
+    else:
+        result.pop("group_id")
+        result.update(state="stale", candidate_group_ids=[identifier])
+    with pytest.raises(ValidationError):
+        AnalysisReport.model_validate(payload)
+
+
+def test_missing_review_can_roundtrip_historical_anchor_without_matching_evidence(
+    clone_root: Path,
+) -> None:
+    report = analyze(clone_root)
+    store = record(clone_root.parent / "reviews.json", report)
+    (clone_root / "a.py").write_text("VALUE = 1\n", encoding="utf-8")
+    changed = analyze(clone_root)
+    annotated = apply_reviews(changed, store)
+    assert annotated.clone_groups == ()
+    assert annotated.review_results[0].state == "missing"
+    assert AnalysisReport.model_validate_json(annotated.model_dump_json()) == annotated
+
+
+def test_symlink_review_store_is_rejected_without_modifying_target(clone_root: Path) -> None:
+    report = analyze(clone_root)
+    target = clone_root.parent / "target.json"
+    record(target, report)
+    link = clone_root.parent / "linked.json"
+    try:
+        link.symlink_to(target)
+    except OSError as error:
+        pytest.skip(f"Platform cannot create test symlink: {error}")
+    before = target.read_bytes()
+    with pytest.raises(InputError):
+        load_review_store(link)
+    with pytest.raises(InputError):
+        record(link, report)
+    assert target.read_bytes() == before and link.is_symlink()
