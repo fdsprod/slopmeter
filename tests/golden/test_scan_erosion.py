@@ -70,3 +70,79 @@ def test_erosion_terminal_matches_hand_written_evidence_golden(erosion_project: 
     assert render_snapshot(normalized, width=80, color=False) == (
         Path(__file__).parent / "scan_erosion.txt"
     ).read_text(encoding="utf-8")
+
+
+def test_configured_threshold_changes_end_to_end_erosion(erosion_project: Path) -> None:
+    reference = DirectorySourceReference(root=erosion_project)
+    default = scan(SnapshotRequest(target=reference, config=AnalysisConfig()))
+    boundary = scan(
+        SnapshotRequest(target=reference, config=AnalysisConfig(complexity_threshold=11))
+    )
+    default_production = next(
+        item.current for item in default.cohorts if item.cohort.value == "production"
+    )
+    boundary_production = next(
+        item.current for item in boundary.cohorts if item.cohort.value == "production"
+    )
+    default_raw = default_production.model_dump(mode="json")["metrics"][-1]["raw"]
+    boundary_raw = boundary_production.model_dump(mode="json")["metrics"][-1]["raw"]
+
+    assert default_raw["value"] == pytest.approx(11 / 12)
+    assert boundary_raw["value"] == boundary_raw["numerator"] == 0
+    assert boundary_raw["denominator"] == default_raw["denominator"]
+    assert boundary.provenance.config.complexity_threshold == 11
+    assert "callables: 2; eroded: 0; CC threshold: > 11" in render_snapshot(boundary, color=False)
+
+
+def write_callable(root: Path, relative_path: str, complexity: int) -> None:
+    target = root / relative_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    expression = " or ".join(f"values[{index}]" for index in range(complexity))
+    target.write_text(f"def f(values):\n    return {expression}\n", encoding="utf-8")
+
+
+def test_hotspots_obey_top_n_and_sort_by_mass_then_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    # Create tied paths in reverse order so discovery order cannot decide the tie.
+    for name, complexity in (("b.py", 11), ("z.py", 12), ("a.py", 11)):
+        write_callable(tmp_path, name, complexity)
+    request = SnapshotRequest(
+        target=DirectorySourceReference(root=tmp_path),
+        config=AnalysisConfig(default_hotspot_count=2),
+    )
+    rendered = render_snapshot(scan(request), width=80, color=False)
+    hotspots = [line for line in rendered.splitlines() if ": CC " in line]
+
+    assert hotspots == [
+        "    z.py:1-2 f: CC 12, SLOC 2, mass 16.9706",
+        "    a.py:1-2 f: CC 11, SLOC 2, mass 15.5563",
+    ]
+    assert "callables: 3; eroded: 3; CC threshold: > 10" in rendered
+    assert render_snapshot(scan(request), width=80, color=False) == rendered
+
+
+def test_production_and_test_erosion_have_independent_mass_totals(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    write_callable(tmp_path, "production.py", 11)
+    write_callable(tmp_path, "tests/test_simple.py", 1)
+    report = scan(
+        SnapshotRequest(target=DirectorySourceReference(root=tmp_path), config=AnalysisConfig())
+    )
+    cohorts = {item.cohort.value: item.current.model_dump(mode="json") for item in report.cohorts}
+    production = cohorts["production"]["metrics"][-1]["raw"]
+    tests = cohorts["test"]["metrics"][-1]["raw"]
+
+    assert production["value"] == 1
+    assert production["numerator"] == production["denominator"] == pytest.approx(11 * math.sqrt(2))
+    assert tests["value"] == tests["numerator"] == 0
+    assert tests["denominator"] == pytest.approx(math.sqrt(2))
+    assert [item["evidence"]["path"] for item in cohorts["production"]["files"]] == [
+        "production.py"
+    ]
+    assert [item["evidence"]["path"] for item in cohorts["test"]["files"]] == [
+        "tests/test_simple.py"
+    ]

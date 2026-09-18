@@ -10,6 +10,7 @@ from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.source import DirectorySourceIdentity
 from slop_measure.errors import AnalysisFailure
 from slop_measure.metrics.aggregate import aggregate_snapshot
+from slop_measure.reporting.json import serialize_report
 
 
 def file(path: str, sloc: int = 2) -> dict:
@@ -150,3 +151,36 @@ def test_strict_service_notices_embedded_complexity_errors(
     assert report.diagnostics[0].detail.code == "python.complexity-error"
     with pytest.raises(AnalysisFailure):
         scan(SnapshotRequest(target=request.target, config=AnalysisConfig(strict=True)))
+
+
+def test_callable_projection_order_is_independent_of_adapter_emission_order(tmp_path: Path) -> None:
+    evidence_file = {**file("app.other", 4), "language": "other"}
+    functions = [
+        {
+            "path": "app.other",
+            "qualified_name": "first",
+            "cyclomatic_complexity": 1,
+            "span": {"start_line": 1, "end_line": 2},
+            "sloc_lines": (1, 2),
+        },
+        {
+            "path": "app.other",
+            "qualified_name": "second",
+            "cyclomatic_complexity": 11,
+            "span": {"start_line": 3, "end_line": 4},
+            "sloc_lines": (3, 4),
+        },
+    ]
+    payload = {
+        "language": "other",
+        "capabilities": ["files", "functions"],
+        "files": [evidence_file],
+        "function_analyses": [{"state": "analyzed", "path": "app.other", "functions": functions}],
+    }
+    forward = aggregate(tmp_path, payload)
+    payload["function_analyses"][0]["functions"] = list(reversed(functions))
+    reverse = aggregate(tmp_path, payload)
+
+    assert serialize_report(reverse) == serialize_report(forward)
+    production = next(item.current for item in reverse.cohorts if item.cohort.value == "production")
+    assert [item.qualified_name for item in production.files[0].functions] == ["first", "second"]
