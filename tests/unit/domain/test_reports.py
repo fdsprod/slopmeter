@@ -28,6 +28,24 @@ from slop_measure.domain.reports import (
 )
 
 
+def measured_score(points: float = 1) -> dict:
+    return {
+        "points": points,
+        "profile_id": "py-2026.1",
+        "model_id": "verbosity-only",
+        "band": "low",
+        "contributions": [
+            {
+                "metric_id": "verbosity.combined",
+                "raw_value": 0.1,
+                "percentile": points,
+                "weight": 1,
+                "points": points,
+            }
+        ],
+    }
+
+
 def score() -> dict[str, object]:
     return {"state": "unavailable", "reason": "calibration-missing"}
 
@@ -159,12 +177,12 @@ def test_source_sides_and_score_unavailability_reasons_are_closed() -> None:
 @pytest.mark.parametrize("points", [-1, 101, float("nan"), float("inf"), float("-inf")])
 def test_snapshot_scores_reject_invalid_points(points: float) -> None:
     with pytest.raises(ValidationError):
-        MeasuredSnapshotScore(points=points, profile_id="py-2026.1")
+        MeasuredSnapshotScore.model_validate(measured_score(points))
 
 
 @pytest.mark.parametrize("points", [0, 100])
 def test_snapshot_scores_accept_range_boundaries(points: float) -> None:
-    assert MeasuredSnapshotScore(points=points, profile_id="py-2026.1").points == points
+    assert MeasuredSnapshotScore.model_validate(measured_score(points)).points == points
 
 
 def test_unavailable_snapshot_score_cannot_carry_points() -> None:
@@ -210,7 +228,7 @@ def test_provenance_rejects_duplicate_version_keys(field: str, items: list) -> N
         (MetricVersion, {"metric_id": "m4.erosion", "version": "1"}, "metric_id"),
         (MetricVersion, {"metric_id": "m4.erosion", "version": "1"}, "version"),
         (Provenance, {"tool_version": "1", "config": {}}, "tool_version"),
-        (MeasuredSnapshotScore, {"points": 1, "profile_id": "py-2026.1"}, "profile_id"),
+        (MeasuredSnapshotScore, measured_score(), "profile_id"),
         (ReportDiagnostic, diagnostic(), "id"),
     ],
 )
@@ -416,7 +434,7 @@ def test_same_source_file_path_cannot_belong_to_two_cohorts() -> None:
         (AnalyzerVersion, {"language": "python", "adapter_version": "1"}),
         (MetricVersion, {"metric_id": "m4.erosion", "version": "1"}),
         (Provenance, {"tool_version": "1", "config": {}}),
-        (MeasuredSnapshotScore, {"points": 1, "profile_id": "py-2026.1"}),
+        (MeasuredSnapshotScore, measured_score()),
         (UnavailableSnapshotScore, score()),
         (FileResult, file_result()),
         (CohortResult, cohort_result()),
