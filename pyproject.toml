@@ -43,6 +43,13 @@ required-version = "==0.11.14"
 [tool.hatch.build.targets.wheel]
 packages = ["src/slop_measure"]
 
+[tool.hatch.build.targets.sdist]
+only-include = [
+  "src", "tests", "tools", "calibration", ".specs", ".github",
+  ".gitattributes", ".gitignore", "README.md", "pyproject.toml", "uv.lock",
+]
+exclude = ["**/__pycache__/**", "**/*.pyc", "**/.pytest_cache/**"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests/unit", "tests/golden", "tests/contract", "tests/integration"]
 addopts = "-q --strict-config --strict-markers"

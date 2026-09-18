@@ -1,7 +1,7 @@
 # Python Slop Detector Tasks
 
 **Design**: `.specs/python-slop-detector/design.md`
-**Status**: In Progress
+**Status**: Implementation complete; hosted platform validation pending
 
 > [!NOTE]
 > The user's shared conversation has been read. [cli-output.md](cli-output.md)
@@ -16,9 +16,11 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q07, T01-T70, and T79-T84 are complete through TB-8.
-Snapshot and directory comparison share the same analysis and calibration pipeline.
-The retained learning tests record the external behavior that adapters rely on.
+Current checkpoint: Q01-Q07, T01-T78, and T79-T84 are implemented. TB-1 through
+TB-8 passed their gates. TB-9 passed all local release checks on Windows with Python
+3.12, 3.13, and 3.14. Hosted Linux/macOS CI execution remains pending because this
+checkout has no Git remote. [release-validation.md](release-validation.md) records
+acceptance mappings, exact results, and that external limit.
 
 The TB-1 raw-scan slice passed these end-to-end checks:
 
@@ -139,8 +141,27 @@ TB-8 passes its validation gate:
 - [x] 1,095 deterministic tests and 41 retained learning tests pass. Branch coverage
   is 96.59 percent. Ruff, Pyright, five import contracts, builds, and CLI smoke pass.
 
-Next is TB-9 release hardening. [comparison-design.md](comparison-design.md) records
-the owned change data contract. Continue through TB-9, with quality gates between slices.
+TB-9 implementation and local release validation are complete:
+
+- [x] T71-T73: Central input/analysis errors, fake-language full-pipeline contracts,
+  deterministic adapter order, normalized paths, and isolated Git environment handling.
+- [x] T74: Reproducible 100,000-SLOC fresh-process benchmark with native peak RSS.
+  A measured tokenization bottleneck fell from 614.51 to 51.77 seconds after a
+  test-first per-source token cache; peak memory is 124.75 MiB, with zero diagnostics.
+- [x] T75-T77: Nine-cell OS/Python release workflow, complete usage/configuration
+  documentation, explicit archive scope, and clean wheel/source installations.
+- [x] T78 local gate: 1,114 deterministic tests plus four artifact checks pass on
+  Windows Python 3.12.14, 3.13.13, and 3.14.5. Each also passes 41 learning tests and
+  two small benchmark tests. Full benchmark runs were measured directly.
+- [x] Ruff, Pyright, five import contracts, locked resolution, dependency audit,
+  builds, and CLI checks pass. Branch coverage is 96.66 percent.
+- [ ] Hosted Windows/macOS/Linux matrix results: no Git remote is configured, so
+  these jobs cannot be triggered from this checkout. This is the only remaining
+  external release-validation item; it is not claimed as passed.
+
+No P1 implementation work remains. History trends and P2/P3 features remain outside
+these tracer bullets. The application and command names remain unchanged.
+
 TB-2 retains Radon learning tests for AST traversal and complete callable spans.
 The scoring package now has its own import boundary. M1 remains unavailable for snapshots.
 
@@ -401,11 +422,11 @@ documentation, and release checks.
 
 **Validation:**
 
-- [ ] All unit, contract, golden, and integration tests pass.
-- [ ] Windows, macOS, and Linux CI jobs pass on supported Python versions.
-- [ ] The 100-thousand-SLOC benchmark records time and peak memory.
-- [ ] Wheel and source distribution install into clean environments.
-- [ ] The README reproduces the snapshot and comparison examples.
+- [x] All unit, contract, golden, and integration tests pass.
+- [ ] Windows, macOS, and Linux hosted CI results are pending a configured remote.
+- [x] The 100-thousand-SLOC benchmark records time and peak memory.
+- [x] Wheel and source distribution install into clean environments.
+- [x] The README reproduces the snapshot and comparison examples.
 
 **Dependencies:** TB-8.
 
@@ -630,14 +651,15 @@ active session permissions. Full-access sessions need no routine approval prompt
 
 ## Completion Definition
 
-- [ ] Every P1 acceptance criterion in the approved specification maps to a passing
+- [x] Every P1 acceptance criterion in the approved specification maps to a passing
       automated test.
-- [ ] Ruff format, Ruff lint, Pyright, import-linter, dependency audit, and branch
+- [x] Ruff format, Ruff lint, Pyright, import-linter, dependency audit, and branch
       coverage gates pass from the locked environment.
-- [ ] Every tracer bullet passes before the next bullet starts.
-- [ ] File and project raw totals reconcile where the metric is additive.
-- [ ] Every score names its compatible calibration and rule versions.
-- [ ] Every terminal number is traceable to JSON evidence.
-- [ ] The Python MVP installs from a wheel and exposes both the CLI and API.
-- [ ] The fake-adapter contract proves that TypeScript can be added without changing
+- [x] Every preceding tracer bullet passed before the next started. TB-9 local checks pass;
+      hosted platform verification remains pending as recorded above.
+- [x] File and project raw totals reconcile where the metric is additive.
+- [x] Every score names its compatible calibration and rule versions.
+- [x] Every terminal number is traceable to JSON evidence.
+- [x] The Python MVP installs from a wheel and exposes both the CLI and API.
+- [x] The fake-adapter contract proves that TypeScript can be added without changing
       the report or scoring core.

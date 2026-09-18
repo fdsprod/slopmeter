@@ -11,15 +11,15 @@ comparable scores at file and project scope.
 
 ## Goals
 
-- [ ] Measure M1 LOC delta, M2 pattern verbosity, M3 clone verbosity, and M4
+- [x] Measure M1 LOC delta, M2 pattern verbosity, M3 clone verbosity, and M4
       structural erosion for Python projects.
-- [ ] Report raw values, normalized scores, and source-level evidence for each
+- [x] Report raw values, normalized scores, and source-level evidence for each
       available measure.
-- [ ] Produce separate file and project results from the same underlying evidence.
-- [ ] Keep snapshot quality separate from change pressure when no baseline exists.
-- [ ] Expose language-neutral contracts so a later TypeScript analyzer can produce
+- [x] Produce separate file and project results from the same underlying evidence.
+- [x] Keep snapshot quality separate from change pressure when no baseline exists.
+- [x] Expose language-neutral contracts so a later TypeScript analyzer can produce
       the same report schema.
-- [ ] Produce deterministic results without an LLM or network access.
+- [x] Produce deterministic results without an LLM or network access.
 
 ## Out of Scope
 
@@ -325,14 +325,17 @@ core aggregation and serialization contract.
 
 - [ ] Golden fixtures produce exact, repeatable raw metric counts on Windows, macOS,
       and Linux.
-- [ ] Project totals reconcile with source evidence and per-file totals where the
+- [x] Project totals reconcile with source evidence and per-file totals where the
       metric is additive.
-- [ ] Every score can be traced to raw values, calibration data, and analyzer
+- [x] Every score can be traced to raw values, calibration data, and analyzer
       versions.
-- [ ] A new language adapter can be demonstrated with a fixture adapter without
+- [x] A new language adapter can be demonstrated with a fixture adapter without
       changing core domain models, aggregation, scoring, or JSON serialization.
-- [ ] Repeated scans of unchanged input and configuration produce byte-stable JSON
+- [x] Repeated scans of unchanged input and configuration produce byte-stable JSON
       after volatile invocation metadata is excluded.
+
+Windows validation passed on Python 3.12, 3.13, and 3.14. Hosted macOS/Linux
+execution is pending a configured Git remote; see [release-validation.md](release-validation.md).
 
 ## Approved Product Decisions
 

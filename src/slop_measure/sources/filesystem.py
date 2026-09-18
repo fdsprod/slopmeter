@@ -19,6 +19,7 @@ from slop_measure.domain.evidence import (
 )
 from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.source import Cohort, DirectorySourceIdentity, ProjectPath, SourceDocument
+from slop_measure.errors import InvalidSource
 from slop_measure.languages.registry import LanguageRegistry
 
 
@@ -44,7 +45,20 @@ def _git_files(root: Path) -> set[str] | None:
     executable = shutil.which("git")
     if executable is None:
         return None
-    environment = {**os.environ, "GIT_OPTIONAL_LOCKS": "0", "GIT_TERMINAL_PROMPT": "0"}
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if key
+        not in {
+            "GIT_DIR",
+            "GIT_WORK_TREE",
+            "GIT_INDEX_FILE",
+            "GIT_COMMON_DIR",
+            "GIT_OBJECT_DIRECTORY",
+            "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        }
+    }
+    environment.update(GIT_OPTIONAL_LOCKS="0", GIT_TERMINAL_PROMPT="0")
     command = [executable, "-c", "core.fsmonitor=false", "-C", str(root)]
     probe = subprocess.run(  # noqa: S603 - fixed read-only Git arguments
         [*command, "rev-parse", "--is-inside-work-tree"],
@@ -61,7 +75,7 @@ def _git_files(root: Path) -> set[str] | None:
         check=False,
     )
     if result.returncode != 0:
-        raise ValueError("Git source inventory failed")
+        raise InvalidSource("Git source inventory failed")
     return {os.fsdecode(path) for path in result.stdout.split(b"\0") if path}
 
 
@@ -123,7 +137,7 @@ class FilesystemSourceProvider:
     def inventory(self) -> SourceInventory:
         """Read eligible source bytes and report every skipped file population."""
         if not self.root.is_dir():
-            raise ValueError(f"source root must be an existing directory: {self.root}")
+            raise InvalidSource(f"source root must be an existing directory: {self.root}")
         builder = _InventoryBuilder(self)
         git_files = _git_files(self.root)
         for path in self._paths(builder.diagnostics):

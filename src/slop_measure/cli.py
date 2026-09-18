@@ -7,7 +7,7 @@ import sys
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, NoReturn
 
 import typer
 
@@ -18,7 +18,7 @@ from slop_measure.domain.evidence import DiagnosticSeverity
 from slop_measure.domain.reports import AnalysisReport, SourceSide
 from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
 from slop_measure.domain.source import DirectorySourceReference, GitSourceReference
-from slop_measure.errors import AnalysisFailure, InvalidRuleSelection, InvalidSource, SelectionError
+from slop_measure.errors import InputError, InvalidSource, SelectionError, error_message, exit_code
 from slop_measure.reporting import terminal
 from slop_measure.reporting.comparison import render_comparison
 from slop_measure.reporting.evidence import render_findings, render_rules
@@ -80,23 +80,20 @@ def _scan_report(path: Path, strict: bool | None, revision: str | None = None) -
         )
         request = SnapshotRequest(target=target, config=config)
     except (ValueError, OSError) as error:
-        typer.echo(f"Invalid analysis input: {error}", err=True)
-        raise typer.Exit(2) from error
+        _fail(InputError(str(error)))
     return _analyze(request)
+
+
+def _fail(error: Exception) -> NoReturn:
+    typer.echo(error_message(error), err=True)
+    raise typer.Exit(exit_code(error)) from error
 
 
 def _analyze(request: SnapshotRequest | ComparisonRequest) -> AnalysisReport:
     try:
         return scan(request) if isinstance(request, SnapshotRequest) else compare(request)
-    except (InvalidRuleSelection, InvalidSource) as error:
-        typer.echo(f"Invalid analysis input: {error}", err=True)
-        raise typer.Exit(2) from error
-    except AnalysisFailure as error:
-        typer.echo(str(error), err=True)
-        raise typer.Exit(3) from error
     except Exception as error:
-        typer.echo(f"Analysis failed: {type(error).__name__}", err=True)
-        raise typer.Exit(3) from error
+        _fail(error)
 
 
 _Directory = Annotated[Path, typer.Argument(exists=True, file_okay=False, resolve_path=True)]
@@ -147,7 +144,7 @@ def _evidence_report(
         )
         request = ComparisonRequest(baseline=baseline, current=current, config=config)
     except (ValueError, OSError) as error:
-        raise SelectionError(f"Invalid analysis input: {error}") from error
+        raise SelectionError(str(error)) from error
     return _analyze(request)
 
 
@@ -177,8 +174,7 @@ def _compare_report(
             config=config,
         )
     except (ValueError, OSError) as error:
-        typer.echo(f"Invalid analysis input: {error}", err=True)
-        raise typer.Exit(2) from error
+        _fail(InputError(str(error)))
     return _analyze(request)
 
 
@@ -324,8 +320,7 @@ def explain_command(  # noqa: PLR0913
             )
         )
     except SelectionError as error:
-        typer.echo(str(error), err=True)
-        raise typer.Exit(2) from error
+        _fail(error)
     typer.echo(output, nl=False, color=display.color)
 
 
@@ -376,8 +371,7 @@ def findings_command(  # noqa: PLR0913
             top=display.top,
         )
     except SelectionError as error:
-        typer.echo(str(error), err=True)
-        raise typer.Exit(2) from error
+        _fail(error)
     typer.echo(output, nl=False, color=display.color)
 
 
@@ -396,8 +390,7 @@ def rules_command(  # noqa: PLR0913 - independent catalog display options
     try:
         catalog = rule_catalog(load_analysis_config(root_path))
     except (ValueError, OSError) as error:
-        typer.echo(f"Invalid analysis input: {error}", err=True)
-        raise typer.Exit(2) from error
+        _fail(InputError(str(error)))
     if json_output:
         typer.echo(catalog.model_dump_json(indent=2))
         return

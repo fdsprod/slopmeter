@@ -1,7 +1,6 @@
 """Local AST and token facts shared by the built-in review rules."""
 
 import ast
-import io
 import tokenize
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
@@ -166,8 +165,7 @@ def suites(tree: ast.AST) -> Iterator[list[ast.stmt]]:
 
 
 def tokens(unit: PythonParsedUnit) -> tuple[tokenize.TokenInfo, ...]:
-    source = unit.source.replace("\r\n", "\n").replace("\r", "\n")
-    return tuple(tokenize.generate_tokens(io.StringIO(source).readline))
+    return unit.token_stream
 
 
 def has_type_comment(unit: PythonParsedUnit, node: ast.stmt) -> bool:

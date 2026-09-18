@@ -1,7 +1,10 @@
 """Validated rule selection and deterministic per-file pattern analysis."""
 
 import ast
+import io
+import tokenize
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Protocol
 
 from slop_measure.config import AnalysisConfig
@@ -29,6 +32,12 @@ class PythonParsedUnit:
     tree: ast.Module
     file: FileEvidence
     source: str
+
+    @cached_property
+    def token_stream(self) -> tuple[tokenize.TokenInfo, ...]:
+        """Tokenize immutable source once, retaining tokens only with this unit."""
+        source = self.source.replace("\r\n", "\n").replace("\r", "\n")
+        return tuple(tokenize.generate_tokens(io.StringIO(source).readline))
 
 
 @dataclass(frozen=True)
