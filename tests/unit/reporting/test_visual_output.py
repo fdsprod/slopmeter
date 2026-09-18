@@ -131,7 +131,7 @@ def test_tree_preserves_hierarchy_and_raw_file_values_without_directory_scores(
     assert "src/" in output and "tests/" in output
     assert "a.py" in output and "b.py" in output and "dup.py" in output
     assert "test_small.py" in output
-    assert "50.0%" in output and "100.0%" in output and "0.0%" in output
+    assert "50.0%" in output and "9.1%" in output and "0.0%" in output
     assert "|--" in output or "+--" in output or "`--" in output
     for row in output.splitlines():
         if "src/" in row and not any(name in row for name in ("a.py", "b.py", "dup.py")):

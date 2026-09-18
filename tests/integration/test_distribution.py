@@ -98,12 +98,12 @@ def test_built_distribution_installs_and_runs_outside_checkout(
 import hashlib, importlib.resources, json, pathlib
 import slop_measure
 from slop_measure.scoring.profiles import load_profile
-profile = load_profile('py-2026.1')
+profile = load_profile('py-2026.2')
 assert profile is not None
 resource = importlib.resources.files('slop_measure.scoring').joinpath('resources')
-manifest = resource.joinpath('py-2026.1.corpus.toml').read_bytes()
+manifest = resource.joinpath('py-2026.2.corpus.toml').read_bytes()
 assert hashlib.sha256(manifest).hexdigest() == profile.corpus_manifest_hash
-assert resource.joinpath('py-2026.1.json').is_file()
+assert resource.joinpath('py-2026.2.json').is_file()
 print(json.dumps({
     'module': str(pathlib.Path(slop_measure.__file__).resolve()),
     'profile': profile.profile_id,
@@ -111,7 +111,7 @@ print(json.dumps({
 """
     imported = json.loads(run([str(python), "-c", probe], isolated, environment))
     assert Path(imported["module"]).is_relative_to(venv.resolve())
-    assert imported["profile"] == "py-2026.1"
+    assert imported["profile"] == "py-2026.2"
     assert "score" in run([str(executable), "--help"], isolated, environment)
     source = isolated / "project"
     source.mkdir()
@@ -123,7 +123,7 @@ print(json.dumps({
         item["current"] for item in report["cohorts"] if item["cohort"] == "production"
     )
     assert production["score"]["state"] == "measured"
-    assert production["score"]["profile_id"] == "py-2026.1"
+    assert production["score"]["profile_id"] == "py-2026.2"
     assert production["files"][0]["evidence"]["sloc"] == 2
     rules = json.loads(
         run([str(executable), "rules", "--root", str(source), "--json"], isolated, environment)

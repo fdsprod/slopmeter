@@ -184,9 +184,9 @@
                 "metric_id": "m4.erosion",
                 "raw": {
                   "denominator": 100.0,
-                  "numerator": 20.0,
+                  "numerator": 10.0,
                   "unit": "ratio",
-                  "value": 0.2
+                  "value": 0.1
                 },
                 "scope": {
                   "cohort": "production",
@@ -207,7 +207,7 @@
                   "metric_id": "m4.erosion",
                   "percentile": 25.0,
                   "points": 10.0,
-                  "raw_value": 0.2,
+                  "raw_value": 0.1,
                   "weight": 0.4
                 },
                 {
@@ -368,9 +368,9 @@
                 "metric_id": "m4.erosion",
                 "raw": {
                   "denominator": 100.0,
-                  "numerator": 40.0,
+                  "numerator": 30.0,
                   "unit": "ratio",
-                  "value": 0.4
+                  "value": 0.3
                 },
                 "scope": {
                   "cohort": "production",
@@ -391,7 +391,7 @@
                   "metric_id": "m4.erosion",
                   "percentile": 75.0,
                   "points": 30.0,
-                  "raw_value": 0.4,
+                  "raw_value": 0.3,
                   "weight": 0.4
                 },
                 {
@@ -432,9 +432,9 @@
             "metric_id": "m4.erosion",
             "raw": {
               "denominator": 200.0,
-              "numerator": 60.0,
+              "numerator": 40.0,
               "unit": "ratio",
-              "value": 0.3
+              "value": 0.2
             },
             "scope": {
               "cohort": "production",
@@ -454,7 +454,7 @@
               "metric_id": "m4.erosion",
               "percentile": 33.333333333333336,
               "points": 13.3,
-              "raw_value": 0.3,
+              "raw_value": 0.2,
               "weight": 0.4
             },
             {
@@ -544,7 +544,7 @@
       },
       {
         "metric_id": "m4.erosion",
-        "version": "1"
+        "version": "2"
       }
     ],
     "tool_version": "test"

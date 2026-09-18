@@ -1,6 +1,7 @@
 """Exact calibrated reports from a fixed, hand-checked synthetic population."""
 
 from decimal import Decimal
+from math import sqrt
 from pathlib import Path
 
 import pytest
@@ -35,8 +36,8 @@ def test_fixed_population_calibrated_json_and_terminal_match_exact_goldens() -> 
     ).read_text(encoding="utf-8")
     assert result.provenance == raw.provenance
     current = result.cohorts[0].current
-    # Project .3 has one of three observations strictly below; file .2 has
-    # one of four below and .4 has three of four below. No file-score averaging.
+    # Project .3/.2 has one of three observations strictly below; file .2/.1 has
+    # one of four below and .4/.3 has three of four below. No file-score averaging.
     for scope, expected in zip((current, *current.files), (33.3, 25, 75), strict=True):
         score = scope.score
         assert isinstance(score, MeasuredSnapshotScore)
@@ -58,7 +59,9 @@ def test_fixed_population_calibrated_json_and_terminal_match_exact_goldens() -> 
         assert verbosity.raw.denominator == file.evidence.sloc == 10
         assert erosion.raw.denominator == sum(function.mass for function in file.functions)
         assert erosion.raw.numerator == sum(
-            function.mass for function in file.functions if function.cyclomatic_complexity > 10
+            (function.cyclomatic_complexity - 10) * sqrt(function.sloc)
+            for function in file.functions
+            if function.cyclomatic_complexity > 10
         )
         assert all(
             metric.scope.kind == "file" and metric.scope.path == file.evidence.path

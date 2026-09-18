@@ -13,11 +13,14 @@ from slop_measure.scoring.profiles import load_profile
 
 
 def test_packaged_python_profile_records_verified_provenance_and_distinct_populations() -> None:
-    profile = load_profile("py-2026.1")
+    profile = load_profile("py-2026.2")
     assert profile is not None
-    assert profile.profile_id == "py-2026.1"
+    assert profile.profile_id == "py-2026.2"
     assert profile.language == "python"
     assert profile.rule_set_version == "py-patterns-1"
+    versions = {item.metric_id: item.version for item in profile.metric_versions}
+    assert versions["m4.erosion"] == "2"
+    assert all(version == "1" for name, version in versions.items() if name != "m4.erosion")
     assert profile.clone_normalization_version
     assert {item.metric_id for item in profile.metric_versions} >= {
         "m2.pattern-verbosity",
@@ -26,7 +29,7 @@ def test_packaged_python_profile_records_verified_provenance_and_distinct_popula
         "m4.erosion",
     }
     manifest = (
-        files("slop_measure.scoring").joinpath("resources", "py-2026.1.corpus.toml").read_bytes()
+        files("slop_measure.scoring").joinpath("resources", "py-2026.2.corpus.toml").read_bytes()
     )
     assert profile.corpus_manifest_hash == hashlib.sha256(manifest).hexdigest()
     assert {population.kind for population in profile.populations} == {"file", "project"}
@@ -65,7 +68,7 @@ def test_default_api_scan_uses_packaged_profile_and_explicit_no_functions_model(
     )
     result = report.cohorts[0].current
     assert isinstance(result.score, MeasuredSnapshotScore)
-    assert result.score.profile_id == "py-2026.1"
+    assert result.score.profile_id == "py-2026.2"
     by_path = {file.evidence.path.root: file for file in result.files}
     assert isinstance(by_path["app.py"].score, MeasuredSnapshotScore)
     constant = by_path["constants.py"]
@@ -92,3 +95,26 @@ def test_changed_metric_option_keeps_raw_measurements_but_refuses_packaged_score
     measured = [metric for metric in result.metrics if isinstance(metric, MeasuredMetric)]
     assert {metric.metric_id for metric in measured} >= {"verbosity.combined", "m4.erosion"}
     assert all(metric.score is None for metric in measured)
+
+
+def test_historical_profile_remains_readable_but_cannot_score_new_erosion(
+    python_project: Path,
+) -> None:
+    historical = load_profile("py-2026.1")
+    assert historical is not None
+    assert {item.metric_id: item.version for item in historical.metric_versions}[
+        "m4.erosion"
+    ] == "1"
+    result = scan(
+        SnapshotRequest(
+            target=DirectorySourceReference(root=python_project),
+            config=AnalysisConfig(calibration_profile="py-2026.1"),
+        )
+    )
+    current = result.cohorts[0].current
+    assert isinstance(current.score, UnavailableSnapshotScore)
+    assert current.score.reason == "calibration-incompatible"
+    assert any(isinstance(metric, MeasuredMetric) for metric in current.metrics)
+    assert all(
+        metric.score is None for metric in current.metrics if isinstance(metric, MeasuredMetric)
+    )

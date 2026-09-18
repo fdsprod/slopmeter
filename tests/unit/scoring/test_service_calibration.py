@@ -38,7 +38,7 @@ def test_service_loads_selected_profile_and_scores_file_and_project(
 
     monkeypatch.setattr("slop_measure.application.service.load_profile", load, raising=False)
     result = service.scan(request(tmp_path))
-    assert selected == ["py-2026.1"]
+    assert selected == ["py-2026.2"]
     cohort = result.cohorts[0].current
     assert isinstance(cohort.score, MeasuredSnapshotScore)
     assert isinstance(cohort.files[0].score, MeasuredSnapshotScore)

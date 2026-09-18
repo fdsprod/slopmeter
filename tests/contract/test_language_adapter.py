@@ -160,12 +160,12 @@ def test_non_python_adapter_supports_raw_metrics_calibration_comparison_and_both
         "m2.pattern-verbosity": 1 / 8,
         "m3.clone-verbosity": 6 / 8,
         "verbosity.combined": 6 / 8,
-        "m4.erosion": 1,
+        "m4.erosion": pytest.approx(1 / 11),
     }
     assert isinstance(result.score, MeasuredSnapshotScore)
-    assert result.score.points == 80
+    assert result.score.points == 53.3
     assert len(snapshot.findings) == 2 and len(snapshot.clone_groups) == 1
-    assert "80.0/100" in render_snapshot(snapshot, ascii=True, color=False)
+    assert "53.3/100" in render_snapshot(snapshot, ascii=True, color=False)
     assert json.loads(serialize_report(snapshot))["cohorts"][0]["language"] == "invented"
     comparison = service.compare(
         ComparisonRequest(
