@@ -226,3 +226,38 @@ def test_verbose_raw_metric_names_its_reference_percentile() -> None:
     assert len(raw_rows) == 2
     assert all("percentile 33.3" in line.lower() for line in raw_rows)
     assert all("metric 33.3/100" not in line for line in raw_rows)
+
+
+def test_findings_projection_preserves_scope_failures_and_excluded_directory_evidence(
+    project: Path,
+) -> None:
+    (project / "a.py").write_text("def broken(:\n", encoding="utf-8")
+    (project / "vendor").mkdir()
+    (project / "vendor" / "external.py").write_text("value = 1\n", encoding="utf-8")
+    (project / "slop.toml").write_text(
+        'calibration_profile = "__raw__"\nexclusions = ["vendor/**"]\n', encoding="utf-8"
+    )
+    runner = CliRunner()
+    complete = runner.invoke(app, ["scan", str(project), "--json"])
+    selected = runner.invoke(app, ["findings", "--root", str(project), "--json"])
+    assert complete.exit_code == selected.exit_code == 0, (complete.output, selected.output)
+    original, filtered = json.loads(complete.stdout), json.loads(selected.stdout)
+    assert original["diagnostics"] and original["excluded_directories"]
+    for field in ("coverage", "diagnostics", "excluded_directories"):
+        assert filtered[field] == original[field]
+    assert all(not rows for rows in filtered["selection"].values())
+    rendered = runner.invoke(app, ["findings", "--root", str(project), "--ascii", "--no-color"])
+    assert rendered.exit_code == 0, rendered.output
+    evidence = rendered.stdout.split("How to read this report", 1)[0].lower()
+    assert "1 diagnostic" in evidence
+    assert "1 excluded director" in evidence
+    assert "partial" in evidence or "error" in evidence or "failed" in evidence
+
+
+def test_findings_json_exposes_empty_scope_evidence_lists(project: Path) -> None:
+    result = CliRunner().invoke(app, ["findings", "--root", str(project), "--json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["coverage"]
+    assert payload["diagnostics"] == []
+    assert payload["excluded_directories"] == []
