@@ -1,0 +1,20 @@
+slop.measure
+PROJECT
+snapshot - higher is worse
+
+source coverage
+  production python: 3 files, 5 SLOC
+    scored
+  test python: 1 file, 2 SLOC
+    scored
+
+production python
+  snapshot slop unavailable: required-metric-unavailable
+  m1.loc-delta: unavailable (no-baseline)
+  m2.pattern-verbosity: unavailable (unsupported-capability)
+  m3.clone-verbosity: unavailable (unsupported-capability)
+  m4.erosion: 0.916667
+  mass: 15.5563 / 16.9706
+  callables: 2; eroded: 1; CC threshold: > 10
+  eroded callables
+    high.py:1-2 high: CC 11, SLOC 2, mass 15.5563
