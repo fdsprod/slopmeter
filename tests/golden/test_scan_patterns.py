@@ -9,6 +9,7 @@ from typer.testing import CliRunner
 
 from slop_measure.api import AnalysisConfig, DirectorySourceReference, SnapshotRequest, scan
 from slop_measure.cli import app
+from slop_measure.config import load_analysis_config
 from slop_measure.domain.reports import SnapshotAnalysis
 from slop_measure.domain.source import DirectorySourceIdentity
 from slop_measure.reporting.json import serialize_report
@@ -21,6 +22,12 @@ def pattern_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     shutil.copytree(
         Path(__file__).parents[1] / "fixtures" / "patterns", tmp_path, dirs_exist_ok=True
     )
+    monkeypatch.setattr(
+        "slop_measure.cli.load_analysis_config",
+        lambda root, **kwargs: load_analysis_config(root, **kwargs).model_copy(
+            update={"calibration_profile": "__raw__"}
+        ),
+    )
     return tmp_path
 
 
@@ -28,7 +35,8 @@ def test_overlapping_pattern_fixture_counts_one_line_and_preserves_both_findings
     pattern_project: Path,
 ) -> None:
     request = SnapshotRequest(
-        target=DirectorySourceReference(root=pattern_project), config=AnalysisConfig()
+        target=DirectorySourceReference(root=pattern_project),
+        config=AnalysisConfig(calibration_profile="__raw__"),
     )
     report = scan(request)
     production = next(item.current for item in report.cohorts if item.cohort.value == "production")
@@ -58,7 +66,8 @@ def test_overlapping_pattern_fixture_counts_one_line_and_preserves_both_findings
 def test_pattern_terminal_matches_handwritten_golden(pattern_project: Path) -> None:
     report = scan(
         SnapshotRequest(
-            target=DirectorySourceReference(root=pattern_project), config=AnalysisConfig()
+            target=DirectorySourceReference(root=pattern_project),
+            config=AnalysisConfig(calibration_profile="__raw__"),
         )
     )
     normalized = report.model_copy(

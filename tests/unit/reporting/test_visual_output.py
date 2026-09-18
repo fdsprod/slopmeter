@@ -30,7 +30,7 @@ def visual_report(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AnalysisRe
     report = scan(
         SnapshotRequest(
             target=DirectorySourceReference(root=tmp_path),
-            config=AnalysisConfig(default_hotspot_count=1),
+            config=AnalysisConfig(calibration_profile="__raw__", default_hotspot_count=1),
         )
     )
     return report.model_copy(

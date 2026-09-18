@@ -37,19 +37,26 @@ def isolate_parent_repository(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
 
 
 @pytest.fixture
-def basic_project(tmp_path: Path) -> Path:
+def basic_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     for source in FIXTURE.rglob("*"):
         if not source.is_file() or source.name == "expected.json":
             continue
         destination = tmp_path / source.relative_to(FIXTURE)
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(source.read_bytes())
+    monkeypatch.setattr(
+        "slop_measure.cli.load_analysis_config",
+        lambda root, **kwargs: load_analysis_config(root, **kwargs).model_copy(
+            update={"calibration_profile": "__raw__"}
+        ),
+    )
     return tmp_path
 
 
 def request(root: Path, *, strict: bool = False) -> SnapshotRequest:
     return SnapshotRequest(
-        target=DirectorySourceReference(root=root), config=AnalysisConfig(strict=strict)
+        target=DirectorySourceReference(root=root),
+        config=AnalysisConfig(calibration_profile="__raw__", strict=strict),
     )
 
 
@@ -110,7 +117,7 @@ def test_basic_scan_matches_hand_counted_manifest_and_never_executes_source(
     assert not (basic_project / "EXECUTED").exists()
     assert payload["analysis"]["current"]["root"] == str(basic_project.resolve())
     assert report.provenance.tool_version == __version__
-    assert report.provenance.config == AnalysisConfig()
+    assert report.provenance.config == AnalysisConfig(calibration_profile="__raw__")
     assert [(item.language, item.adapter_version) for item in report.provenance.analyzers] == [
         ("python", "python-clones-1")
     ]
@@ -133,7 +140,9 @@ def test_json_is_stable_sorted_indented_and_cli_equivalent(basic_project: Path) 
 def test_cli_defaults_to_current_directory_and_loads_root_config(
     basic_project: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    (basic_project / "slop.toml").write_text("complexity_threshold = 12\n", encoding="utf-8")
+    (basic_project / "slop.toml").write_text(
+        'complexity_threshold = 12\ncalibration_profile = "__raw__"\n', encoding="utf-8"
+    )
     monkeypatch.chdir(basic_project)
     result = CliRunner().invoke(app, ["scan", "--json"])
     assert result.exit_code == 0, result.output
@@ -217,12 +226,19 @@ def test_git_scan_and_comparison_are_explicitly_unavailable(tmp_path: Path) -> N
     with pytest.raises(ValueError, match="Git revision"):
         scan(
             SnapshotRequest(
-                target=GitSourceReference(root=tmp_path, revision="HEAD"), config=AnalysisConfig()
+                target=GitSourceReference(root=tmp_path, revision="HEAD"),
+                config=AnalysisConfig(calibration_profile="__raw__"),
             )
         )
     reference = DirectorySourceReference(root=tmp_path)
     with pytest.raises(NotImplementedError):
-        compare(ComparisonRequest(baseline=reference, current=reference, config=AnalysisConfig()))
+        compare(
+            ComparisonRequest(
+                baseline=reference,
+                current=reference,
+                config=AnalysisConfig(calibration_profile="__raw__"),
+            )
+        )
 
 
 def test_public_api_exports_a_complete_directory_scan_interface(tmp_path: Path) -> None:

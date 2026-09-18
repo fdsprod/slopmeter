@@ -28,7 +28,7 @@ def clone_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def request(root: Path, *, strict: bool = False) -> SnapshotRequest:
     return SnapshotRequest(
         target=DirectorySourceReference(root=root),
-        config=AnalysisConfig(clone_min_sloc=2, strict=strict),
+        config=AnalysisConfig(calibration_profile="__raw__", clone_min_sloc=2, strict=strict),
     )
 
 
