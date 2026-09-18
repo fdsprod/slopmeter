@@ -9,6 +9,7 @@ from typer.testing import CliRunner
 from slop_measure.api import AnalysisConfig, ComparisonRequest, DirectorySourceReference, compare
 from slop_measure.cli import app
 from slop_measure.errors import AnalysisFailure
+from slop_measure.languages.python.adapter import PythonAdapter
 from slop_measure.reporting.json import serialize_report
 from slop_measure.sources.filesystem import FilesystemSourceProvider
 
@@ -214,3 +215,37 @@ def test_clone_failure_does_not_invalidate_comparison_sloc(
     assert deltas["m3.clone-verbosity"].state == "unavailable"
     assert deltas["verbosity.combined"].state == "unavailable"
     assert deltas["m2.pattern-verbosity"].state == "measured"
+
+
+def test_whole_adapter_failure_preserves_successful_side_without_provenance_conflict(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    before, after = tmp_path / "before", tmp_path / "after"
+    before.mkdir()
+    after.mkdir()
+    (before / "a.py").write_text("# fail adapter\nx = 1\n", encoding="utf-8")
+    (after / "a.py").write_text("x = 2\n", encoding="utf-8")
+    original = PythonAdapter.analyze
+
+    def analyze(adapter, documents, config):
+        if any(b"fail adapter" in document.content for document in documents):
+            raise RuntimeError("fixture whole-adapter failure")
+        return original(adapter, documents, config)
+
+    monkeypatch.setattr(PythonAdapter, "analyze", analyze)
+    report = compare(request(before, after))
+    cohort = next(item for item in report.cohorts if item.cohort.value == "production")
+    assert cohort.kind == "comparison"
+    assert cohort.baseline.files[0].evidence.parse_state.value == "failed"
+    assert cohort.current.files[0].evidence.parse_state.value == "parsed"
+    assert cohort.current.files[0].evidence.sloc == 1
+    assert cohort.line_delta.state == "unavailable"
+    assert all(item.state == "unavailable" for item in cohort.deltas)
+    assert any(
+        item.source.value == "baseline" and item.detail.code == "analyzer.failed"
+        for item in report.diagnostics
+    )
+    with pytest.raises(AnalysisFailure):
+        compare(request(before, after, strict=True))
