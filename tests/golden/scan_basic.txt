@@ -1,0 +1,22 @@
+slop.measure
+PROJECT
+snapshot - higher is worse
+
+source coverage
+  production python: 1 file, 0 SLOC
+    excluded - configured exclusion
+  production python: 2 files, 4 SLOC
+    scored
+  test python: 1 file, 2 SLOC
+    scored
+  production md: 1 file, 0 SLOC
+    unsupported - no language adapter
+
+production python
+  snapshot slop unavailable: required-metric-unavailable
+  m1.loc-delta: unavailable (no-baseline)
+  m2.pattern-verbosity: unavailable (parse-failed)
+  m3.clone-verbosity: unavailable (parse-failed)
+  m4.erosion: unavailable (parse-failed)
+
+diagnostics: 1 (see --json for full details)

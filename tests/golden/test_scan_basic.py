@@ -10,8 +10,13 @@ from slop_measure import __version__
 from slop_measure.api import compare, scan
 from slop_measure.cli import app
 from slop_measure.config import AnalysisConfig, load_analysis_config
+from slop_measure.domain.reports import SnapshotAnalysis
 from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
-from slop_measure.domain.source import DirectorySourceReference, GitSourceReference
+from slop_measure.domain.source import (
+    DirectorySourceIdentity,
+    DirectorySourceReference,
+    GitSourceReference,
+)
 from slop_measure.errors import AnalysisFailure
 from slop_measure.reporting.json import serialize_report
 from slop_measure.reporting.terminal import render_snapshot
@@ -151,6 +156,17 @@ def test_cli_missing_root_and_invalid_config_return_two(tmp_path: Path) -> None:
     assert CliRunner().invoke(app, ["scan", str(tmp_path)]).exit_code == 2
 
 
+def test_cli_internal_scan_value_error_is_failure_three(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail_scan(request: SnapshotRequest):
+        raise ValueError("internal report invariant failed")
+
+    monkeypatch.setattr("slop_measure.cli.scan", fail_scan)
+    result = CliRunner().invoke(app, ["scan", str(tmp_path), "--json"])
+    assert result.exit_code == 3, result.output
+
+
 def test_scope_changes_terminal_selection_but_json_keeps_all_cohorts(basic_project: Path) -> None:
     result = CliRunner().invoke(app, ["scan", str(basic_project), "--scope", "test", "--json"])
     assert result.exit_code == 0, result.output
@@ -196,3 +212,28 @@ def test_git_scan_and_comparison_are_explicitly_unavailable(tmp_path: Path) -> N
     reference = DirectorySourceReference(root=tmp_path)
     with pytest.raises(NotImplementedError):
         compare(ComparisonRequest(baseline=reference, current=reference, config=AnalysisConfig()))
+
+
+def test_public_api_exports_a_complete_directory_scan_interface(tmp_path: Path) -> None:
+    from slop_measure.api import (  # noqa: PLC0415 - exercise the documented public import
+        AnalysisConfig as PublicConfig,
+        DirectorySourceReference as PublicDirectory,
+        GitSourceReference as PublicGit,
+        SnapshotRequest as PublicRequest,
+        scan as public_scan,
+    )
+
+    public_request = PublicRequest(target=PublicDirectory(root=tmp_path), config=PublicConfig())
+    assert public_scan(public_request).analysis.kind == "snapshot"
+    assert PublicGit(root=tmp_path, revision="HEAD").revision == "HEAD"
+
+
+def test_plain_terminal_snapshot_matches_approved_golden(basic_project: Path) -> None:
+    report = scan(request(basic_project))
+    normalized = report.model_copy(
+        update={"analysis": SnapshotAnalysis(current=DirectorySourceIdentity(root=Path("PROJECT")))}
+    )
+    rendered = render_snapshot(normalized, width=80, color=False)
+    expected = (Path(__file__).parent / "scan_basic.txt").read_text(encoding="utf-8")
+
+    assert rendered == expected

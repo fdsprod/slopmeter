@@ -218,9 +218,11 @@ class InconsistentAdapter:
                 path=document.path,
                 language=language,
                 cohort=Cohort.TEST if self.mode == "cohort" else document.cohort,
-                sloc=1,
-                sloc_lines=(1,),
-                parse_state=ParseState.PARSED,
+                sloc=0 if self.mode == "silent-failure" else 1,
+                sloc_lines=() if self.mode == "silent-failure" else (1,),
+                parse_state=ParseState.FAILED
+                if self.mode == "silent-failure"
+                else ParseState.PARSED,
             )
             for document in documents
         )
@@ -247,7 +249,9 @@ class InconsistentAdapter:
         )
 
 
-@pytest.mark.parametrize("mode", ["missing", "extra", "cohort", "language", "capabilities"])
+@pytest.mark.parametrize(
+    "mode", ["missing", "extra", "cohort", "language", "capabilities", "silent-failure"]
+)
 def test_inconsistent_adapter_output_fails_batch_without_losing_source(
     tmp_path: Path, mode: str
 ) -> None:
@@ -279,6 +283,16 @@ def test_invalid_adapter_language_on_empty_input_has_project_error(tmp_path: Pat
         service.scan(request(tmp_path, strict=True))
 
 
+def test_adapter_exception_on_empty_input_has_project_error(tmp_path: Path) -> None:
+    service = AnalysisService(LanguageRegistry((BrokenAdapter(),)))
+    report = service.scan(request(tmp_path))
+    assert len(report.diagnostics) == 1
+    assert report.diagnostics[0].detail.code == "analyzer.failed"
+    assert report.diagnostics[0].detail.path is None
+    with pytest.raises(AnalysisFailure):
+        service.scan(request(tmp_path, strict=True))
+
+
 def test_directory_read_error_keeps_other_source_and_fails_strict_mode(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -299,3 +313,36 @@ def test_directory_read_error_keeps_other_source_and_fails_strict_mode(
     assert any(cohort.current.files for cohort in report.cohorts)
     with pytest.raises(AnalysisFailure):
         service.scan(request(tmp_path, strict=True))
+
+
+def test_aggregate_parse_failure_reason_is_independent_of_language(tmp_path: Path) -> None:
+    evidence = LanguageEvidence(
+        language="other",
+        capabilities=frozenset({EvidenceCapability.FILES}),
+        files=(
+            FileEvidence(
+                path=ProjectPath("bad.other"),
+                language="other",
+                cohort=Cohort.PRODUCTION,
+                sloc=0,
+                sloc_lines=(),
+                parse_state=ParseState.FAILED,
+            ),
+        ),
+        diagnostics=(
+            Diagnostic(
+                severity=DiagnosticSeverity.ERROR,
+                code="other.parse-error",
+                message="Parse failed.",
+                path=ProjectPath("bad.other"),
+            ),
+        ),
+    )
+    report = aggregate_snapshot(
+        DirectorySourceIdentity(root=tmp_path), SourceInventory(), (evidence,), AnalysisConfig()
+    )
+    production = next(item.current for item in report.cohorts if item.cohort is Cohort.PRODUCTION)
+    payload = production.model_dump(mode="json")
+
+    assert [item["reason"] for item in payload["metrics"]][1:] == ["parse-failed"] * 3
+    assert [item["reason"] for item in payload["files"][0]["metrics"]][1:] == ["parse-failed"] * 3

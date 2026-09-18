@@ -295,6 +295,24 @@ def test_directory_walk_errors_are_diagnostics_not_silent_omissions(
     assert inventory.diagnostics[0].path.root == "blocked"
 
 
+def test_junction_directories_are_pruned_before_traversal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    write(tmp_path, "junction/hidden.py")
+    write(tmp_path, "kept.py")
+    junction = tmp_path / "junction"
+    original = Path.is_junction
+
+    def is_junction(path: Path) -> bool:
+        return path == junction or original(path)
+
+    monkeypatch.setattr(Path, "is_junction", is_junction)
+    inventory = provider(tmp_path).inventory()
+
+    assert [item.path.root for item in inventory.documents] == ["kept.py"]
+    assert inventory.diagnostics == ()
+
+
 @pytest.mark.parametrize("conflict", ["duplicate-documents", "duplicate-failures", "overlap"])
 def test_inventory_paths_have_one_discovery_outcome(conflict: str) -> None:
     document = SourceDocument.model_validate(
