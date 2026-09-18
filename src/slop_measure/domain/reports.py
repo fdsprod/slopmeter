@@ -8,6 +8,7 @@ from typing import Annotated, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, StringConstraints, model_validator
 
 from slop_measure.config import AnalysisConfig
+from slop_measure.domain.boundaries import CloneBoundaryContext, clone_boundary_context
 from slop_measure.domain.changes import FileChange, LineTotals, MetricDelta
 from slop_measure.domain.comparison_validation import validate_cohort_changes
 from slop_measure.domain.evidence import (
@@ -29,6 +30,12 @@ from slop_measure.domain.metrics import (
     MetricVersion,
     ProjectMetricScope,
     UnavailableMetric,
+)
+from slop_measure.domain.reviews import (
+    CloneReviewAnchor,
+    CloneReviewResult,
+    SourceHash,
+    clone_analysis_fingerprint,
 )
 from slop_measure.domain.scoring import ReferenceSupport, ScoreContribution, UnknownReferenceSupport
 from slop_measure.domain.source import Cohort, SourceIdentity
@@ -144,6 +151,9 @@ class FileResult(_ReportModel):
     """Source facts and derived results for one file."""
 
     evidence: FileEvidence
+    source_sha256: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     functions: tuple[FunctionEvidence, ...] = ()
     metrics: tuple[MetricResult, ...] = ()
     score: SnapshotScore
@@ -266,6 +276,9 @@ class ReportCloneGroup(_ReportModel):
     id: _Text
     source: SourceSide = SourceSide.CURRENT
     detail: CloneGroup
+    boundary_context: CloneBoundaryContext | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 def _source_results(cohort: CohortReport) -> Iterator[tuple[SourceSide, CohortResult]]:
@@ -317,7 +330,66 @@ class AnalysisReport(_ReportModel):
     cohorts: tuple[CohortReport, ...] = ()
     findings: tuple[ReportFinding, ...] = ()
     clone_groups: tuple[ReportCloneGroup, ...] = ()
+    review_results: tuple[CloneReviewResult, ...] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
     diagnostics: tuple[ReportDiagnostic, ...] = ()
+
+    def clone_review_anchor(self, group: ReportCloneGroup) -> CloneReviewAnchor:
+        """Derive applicability from this report's current evidence and policy."""
+        if group.source is not SourceSide.CURRENT or group not in self.clone_groups:
+            raise ValueError("clone review requires an owned current group")
+        files = {
+            file.evidence.path.root: file
+            for cohort in self.cohorts
+            for file in cohort.current.files
+        }
+        paths = tuple(member.path for member in group.detail.members)
+        hashes = []
+        for path in sorted({path.root for path in paths}):
+            file = files.get(path)
+            if file is None or file.source_sha256 is None:
+                raise ValueError("clone review requires exact source hashes for every member file")
+            hashes.append(SourceHash(path=file.evidence.path, sha256=file.source_sha256))
+        version = next(
+            (
+                item.version
+                for item in self.provenance.metrics
+                if item.metric_id == "m3.clone-verbosity"
+            ),
+            None,
+        )
+        if version is None:
+            raise ValueError("clone review requires the clone metric version")
+        config = self.provenance.config
+        return CloneReviewAnchor(
+            detail=group.detail,
+            source_hashes=tuple(hashes),
+            policy_fingerprint=clone_boundary_context(paths, config.boundaries).policy_fingerprint,
+            analysis_fingerprint=clone_analysis_fingerprint(
+                version,
+                group.detail.normalization_version,
+                config.clone_min_statements,
+                config.clone_min_sloc,
+            ),
+        )
+
+    @model_validator(mode="after")
+    def validate_reviews(self) -> Self:
+        _require_unique((result.decision.id for result in self.review_results), "review decision")
+        groups = {
+            group.id: group for group in self.clone_groups if group.source is SourceSide.CURRENT
+        }
+        for result in self.review_results:
+            if result.state == "current":
+                group = groups.get(result.group_id)
+                if group is None or result.decision.anchor != self.clone_review_anchor(group):
+                    raise ValueError("current clone review must match its source and policy anchor")
+            elif result.state == "stale" and any(
+                key not in groups for key in result.candidate_group_ids
+            ):
+                raise ValueError("stale review candidates must refer to current clone groups")
+        return self
 
     @model_validator(mode="after")
     def validate_clones(self) -> Self:
@@ -330,6 +402,17 @@ class AnalysisReport(_ReportModel):
         }
         for record in self.clone_groups:
             group = record.detail
+            if (
+                record.boundary_context is not None
+                and record.boundary_context
+                != clone_boundary_context(
+                    tuple(member.path for member in group.members),
+                    self.provenance.config.boundaries,
+                )
+            ):
+                raise ValueError(
+                    "clone boundary context must match its members and configured policy"
+                )
             for member in group.members:
                 file = files.get((record.source, member.path.root))
                 if file is None:

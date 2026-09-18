@@ -6,7 +6,6 @@ from pathlib import PurePosixPath
 
 from rich.console import Console
 
-from slop_measure.config import AnalysisConfig
 from slop_measure.domain.changes import AddedFile, DeletedFile, FileChange
 from slop_measure.domain.evidence import (
     CoverageState,
@@ -37,6 +36,7 @@ from slop_measure.domain.reports import (
 from slop_measure.domain.scoring import RecordedReferenceSupport, ScoreTransform
 from slop_measure.domain.source import Cohort
 from slop_measure.errors import SelectionError
+from slop_measure.reporting.callables import effective_complexity, render_callable_basis
 from slop_measure.reporting.interpretation import render_interpretation
 from slop_measure.reporting.queries import (
     change_for_file,
@@ -45,18 +45,22 @@ from slop_measure.reporting.queries import (
     select_callable,
     select_file,
 )
+from slop_measure.reporting.reviews import render_review_results
 from slop_measure.scoring.hotspots import rank_hotspots
 
 
 def _render_erosion(
-    console: Console, metric: MeasuredMetric, result: CohortResult, config: AnalysisConfig
+    console: Console, metric: MeasuredMetric, result: CohortResult, report: AnalysisReport
 ) -> None:
+    config = report.provenance.config
+    version = _erosion_version(report)
     functions = tuple(function for file in result.files for function in file.functions)
     eroded = sorted(
         (
             function
             for function in functions
-            if function.complexity_for(metric.scope.cohort) > config.complexity_threshold
+            if (effective_complexity(function, metric.scope.cohort, version) or 0)
+            > config.complexity_threshold
         ),
         key=lambda function: (
             -function.mass,
@@ -77,7 +81,10 @@ def _render_erosion(
         console.print(
             f"    {function.path.root}:{function.span.start_line}-{function.span.end_line} "
             f"{function.qualified_name}: CC {function.cyclomatic_complexity}, "
-            f"SLOC {function.sloc}, mass {function.mass:g}" + _assertion_detail(function)
+            f"SLOC {function.sloc}, full-CC mass {function.mass:g}" + _assertion_detail(function)
+        )
+        render_callable_basis(
+            console, function, metric.scope.cohort, config.complexity_threshold, version
         )
 
 
@@ -294,7 +301,7 @@ def _measured(view: _View, result: CohortResult, report: AnalysisReport) -> None
         ):
             _metric_row(view, metric)
             if view.verbose and metric.metric_id == "m4.erosion":
-                _render_erosion(view.console, metric, result, report.provenance.config)
+                _render_erosion(view.console, metric, result, report)
             elif view.verbose and metric.metric_id == "m2.pattern-verbosity":
                 _render_patterns(view.console, metric, result, report)
 
@@ -332,6 +339,7 @@ def _file_values(view: _View, file: FileResult, label: str, *, scored: bool = Fa
         )
         text += " | " + points
     text += " | " + _percentage(file, "m2.pattern-verbosity", view.missing)
+    text += " | " + _percentage(file, "m3.clone-verbosity", view.missing)
     if view.console.width >= _FULL_COLUMNS_WIDTH:
         text += " | " + _percentage(file, "m4.erosion", view.missing)
     return text
@@ -361,7 +369,7 @@ def _file_table(view: _View, files: tuple[FileResult, ...]) -> None:
     view.console.print(
         "  File"
         + (" | Score" if scored else "")
-        + " | Patterns"
+        + " | Patterns | Clones"
         + (" | Erosion" if view.console.width >= _FULL_COLUMNS_WIDTH else "")
     )
     for file in ordered[: view.limit]:
@@ -503,6 +511,17 @@ def _groups_for(
     )
 
 
+def _clone_boundary(view: _View, record: ReportCloneGroup) -> None:
+    context = record.boundary_context
+    if context is None:
+        return
+    view.console.print(
+        f"    Ownership: {context.relation} (configured labels; not a refactoring decision)"
+    )
+    for member in context.members:
+        view.console.print(f"      {member.path.root}: {member.boundary or 'unassigned'}")
+
+
 def _render_clone_groups(
     view: _View, groups: tuple[ReportCloneGroup, ...], limit: int | None = None
 ) -> None:
@@ -512,6 +531,7 @@ def _render_clone_groups(
     view.console.print("Clone groups")
     for group in groups[:limit]:
         view.console.print(f"  {group.id} | {_count(len(group.detail.members), 'instance')}")
+        _clone_boundary(view, group)
         for member in group.detail.members:
             view.console.print(
                 f"    {member.path.root}:{member.span.start_line}-{member.span.end_line}"
@@ -554,6 +574,7 @@ def render_snapshot(  # noqa: PLR0913
         )
         _unavailable(view, cohort.current.metrics)
     _footer(view, report, cohorts)
+    render_review_results(view.console, report.review_results)
     render_interpretation(view.console, report.interpretation, verbose=verbose)
     return stream.getvalue()
 
@@ -611,7 +632,7 @@ def render_tree(  # noqa: PLR0913
         view.console.print(
             "File"
             + (" | Score" if scored else "")
-            + " | Patterns"
+            + " | Patterns | Clones"
             + (" | Erosion" if width >= _FULL_COLUMNS_WIDTH else "")
         )
         files = tuple(sorted(cohort.current.files, key=lambda item: item.evidence.path.root))
@@ -622,8 +643,27 @@ def render_tree(  # noqa: PLR0913
         )
         _unavailable(view, cohort.current.metrics)
     _footer(view, report, cohorts)
+    render_review_results(view.console, report.review_results)
     render_interpretation(view.console, report.interpretation, verbose=verbose)
     return stream.getvalue()
+
+
+def _erosion_version(report: AnalysisReport) -> str | None:
+    return next(
+        (item.version for item in report.provenance.metrics if item.metric_id == "m4.erosion"), None
+    )
+
+
+def _callable_basis(
+    view: _View, report: AnalysisReport, cohort: Cohort, function: FunctionEvidence
+) -> None:
+    render_callable_basis(
+        view.console,
+        function,
+        cohort,
+        report.provenance.config.complexity_threshold,
+        _erosion_version(report),
+    )
 
 
 def _assertion_detail(function: FunctionEvidence) -> str:
@@ -639,7 +679,7 @@ def _callable_row(view: _View, function: FunctionEvidence) -> None:
     view.console.print(
         f"  {function.path.root}:{function.span.start_line}-{function.span.end_line} "
         f"{function.qualified_name}: CC {function.cyclomatic_complexity}, "
-        f"SLOC {function.sloc}, mass {function.mass:g}" + _assertion_detail(function)
+        f"SLOC {function.sloc}, full-CC mass {function.mass:g}" + _assertion_detail(function)
     )
 
 
@@ -661,7 +701,7 @@ def _explain_findings(
         )
     )
     view.console.print()
-    view.console.print(f"Findings ({len(findings)})")
+    view.console.print(f"Pattern findings ({len(findings)})")
     for finding in findings:
         view.console.print(
             f"  {finding.path.root}:{finding.span.start_line}-{finding.span.end_line} "
@@ -671,7 +711,8 @@ def _explain_findings(
             view.console.print(f"    {finding.remediation}")
 
 
-def _explain_file(view: _View, file: FileResult, config: AnalysisConfig) -> None:
+def _explain_file(view: _View, file: FileResult, report: AnalysisReport) -> None:
+    config = report.provenance.config
     _score_row(view, file.score, details=True)
     for metric in file.metrics:
         if isinstance(metric, MeasuredMetric):
@@ -686,6 +727,7 @@ def _explain_file(view: _View, file: FileResult, config: AnalysisConfig) -> None
     view.console.print("Callables")
     for function in file.functions:
         _callable_row(view, function)
+        _callable_basis(view, report, file.evidence.cohort, function)
 
 
 def _explanation_clones(
@@ -798,8 +840,9 @@ def render_explanation(  # noqa: PLR0913
     )
     if function is not None:
         _callable_row(view, function)
+        _callable_basis(view, report, file.evidence.cohort, function)
     else:
-        _explain_file(view, file, report.provenance.config)
+        _explain_file(view, file, report)
     _explain_findings(view, report, file, function, source=source)
     _render_clone_groups(view, _explanation_clones(report, file, function, source))
     if isinstance(report.analysis, ComparisonAnalysis):
@@ -807,5 +850,6 @@ def render_explanation(  # noqa: PLR0913
     _explain_diagnostics(view, report, file, source)
     if verbose:
         _provenance(view, report)
+    render_review_results(view.console, report.review_results)
     render_interpretation(view.console, report.interpretation, verbose=verbose)
     return stream.getvalue()

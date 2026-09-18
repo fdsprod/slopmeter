@@ -13,10 +13,12 @@ import typer
 
 from slop_measure.api import compare, scan
 from slop_measure.application.catalog import rule_catalog
+from slop_measure.application.reviews import apply_reviews, load_review_store, write_clone_review
 from slop_measure.config import load_analysis_config
 from slop_measure.domain.evidence import DiagnosticSeverity
 from slop_measure.domain.reports import AnalysisReport, SourceSide
 from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
+from slop_measure.domain.reviews import ReviewDisposition
 from slop_measure.domain.source import DirectorySourceReference, GitSourceReference
 from slop_measure.errors import InputError, InvalidSource, SelectionError, error_message, exit_code
 from slop_measure.reporting import terminal
@@ -131,6 +133,10 @@ _Ascii = Annotated[bool, typer.Option("--ascii", help="Use plain bars and tree c
 _Verbose = Annotated[bool, typer.Option("--verbose", help="Show counts, evidence, and provenance.")]
 _Top = Annotated[int | None, typer.Option("--top", min=1, help="Limit terminal file rows.")]
 _Root = Annotated[Path, typer.Option("--root", exists=True, file_okay=False, resolve_path=True)]
+_Reviews = Annotated[
+    Path | None,
+    typer.Option("--reviews", help="Read a clone review store without changing scores."),
+]
 _Revision = Annotated[str | None, typer.Option("--rev", help="Read the current Git revision.")]
 _BaselineRoot = Annotated[
     Path | None, typer.Option("--baseline-root", exists=True, file_okay=False, resolve_path=True)
@@ -255,6 +261,7 @@ def scan_command(  # noqa: PLR0913
     path: _Directory = Path("."),
     *,
     revision: Annotated[str | None, typer.Option("--rev", help="Read a Git revision.")] = None,
+    reviews: _Reviews = None,
     json_output: _Json = False,
     strict: _Strict = None,
     languages: _Languages = None,
@@ -269,7 +276,7 @@ def scan_command(  # noqa: PLR0913
 ) -> None:
     """Inspect snapshot measurements and file evidence."""
     display = _display(color, no_color, ascii, verbose, top)
-    report = _scan_report(path, strict, revision, languages)
+    report = _review_report(_scan_report(path, strict, revision, languages), reviews)
     if json_output:
         typer.echo(serialize_report(report), nl=False)
         return
@@ -370,6 +377,7 @@ def findings_command(  # noqa: PLR0913
     metric: Annotated[str | None, typer.Option("--metric", help="m2, m3, m4, or combined.")] = None,
     rule: Annotated[str | None, typer.Option("--rule", help="Exact pattern rule ID.")] = None,
     severity: Annotated[DiagnosticSeverity | None, typer.Option("--severity")] = None,
+    reviews: _Reviews = None,
     json_output: _Json = False,
     strict: _Strict = None,
     languages: _Languages = None,
@@ -385,6 +393,7 @@ def findings_command(  # noqa: PLR0913
         report = _evidence_report(
             root_path, strict, revision, baseline_root, baseline_revision, languages=languages
         )
+        report = _review_report(report, reviews)
         selection = query_findings(
             report, path=path, metric=metric, rule=rule, severity=severity, source=source
         )
@@ -401,6 +410,10 @@ def findings_command(  # noqa: PLR0913
                     item.model_dump(mode="json") for item in report.excluded_directories
                 ],
             }
+            if report.review_results:
+                payload["review_results"] = [
+                    item.model_dump(mode="json") for item in report.review_results
+                ]
             typer.echo(json.dumps(payload, indent=2, ensure_ascii=True, sort_keys=True))
             return
         output = render_findings(
@@ -447,6 +460,75 @@ def rules_command(  # noqa: PLR0913 - independent catalog display options
         nl=False,
         color=display.color,
     )
+
+
+def _review_report(report: AnalysisReport, store: Path | None) -> AnalysisReport:
+    if store is None:
+        return report
+    try:
+        return apply_reviews(report, load_review_store(store))
+    except (InputError, ValueError, OSError) as error:
+        _fail(InputError(str(error)))
+
+
+review_app = typer.Typer(
+    help="Record and inspect source-bound clone review decisions.", no_args_is_help=True
+)
+app.add_typer(review_app, name="review")
+
+
+@review_app.command("set")
+def review_set(  # noqa: PLR0913 - explicit review identity, decision, and source selection
+    group_id: str,
+    *,
+    store: Annotated[Path, typer.Option("--store")],
+    disposition: Annotated[ReviewDisposition, typer.Option("--disposition")],
+    reason: Annotated[str, typer.Option("--reason")],
+    root_path: _Root = Path("."),
+    next_step: Annotated[str, typer.Option("--next-step")] = "",
+    languages: _Languages = None,
+) -> None:
+    """Save one clone decision after source review; never modify analyzed code."""
+    report = _scan_report(root_path, None, languages=languages)
+    try:
+        write_clone_review(
+            store, report, group_id, disposition=disposition, reason=reason, next_step=next_step
+        )
+    except (InputError, ValueError, OSError) as error:
+        _fail(InputError(str(error)))
+    typer.echo(
+        f"Saved {disposition.value} for {group_id} in {store}. Findings and scores are unchanged."
+    )
+
+
+@review_app.command("show")
+def review_show(  # noqa: PLR0913 - report source and independent presentation options
+    *,
+    store: Annotated[Path, typer.Option("--store")],
+    root_path: _Root = Path("."),
+    languages: _Languages = None,
+    json_output: _Json = False,
+    color: _ColorOption = _Color.AUTO,
+    no_color: _NoColor = False,
+    ascii: _Ascii = False,
+    verbose: _Verbose = False,
+) -> None:
+    """Recheck saved clone decisions against a fresh read-only snapshot."""
+    report = _review_report(_scan_report(root_path, None, languages=languages), store)
+    display = _display(color, no_color, ascii, verbose, None)
+    output = (
+        serialize_report(report)
+        if json_output
+        else terminal.render_snapshot(
+            report,
+            scope="all",
+            width=display.width,
+            color=display.color,
+            ascii=display.ascii,
+            verbose=verbose,
+        )
+    )
+    typer.echo(output, nl=False, color=display.color)
 
 
 def main() -> None:

@@ -14,6 +14,8 @@ from pydantic import (
     model_validator,
 )
 
+from slop_measure.domain.boundaries import BoundaryDeclaration
+
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 _PositiveInt = Annotated[int, Field(gt=0, strict=True)]
 
@@ -25,6 +27,9 @@ class AnalysisConfig(BaseModel):
 
     languages: frozenset[_Text] = Field(
         default_factory=frozenset, exclude_if=lambda value: not value
+    )
+    boundaries: tuple[BoundaryDeclaration, ...] = Field(
+        default=(), exclude_if=lambda value: not value
     )
     production_patterns: tuple[_Text, ...] = ("**/*.py",)
     test_patterns: tuple[_Text, ...] = ("tests/**/*.py", "**/test_*.py", "**/*_test.py")
@@ -45,6 +50,14 @@ class AnalysisConfig(BaseModel):
     calibration_profile: _Text = "py-2026.3"
     default_hotspot_count: _PositiveInt = 5
     strict: Annotated[bool, Field(strict=True)] = False
+
+    @model_validator(mode="after")
+    def validate_boundaries(self) -> Self:
+        if len({item.name for item in self.boundaries}) != len(self.boundaries):
+            raise ValueError("boundary names must be unique")
+        if len({item.prefix.root for item in self.boundaries}) != len(self.boundaries):
+            raise ValueError("boundary prefixes must be unique")
+        return self
 
     @model_validator(mode="after")
     def validate_rule_selection(self) -> Self:

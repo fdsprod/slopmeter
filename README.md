@@ -324,8 +324,8 @@ Use the affected/total SLOC and excess/total complexity mass with percentile ran
 when choosing what to inspect. Clone SLOC counts all occurrences, not removable lines.
 Independent providers or deployables can justify duplication. Keep that evidence and
 record the ownership decision instead of extracting shared code only to lower a score.
-Persistent review dispositions and configured architectural boundaries are planned.
-This version does not yet store or automatically apply them. All-zero pattern results
+Configured architectural boundaries and persistent clone review dispositions add
+review context without suppressing findings or changing scores. All-zero pattern results
 provide no evidence of detector sensitivity without known positive examples.
 
 The initial corpus contains six pinned 2019 Python project snapshots. It provides
@@ -479,3 +479,62 @@ package checks, and 96.81 percent branch coverage on Windows Python 3.12, with
 focused checks on Python 3.13 and 3.14. These are local results; the
 [GitHub Actions workflow](.github/workflows/ci.yml) defines the full nine-cell
 Windows, macOS, and Linux matrix.
+
+## Ownership and clone review (unreleased)
+
+Declare boundaries explicitly in `slop.toml` (or `[[tool.slop.boundaries]]` in
+`pyproject.toml`):
+
+```toml
+[[boundaries]]
+name = "service-a"
+prefix = "src/services/a"
+
+[[boundaries]]
+name = "service-b"
+prefix = "src/services/b"
+```
+
+Prefixes are paths relative to the scan root, not globs. The longest matching path
+prefix wins. A clone group is `within-boundary` or `cross-boundary` only when every
+member is assigned. Otherwise its relation is `unknown`, with unmatched files shown
+as `unassigned`. A cross-boundary clone is not automatically intentional or actionable.
+Boundary labels never change clone detection, metrics, calibrated scores, or ranking.
+
+Save a reviewed clone decision with a reason:
+
+```powershell
+slop findings --root . --metric m3
+slop review set CLONE_ID --root . --store reviews.json --disposition no-change --reason "These adapters evolve under separate contracts." --next-step "Check each adapter when the contract changes."
+slop score . --lang py --reviews reviews.json
+slop findings --root . --metric m3 --reviews reviews.json --json
+slop review show --root . --store reviews.json --json
+```
+
+Dispositions are `actionable`, `defer`, or `no-change`. Only `review set` writes the
+store. Scans and `review show` only read it. Review annotations preserve findings,
+scores, and file order. The store is explicit and local; scans do not discover or
+create one automatically.
+
+A decision is `current` only when the clone evidence, exact member-file bytes,
+configured boundary policy, and clone measurement definition still match. A source
+edit can make it `stale` even if normalized clone tokens stay the same. This first
+version hashes whole member files, so an unrelated edit in one can also require
+review. If the group is absent or unavailable, its decision is `missing`, not fixed.
+Review the source again before using `review set` to replace a decision. Historical
+reports without source hashes cannot create or confirm a current decision.
+
+Stores contain relative locations and hashes, not source text. They can still
+contain sensitive paths and reviewer notes; choose where to keep them. Persistence
+currently covers clone groups and the current snapshot side only. Use separate
+stores for independent scan roots. Boundary prefixes are also relative to each root.
+
+Callable explanations label the retained `mass` field as **full-CC mass**. They show
+the version-specific M4 basis, effective CC, effective mass, numerator, and threshold
+separately. File rankings include clone percentages at narrow and wide widths.
+`Pattern findings (0)` counts pattern rules only, not complexity or clones.
+
+Production callables whose assertions alone cause a threshold crossing receive a
+classification-review hint. This does not move them into the test cohort or change
+their score. Inspect intent before separating self-test scenarios or configuring
+file-level test paths. Do not exclude a mixed-purpose file merely to lower a score.

@@ -5,6 +5,7 @@ from hashlib import sha256
 
 from slop_measure import __version__
 from slop_measure.config import AnalysisConfig
+from slop_measure.domain.boundaries import clone_boundary_context
 from slop_measure.domain.evidence import (
     AnalyzedFunctions,
     AnalyzedPatterns,
@@ -304,12 +305,14 @@ def _score(
     )
 
 
-def _cohort_result(
+def _cohort_result(  # noqa: PLR0913 - source identity is separate from metrics
     files: tuple[FileEvidence, ...],
     cohort: Cohort,
     diagnostics: tuple[ReportDiagnostic, ...],
     project_errors: tuple[ReportDiagnostic, ...],
     metrics: _SnapshotMetrics,
+    *,
+    source_hashes: dict[str, str],
 ) -> CohortResult:
     results: list[FileResult] = []
     for file in files:
@@ -320,6 +323,7 @@ def _cohort_result(
         results.append(
             FileResult(
                 evidence=file,
+                source_sha256=source_hashes.get(file.path.root),
                 functions=metrics.erosion.functions((file,)),
                 metrics=file_metrics,
                 score=_score(reason, file_metrics),
@@ -488,6 +492,7 @@ def aggregate_snapshot(
         | {item.language for item in analyzers}
         | {file.language for file in files}
     )
+    source_hashes = {document.path.root: document.content_hash for document in inventory.documents}
     cohorts: list[SnapshotCohortReport] = []
     coverage = [ReportCoverage(detail=item) for item in inventory.coverage]
     for language in languages:
@@ -501,7 +506,14 @@ def aggregate_snapshot(
                 SnapshotCohortReport(
                     language=language,
                     cohort=cohort,
-                    current=_cohort_result(members, cohort, diagnostics, project_errors, metrics),
+                    current=_cohort_result(
+                        members,
+                        cohort,
+                        diagnostics,
+                        project_errors,
+                        metrics,
+                        source_hashes=source_hashes,
+                    ),
                 )
             )
             coverage.append(
@@ -534,6 +546,13 @@ def aggregate_snapshot(
             ReportCloneGroup(
                 id="clone-" + sha256(group.model_dump_json().encode()).hexdigest()[:20],
                 detail=group,
+                boundary_context=(
+                    clone_boundary_context(
+                        tuple(member.path for member in group.members), config.boundaries
+                    )
+                    if config.boundaries
+                    else None
+                ),
             )
             for group in groups
         ),

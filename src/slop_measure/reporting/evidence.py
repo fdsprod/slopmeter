@@ -4,8 +4,16 @@ from slop_measure.domain.evidence import DiagnosticSeverity
 from slop_measure.domain.reports import AnalysisReport, ReportCloneGroup, ReportFinding
 from slop_measure.domain.rules import RuleCatalog
 from slop_measure.reporting.interpretation import render_interpretation
+from slop_measure.reporting.reviews import render_review_results
 from slop_measure.reporting.selections import ErosionFinding, FindingSelection
-from slop_measure.reporting.terminal import _callable_row, _provenance, _View, _view
+from slop_measure.reporting.terminal import (
+    _callable_basis,
+    _callable_row,
+    _clone_boundary,
+    _provenance,
+    _View,
+    _view,
+)
 
 
 def _pattern(view: _View, record: ReportFinding) -> None:
@@ -26,6 +34,7 @@ def _clone(view: _View, record: ReportCloneGroup) -> None:
     view.console.print(
         f"  {record.id} | {record.source.value} | {group.language} | {group.cohort.value}"
     )
+    _clone_boundary(view, record)
     for member in group.members:
         view.console.print(
             f"    {member.path.root}:{member.span.start_line}-{member.span.end_line}"
@@ -36,9 +45,10 @@ def _clone(view: _View, record: ReportCloneGroup) -> None:
         view.console.print(f"    fingerprint {group.fingerprint}")
 
 
-def _function(view: _View, record: ErosionFinding) -> None:
+def _function(view: _View, record: ErosionFinding, report: AnalysisReport) -> None:
     view.console.print(f"  {record.source.value} | {record.language} | {record.cohort.value}")
     _callable_row(view, record.function)
+    _callable_basis(view, report, record.cohort, record.function)
 
 
 # Presentation options match the other report renderers and do not mutate selections.
@@ -111,7 +121,7 @@ def render_findings(  # noqa: PLR0913
             ),
         )[:remaining]
         for function in functions:
-            _function(view, function)
+            _function(view, function, report)
         remaining -= len(functions)
     omitted = total - (view.limit - remaining)
     if omitted:
@@ -122,6 +132,7 @@ def render_findings(  # noqa: PLR0913
         view.console.print("No matching evidence.")
     if verbose:
         _provenance(view, report)
+    render_review_results(view.console, report.review_results)
     render_interpretation(view.console, report.interpretation, verbose=verbose)
     return stream.getvalue()
 
