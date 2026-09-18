@@ -5,6 +5,8 @@ import os
 import shutil
 import subprocess
 import sys
+import tarfile
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -13,6 +15,38 @@ pytestmark = pytest.mark.skipif(
     not os.environ.get("SLOP_RELEASE_DIST"),
     reason="release artifacts are supplied by the build gate",
 )
+
+
+@pytest.mark.parametrize("pattern", ["*.tar.gz", "*.whl"])
+def test_release_archives_exclude_local_state_and_cache_paths(pattern: str) -> None:
+    distribution = Path(os.environ["SLOP_RELEASE_DIST"]).resolve()
+    artifacts = sorted(distribution.glob(pattern))
+    assert len(artifacts) == 1
+    artifact = artifacts[0]
+    if pattern == "*.whl":
+        with zipfile.ZipFile(artifact) as archive:
+            names = archive.namelist()
+        assert all(
+            name.split("/", 1)[0] == "slop_measure" or name.split("/", 1)[0].endswith(".dist-info")
+            for name in names
+        )
+    else:
+        with tarfile.open(artifact, "r:gz") as archive:
+            names = archive.getnames()
+    forbidden = {
+        ".claude",
+        ".codex",
+        ".uv-cache",
+        ".tmp",
+        ".venv",
+        ".pytest_cache",
+        ".git",
+        "__pycache__",
+    }
+    offending = [
+        name for name in names if forbidden.intersection(name.replace("\\", "/").split("/"))
+    ]
+    assert not offending, f"Archive includes local state/cache paths: {offending[:10]}"
 
 
 def run(arguments: list[str], cwd: Path, environment: dict[str, str]) -> str:
