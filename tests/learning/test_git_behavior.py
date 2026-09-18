@@ -244,3 +244,77 @@ def test_revision_resolution_uses_end_of_options_and_requires_a_commit(
             git_repository, "rev-parse", "--verify", "--end-of-options", invalid, check=False
         )
         assert result.returncode != 0
+
+
+def test_ignored_directory_listing_keeps_forced_tracked_children_and_relative_subroots(
+    git_repository: Path,
+) -> None:
+    (git_repository / ".gitignore").write_text(
+        "ignored/**\nonlyignored/**\ncache.py\n", encoding="utf-8"
+    )
+    for path in (
+        "ignored/tracked.py",
+        "ignored/deep/cache.py",
+        "onlyignored/deep/cache.py",
+        "cache.py",
+        "eligible.py",
+        "nested/ok.py",
+        "nested/junk/cache.py",
+    ):
+        target = git_repository / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(b"VALUE = 1\n")
+    (git_repository / "nested/.gitignore").write_text("junk/**\n", encoding="utf-8")
+    run_git(git_repository, "add", "--force", "ignored/tracked.py")
+    ignored = nul_fields(
+        run_git(
+            git_repository,
+            "ls-files",
+            "--others",
+            "--ignored",
+            "--exclude-standard",
+            "--directory",
+            "-z",
+            "--",
+            ".",
+        ).stdout
+    )
+    eligible = nul_fields(
+        run_git(
+            git_repository,
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "-z",
+            "--",
+            ".",
+        ).stdout
+    )
+    # Observed: complete ignored subtrees use trailing-slash directory records,
+    # while a forced tracked child stays eligible inside an otherwise ignored tree.
+    assert set(ignored) == {
+        b"cache.py",
+        b"ignored/deep/",
+        b"onlyignored/",
+        b"onlyignored/deep/",
+        b"nested/junk/",
+        b"nested/junk/cache.py",
+    }
+    assert b"ignored/tracked.py" in eligible and b"eligible.py" in eligible
+    assert not any(b"cache.py" in path for path in eligible)
+    nested = nul_fields(
+        run_git(
+            git_repository / "nested",
+            "ls-files",
+            "--others",
+            "--ignored",
+            "--exclude-standard",
+            "--directory",
+            "-z",
+            "--",
+            ".",
+        ).stdout
+    )
+    # Observed: running below the worktree root emits paths relative to that cwd.
+    assert nested == [b"junk/", b"junk/cache.py"]
