@@ -7,7 +7,13 @@ from pathlib import Path
 import pytest
 
 from slop_measure.config import AnalysisConfig
-from slop_measure.domain.evidence import DiagnosticSeverity, EvidenceCapability, ParseState
+from slop_measure.domain.evidence import (
+    AnalyzedFunctions,
+    DiagnosticSeverity,
+    EvidenceCapability,
+    FailedFunctions,
+    ParseState,
+)
 from slop_measure.domain.source import Cohort, ProjectPath, SourceDocument
 from slop_measure.languages.base import LanguageAdapter
 from slop_measure.languages.python.adapter import PythonAdapter
@@ -23,8 +29,10 @@ def test_python_adapter_declares_its_exact_capabilities() -> None:
     adapter: LanguageAdapter = PythonAdapter()
     assert adapter.language_id == "python"
     assert adapter.extensions == frozenset({".py", ".pyi"})
-    assert adapter.capabilities == frozenset({EvidenceCapability.FILES})
-    assert PythonAdapter().adapter_version == "python-files-1"
+    assert adapter.capabilities == frozenset(
+        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS}
+    )
+    assert PythonAdapter().adapter_version == "python-functions-1"
 
 
 @pytest.mark.parametrize(
@@ -44,9 +52,13 @@ def test_valid_sources_produce_exact_owned_file_evidence(
 ) -> None:
     result = PythonAdapter().analyze((document(content),), AnalysisConfig())
     assert result.language == "python"
-    assert result.capabilities == frozenset({EvidenceCapability.FILES})
+    assert result.capabilities == frozenset(
+        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS}
+    )
     assert result.diagnostics == ()
-    assert result.patterns == result.functions == result.clone_candidates == ()
+    assert result.patterns == result.clone_candidates == ()
+    assert len(result.function_analyses) == 1
+    assert isinstance(result.function_analyses[0], AnalyzedFunctions)
     assert len(result.files) == 1
     file = result.files[0]
     assert file.path == ProjectPath("src/app.py")
@@ -55,6 +67,7 @@ def test_valid_sources_produce_exact_owned_file_evidence(
     assert file.parse_state is ParseState.PARSED
     assert file.sloc_lines == lines
     assert file.sloc == len(lines)
+    assert bool(result.functions) == content.startswith(b"def ")
 
 
 @pytest.mark.parametrize(
@@ -87,6 +100,8 @@ def test_bad_source_does_not_prevent_other_files_and_strictness_is_service_owned
     assert diagnostic.code == code
     assert diagnostic.path == ProjectPath("bad.py")
     assert diagnostic.message
+    assert len(result.function_analyses) == 1
+    assert result.function_analyses[0].path == ProjectPath("good.py")
 
 
 def test_syntax_error_diagnostic_preserves_available_line_location() -> None:
@@ -147,3 +162,34 @@ def test_source_code_is_never_executed(tmp_path: Path) -> None:
     result = PythonAdapter().analyze((document(source.encode()),), AnalysisConfig())
     assert result.files[0].parse_state is ParseState.PARSED
     assert not marker.exists()
+
+
+def test_complexity_failure_retains_file_sloc_and_other_successful_outcomes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from slop_measure.languages.python.complexity import extract_functions  # noqa: PLC0415
+
+    def extract(tree, file):
+        if file.path == ProjectPath("bad.py"):
+            raise RuntimeError("fixture complexity failure")
+        return extract_functions(tree, file)
+
+    monkeypatch.setattr("slop_measure.languages.python.adapter.extract_functions", extract)
+    documents = (
+        document(b"def f():\n    return 1\n", "bad.py"),
+        document(b"def g():\n    return 2\n", "good.py"),
+    )
+    adapter = PythonAdapter()
+    evidence = adapter.analyze(documents, AnalysisConfig())
+
+    assert evidence == adapter.analyze(documents, AnalysisConfig(strict=True))
+    assert all(file.parse_state is ParseState.PARSED and file.sloc == 2 for file in evidence.files)
+    failed, succeeded = evidence.function_analyses
+    assert isinstance(failed, FailedFunctions)
+    assert failed.path == ProjectPath("bad.py")
+    assert failed.diagnostic.path == failed.path
+    assert failed.diagnostic.code == "python.complexity-error"
+    assert failed.diagnostic.severity is DiagnosticSeverity.ERROR
+    assert isinstance(succeeded, AnalyzedFunctions)
+    assert succeeded.functions[0].qualified_name == "g"
+    assert evidence.diagnostics == ()
