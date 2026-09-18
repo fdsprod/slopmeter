@@ -34,8 +34,10 @@ from slop_measure.domain.reports import (
     SnapshotScore,
     SourceSide,
 )
+from slop_measure.domain.scoring import ScoreTransform
 from slop_measure.domain.source import Cohort
 from slop_measure.errors import SelectionError
+from slop_measure.reporting.interpretation import render_interpretation
 from slop_measure.reporting.queries import (
     change_for_file,
     clones_for_file,
@@ -169,6 +171,8 @@ def _view(
     console = Console(
         file=stream,
         width=width,
+        height=25,
+        legacy_windows=False,
         force_terminal=color,
         no_color=not color,
         color_system="standard" if color else None,
@@ -277,7 +281,7 @@ def _metric_row(view: _View, metric: MeasuredMetric) -> None:
     if metric.metric_id in {"m2.pattern-verbosity", "m3.clone-verbosity", "verbosity.combined"}:
         text += f"  {metric.raw.numerator:g} / {metric.raw.denominator:g} SLOC"
     if view.verbose and metric.score is not None:
-        text += f" | metric {metric.score.points:.1f}/100"
+        text += f" | percentile {metric.score.points:.1f}"
     view.console.print(text, style="cyan")
 
 
@@ -380,6 +384,11 @@ def _score_row(view: _View, score: SnapshotScore, *, details: bool = False) -> N
                 f"    {_LABELS.get(contribution.metric_id, contribution.metric_id)}: "
                 f"{contribution.points:.1f} points | raw {contribution.raw_value:.1%} | "
                 f"percentile {contribution.percentile:.1f} | weight {contribution.weight:g}"
+                + (
+                    f" | severity-weighted ({contribution.metric_id})"
+                    if contribution.transform is ScoreTransform.SEVERITY_WEIGHTED
+                    else ""
+                )
             )
 
 
@@ -518,6 +527,7 @@ def render_snapshot(  # noqa: PLR0913
         )
         _unavailable(view, cohort.current.metrics)
     _footer(view, report, cohorts)
+    render_interpretation(view.console, report.interpretation, verbose=verbose)
     return stream.getvalue()
 
 
@@ -585,6 +595,7 @@ def render_tree(  # noqa: PLR0913
         )
         _unavailable(view, cohort.current.metrics)
     _footer(view, report, cohorts)
+    render_interpretation(view.console, report.interpretation, verbose=verbose)
     return stream.getvalue()
 
 
@@ -760,4 +771,5 @@ def render_explanation(  # noqa: PLR0913
     _explain_diagnostics(view, report, file, source)
     if verbose:
         _provenance(view, report)
+    render_interpretation(view.console, report.interpretation, verbose=verbose)
     return stream.getvalue()

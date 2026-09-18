@@ -2,6 +2,7 @@
 
 from bisect import bisect_left
 from decimal import ROUND_FLOOR, ROUND_HALF_UP, Decimal
+from typing import assert_never
 
 from slop_measure.domain.metrics import (
     CalibratedScore,
@@ -31,6 +32,7 @@ from slop_measure.domain.scoring import (
     ScoreContribution,
     ScoreInput,
     ScoreModel,
+    ScoreTransform,
 )
 
 
@@ -94,11 +96,21 @@ def select_population(
     return None
 
 
+def _transformed(rank: Decimal, raw: float, transform: ScoreTransform) -> Decimal:
+    match transform:
+        case ScoreTransform.PERCENTILE:
+            return rank
+        case ScoreTransform.SEVERITY_WEIGHTED:
+            return rank * Decimal(str(raw))
+        case _:
+            assert_never(transform)
+
+
 def _contributions(
     model: ScoreModel, population: ReferencePopulation, metrics: dict[str, MetricResult]
 ) -> tuple[ScoreContribution, ...]:
     distributions = {item.metric_id: item for item in population.distributions}
-    observations: list[tuple[ScoreInput, float, Decimal, float]] = []
+    observations: list[tuple[ScoreInput, float, Decimal, float, ScoreTransform]] = []
     for item in sorted(model.inputs, key=lambda item: item.metric_id):
         metric = metrics[item.metric_id]
         assert isinstance(metric, MeasuredMetric)  # noqa: S101 - checked by model selection
@@ -110,9 +122,13 @@ def _contributions(
                 metric.raw.value,
                 percentile(metric.raw.value, distributions[item.metric_id]),
                 item.weight,
+                item.transform,
             )
         )
-    tenths = [rank * Decimal(str(weight)) * 10 for _, _, rank, weight in observations]
+    tenths = [
+        _transformed(rank, raw, transform) * Decimal(str(weight)) * 10
+        for _, raw, rank, weight, transform in observations
+    ]
     allocated = [int(value.to_integral_value(rounding=ROUND_FLOOR)) for value in tenths]
     target = int(sum(tenths, Decimal(0)).to_integral_value(rounding=ROUND_HALF_UP))
     order = sorted(
@@ -127,9 +143,12 @@ def _contributions(
             raw_value=raw,
             percentile=float(rank),
             weight=weight,
+            transform=transform,
             points=float(Decimal(points) / 10),
         )
-        for (metric_id, raw, rank, weight), points in zip(observations, allocated, strict=True)
+        for (metric_id, raw, rank, weight, transform), points in zip(
+            observations, allocated, strict=True
+        )
     )
 
 

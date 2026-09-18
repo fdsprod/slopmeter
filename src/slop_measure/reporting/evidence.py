@@ -1,7 +1,9 @@
 """Render native evidence selections and versioned rule metadata."""
 
+from slop_measure.domain.evidence import DiagnosticSeverity
 from slop_measure.domain.reports import AnalysisReport, ReportCloneGroup, ReportFinding
 from slop_measure.domain.rules import RuleCatalog
+from slop_measure.reporting.interpretation import render_interpretation
 from slop_measure.reporting.selections import ErosionFinding, FindingSelection
 from slop_measure.reporting.terminal import _callable_row, _provenance, _View, _view
 
@@ -58,6 +60,14 @@ def render_findings(  # noqa: PLR0913
         f"{len(selection.patterns)} pattern findings | {len(selection.clone_groups)} clone groups"
         f" | {len(selection.functions)} eroded callables"
     )
+    partial = any(item.detail.severity is DiagnosticSeverity.ERROR for item in report.diagnostics)
+    directory_count = len(report.excluded_directories)
+    directory_noun = "directory" if directory_count == 1 else "directories"
+    view.console.print(
+        ("Analysis partial" if partial else "No analysis errors reported")
+        + f" | {len(report.diagnostics)} diagnostic(s)"
+        + f" | {directory_count} excluded {directory_noun} (contents not scanned)"
+    )
     remaining = view.limit
     if selection.patterns and remaining:
         view.console.print()
@@ -112,6 +122,7 @@ def render_findings(  # noqa: PLR0913
         view.console.print("No matching evidence.")
     if verbose:
         _provenance(view, report)
+    render_interpretation(view.console, report.interpretation, verbose=verbose)
     return stream.getvalue()
 
 
@@ -135,4 +146,5 @@ def render_rules(
         view.console.print(f"  {rule.message}")
         if rule.remediation:
             view.console.print(f"  {rule.remediation}")
+    render_interpretation(view.console, catalog.interpretation, verbose=verbose)
     return stream.getvalue()

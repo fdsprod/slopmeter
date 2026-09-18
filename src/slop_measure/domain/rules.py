@@ -2,9 +2,10 @@
 
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from slop_measure.domain.evidence import DiagnosticSeverity, PatternCategory
+from slop_measure.domain.interpretation import ReportInterpretation
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -33,6 +34,7 @@ class RuleCatalog(BaseModel):
     """Versioned metadata returned without analyzing source files."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
+    interpretation: ReportInterpretation = Field(default_factory=ReportInterpretation)
     language: _Text
     version: _Text
     rules: tuple[RuleEntry, ...]

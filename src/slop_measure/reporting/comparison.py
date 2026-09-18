@@ -12,6 +12,7 @@ from slop_measure.domain.changes import (
 from slop_measure.domain.metrics import MeasuredMetric, MetricResult
 from slop_measure.domain.reports import AnalysisReport, ComparisonAnalysis, ComparisonCohortReport
 from slop_measure.domain.source import GitSourceIdentity, SourceIdentity
+from slop_measure.reporting.interpretation import render_interpretation
 from slop_measure.reporting.terminal import (
     _LABELS,
     _REASONS,
@@ -205,4 +206,5 @@ def render_comparison(  # noqa: PLR0913
         _changes(view, cohort)
     if verbose:
         _provenance(view, report)
+    render_interpretation(view.console, report.interpretation, verbose=verbose)
     return stream.getvalue()

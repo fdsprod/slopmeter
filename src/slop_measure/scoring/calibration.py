@@ -22,6 +22,7 @@ from slop_measure.domain.scoring import (
     ReferencePopulation,
     ScoreBand,
     ScoreModel,
+    ScoreTransform,
 )
 from slop_measure.domain.source import Cohort
 
@@ -187,7 +188,18 @@ def build_profile(
                 eligibility="all-metrics",
                 inputs=(
                     MetricWeight(metric_id="verbosity.combined", weight=0.5),
-                    MetricWeight(metric_id="m4.erosion", weight=0.5),
+                    MetricWeight(
+                        metric_id="m4.erosion",
+                        weight=0.5,
+                        transform=(
+                            ScoreTransform.SEVERITY_WEIGHTED
+                            if any(
+                                item.metric_id == "m4.erosion" and item.version == "2"
+                                for item in versions
+                            )
+                            else ScoreTransform.PERCENTILE
+                        ),
+                    ),
                 ),
             ),
             ScoreModel(

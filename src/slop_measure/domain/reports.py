@@ -22,6 +22,7 @@ from slop_measure.domain.evidence import (
     validate_clone_member,
     validate_function_evidence,
 )
+from slop_measure.domain.interpretation import ReportInterpretation
 from slop_measure.domain.metrics import (
     FileMetricScope,
     MetricResult,
@@ -301,6 +302,7 @@ class AnalysisReport(_ReportModel):
     """The versioned source of truth for JSON and terminal renderers."""
 
     schema_version: Literal["1.0"] = "1.0"
+    interpretation: ReportInterpretation = Field(default_factory=ReportInterpretation)
     analysis: Analysis
     provenance: Provenance
     coverage: tuple[ReportCoverage, ...] = ()

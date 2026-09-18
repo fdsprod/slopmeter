@@ -1,7 +1,9 @@
 # Python reference corpus
 
-`corpus.toml` pins six source snapshots and the source-selection policy for
-`py-2026.1`. The source cache was acquired on 2026-09-18. Keep the cache outside
+`corpus-2026.2.toml` pins six source snapshots and the source-selection policy for
+`py-2026.2` with gradual M4 version 2. Historical `corpus.toml` and `py-2026.1`
+resources retain the version 1 baseline. The source cache was acquired on
+2026-09-18. Keep the cache outside
 the package. Do not install or execute code from the reference projects.
 
 > [!NOTE]
@@ -18,7 +20,7 @@ commit and clean worktree before analysis.
 Run the builder from the repository root in the locked development environment:
 
 ```text
-uv run python tools/calibrate.py --manifest calibration/python/corpus.toml --cache .tmp/calibration --output .tmp/calibration-output/py-2026.1.json --evidence-dir .tmp/calibration-evidence
+uv run python tools/calibrate.py --manifest calibration/python/corpus-2026.2.toml --cache .tmp/calibration --output .tmp/calibration-output/py-2026.2.json --evidence-dir .tmp/calibration-2026.2-evidence
 ```
 
 The output contains the profile and an exact copy of its corpus manifest. The

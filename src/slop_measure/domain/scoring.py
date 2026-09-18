@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 from decimal import Decimal
+from enum import StrEnum
 from math import isclose
 from typing import Annotated, Literal, Self
 
@@ -97,8 +98,19 @@ class MetricDistribution(_CalibrationModel):
         return self
 
 
+class ScoreTransform(StrEnum):
+    """Closed policies for turning a reference percentile into score points."""
+
+    PERCENTILE = "percentile"
+    SEVERITY_WEIGHTED = "severity-weighted"
+
+
 class MetricWeight(_CalibrationModel):
     metric_id: ScoreInput
+    transform: ScoreTransform = Field(
+        default=ScoreTransform.PERCENTILE,
+        exclude_if=lambda value: value is ScoreTransform.PERCENTILE,
+    )
     weight: Annotated[FiniteFloat, Field(gt=0, le=1)]
 
 
@@ -170,6 +182,10 @@ class ScoreContribution(_CalibrationModel):
     """The raw input, percentile, weight, and allocated displayed points."""
 
     metric_id: ScoreInput
+    transform: ScoreTransform = Field(
+        default=ScoreTransform.PERCENTILE,
+        exclude_if=lambda value: value is ScoreTransform.PERCENTILE,
+    )
     raw_value: _Ratio
     percentile: _Points
     weight: Annotated[FiniteFloat, Field(gt=0, le=1)]

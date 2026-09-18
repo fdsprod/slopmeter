@@ -66,6 +66,10 @@ def _display(
         color is _Color.ALWAYS
         or (color is _Color.AUTO and "NO_COLOR" not in os.environ and sys.stdout.isatty())
     )
+    try:
+        "\u2588\u2591\u00b7\u2014\u2514\u2500\u251c\u2502".encode(sys.stdout.encoding or "ascii")
+    except (UnicodeEncodeError, LookupError):
+        ascii = True
     return _Display(enabled, ascii, verbose, top, shutil.get_terminal_size().columns)
 
 
@@ -387,9 +391,15 @@ def findings_command(  # noqa: PLR0913
         if json_output:
             payload = {
                 "schema_version": report.schema_version,
+                "interpretation": report.interpretation.model_dump(mode="json"),
                 "analysis": report.analysis.model_dump(mode="json"),
                 "provenance": report.provenance.model_dump(mode="json"),
                 "selection": selection.model_dump(mode="json"),
+                "coverage": [item.model_dump(mode="json") for item in report.coverage],
+                "diagnostics": [item.model_dump(mode="json") for item in report.diagnostics],
+                "excluded_directories": [
+                    item.model_dump(mode="json") for item in report.excluded_directories
+                ],
             }
             typer.echo(json.dumps(payload, indent=2, ensure_ascii=True, sort_keys=True))
             return

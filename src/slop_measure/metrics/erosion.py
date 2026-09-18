@@ -1,6 +1,6 @@
 """Structural erosion derived from total callable mass."""
 
-from math import fsum
+from math import fsum, sqrt
 
 from slop_measure.domain.evidence import FunctionEvidence
 from slop_measure.domain.metrics import (
@@ -18,7 +18,7 @@ from slop_measure.domain.metrics import (
 def measure_erosion(
     functions: tuple[FunctionEvidence, ...], scope: MetricScope, threshold: int
 ) -> MetricResult:
-    """Measure the fraction of mass above a strict complexity threshold."""
+    """Measure excess complexity mass as a fraction of total callable mass."""
     if isinstance(threshold, bool) or not isinstance(threshold, int) or threshold <= 0:
         raise ValueError("complexity threshold must be a positive integer")
     if isinstance(scope, FileMetricScope) and any(
@@ -31,7 +31,8 @@ def measure_erosion(
         )
     total = fsum(function.mass for function in functions)
     eroded = fsum(
-        function.mass for function in functions if function.cyclomatic_complexity > threshold
+        max(0, function.cyclomatic_complexity - threshold) * sqrt(function.sloc)
+        for function in functions
     )
     return MeasuredMetric(
         metric_id="m4.erosion",
