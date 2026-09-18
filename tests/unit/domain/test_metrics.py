@@ -81,6 +81,41 @@ def test_metric_measurement_preserves_raw_inputs_and_value() -> None:
     }
 
 
+@pytest.mark.parametrize("denominator", [0, -2])
+def test_ratio_measurement_requires_a_positive_denominator(denominator: float) -> None:
+    with pytest.raises(ValidationError):
+        MetricMeasurement(numerator=1, denominator=denominator, value=0.5, unit=MetricUnit.RATIO)
+
+
+def test_ratio_measurement_rejects_a_value_that_disagrees_with_its_inputs() -> None:
+    with pytest.raises(ValidationError):
+        MetricMeasurement(numerator=1, denominator=4, value=0.5, unit=MetricUnit.RATIO)
+
+
+@pytest.mark.parametrize("numerator", [-3, 7])
+def test_ratio_measurement_allows_signed_and_unbounded_ratios(numerator: float) -> None:
+    measurement = MetricMeasurement(
+        numerator=numerator, denominator=2, value=numerator / 2, unit=MetricUnit.RATIO
+    )
+
+    assert measurement.value == numerator / 2
+
+
+def test_ratio_measurement_tolerates_floating_point_roundoff() -> None:
+    measurement = MetricMeasurement(
+        numerator=0.1 + 0.2, denominator=1, value=0.3, unit=MetricUnit.RATIO
+    )
+
+    assert measurement.value == 0.3
+
+
+def test_line_measurement_preserves_negative_net_changes_without_a_baseline() -> None:
+    measurement = MetricMeasurement(numerator=-3, denominator=0, value=-3, unit=MetricUnit.LINES)
+
+    assert measurement.value == -3
+    assert measurement.denominator == 0
+
+
 @pytest.mark.parametrize("unit", ["ratio", "lines"])
 def test_metric_unit_accepts_supported_raw_value_units(unit: str) -> None:
     assert MetricUnit(unit).value == unit

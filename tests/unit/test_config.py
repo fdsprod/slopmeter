@@ -38,13 +38,15 @@ def test_analysis_config_has_conservative_python_defaults() -> None:
 
 
 def test_analysis_config_normalizes_collection_storage() -> None:
-    config = AnalysisConfig(
-        production_patterns=["src/**/*.py"],
-        test_patterns=["tests/**/*.py"],
-        exclusions=["vendor/**"],
-        generated_markers=["generated file"],
-        enabled_rules=["identity-comprehension", "single-use-temporary"],
-        disabled_rules=["trivial-wrapper"],
+    config = AnalysisConfig.model_validate(
+        {
+            "production_patterns": ["src/**/*.py"],
+            "test_patterns": ["tests/**/*.py"],
+            "exclusions": ["vendor/**"],
+            "generated_markers": ["generated file"],
+            "enabled_rules": ["identity-comprehension", "single-use-temporary"],
+            "disabled_rules": ["trivial-wrapper"],
+        }
     )
 
     assert config.production_patterns == ("src/**/*.py",)
@@ -73,20 +75,41 @@ def test_analysis_config_is_immutable() -> None:
 )
 def test_analysis_config_requires_positive_thresholds(field: str, value: int) -> None:
     with pytest.raises(ValidationError):
-        AnalysisConfig(**{field: value})
+        AnalysisConfig.model_validate({field: value})
 
 
 def test_analysis_config_rejects_rules_that_are_both_enabled_and_disabled() -> None:
     with pytest.raises(ValidationError, match="identity-comprehension"):
-        AnalysisConfig(
-            enabled_rules={"identity-comprehension"},
-            disabled_rules={"identity-comprehension"},
+        AnalysisConfig.model_validate(
+            {
+                "enabled_rules": {"identity-comprehension"},
+                "disabled_rules": {"identity-comprehension"},
+            }
         )
 
 
 def test_analysis_config_rejects_unknown_fields() -> None:
     with pytest.raises(ValidationError):
-        AnalysisConfig(unknown_setting=True)
+        AnalysisConfig.model_validate({"unknown_setting": True})
+
+
+def test_config_json_sorts_rules_and_round_trips_immutable_collections() -> None:
+    config = AnalysisConfig.model_validate(
+        {
+            "enabled_rules": ["single-use-temporary", "identity-comprehension"],
+            "disabled_rules": ["trivial-wrapper", "defensive-check"],
+            "production_patterns": ["src/**/*.py"],
+        }
+    )
+    payload = config.model_dump(mode="json")
+
+    assert payload["enabled_rules"] == ["identity-comprehension", "single-use-temporary"]
+    assert payload["disabled_rules"] == ["defensive-check", "trivial-wrapper"]
+    restored = AnalysisConfig.model_validate_json(config.model_dump_json())
+    assert restored == config
+    assert isinstance(restored.enabled_rules, frozenset)
+    assert isinstance(restored.disabled_rules, frozenset)
+    assert restored.production_patterns == ("src/**/*.py",)
 
 
 def test_loader_reads_tool_slop_from_pyproject(tmp_path: Path) -> None:

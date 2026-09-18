@@ -262,6 +262,20 @@ def test_language_evidence_rejects_files_from_another_language() -> None:
         )
 
 
+@pytest.mark.parametrize("family", ["patterns", "functions", "clone_candidates"])
+@pytest.mark.parametrize("value", [object(), {"parser_node": "opaque"}])
+def test_evidence_families_reject_arbitrary_objects(family: str, value: object) -> None:
+    with pytest.raises(ValidationError):
+        LanguageEvidence.model_validate(
+            {
+                "language": "python",
+                "capabilities": frozenset(EvidenceCapability),
+                "files": (),
+                family: (value,),
+            }
+        )
+
+
 def test_diagnostic_span_requires_a_source_path() -> None:
     with pytest.raises(ValidationError):
         Diagnostic(
