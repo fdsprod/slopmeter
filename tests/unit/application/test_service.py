@@ -101,13 +101,15 @@ def test_service_isolates_adapter_failure_and_preserves_other_language(tmp_path:
         "analyzer-failed",
         "analyzer-failed",
         "analyzer-failed",
+        "analyzer-failed",
     ]
     assert broken["score"]["reason"] == "required-metric-unavailable"
     assert other["files"][0]["evidence"]["sloc"] == 1
-    assert [item["reason"] for item in other["metrics"]][1:] == ["unsupported-capability"] * 3
+    assert [item["reason"] for item in other["metrics"]][1:] == ["unsupported-capability"] * 4
     assert report.diagnostics[0].detail.code == "analyzer.failed"
     assert report.diagnostics[0].detail.path == ProjectPath("bad.broken")
     assert all(item.adapter_version == "unversioned" for item in report.provenance.analyzers)
+    assert all(item.clone_normalization_version is None for item in report.provenance.analyzers)
     with pytest.raises(AnalysisFailure):
         service.scan(request(tmp_path, strict=True))
 
@@ -344,5 +346,5 @@ def test_aggregate_parse_failure_reason_is_independent_of_language(tmp_path: Pat
     production = next(item.current for item in report.cohorts if item.cohort is Cohort.PRODUCTION)
     payload = production.model_dump(mode="json")
 
-    assert [item["reason"] for item in payload["metrics"]][1:] == ["parse-failed"] * 3
-    assert [item["reason"] for item in payload["files"][0]["metrics"]][1:] == ["parse-failed"] * 3
+    assert [item["reason"] for item in payload["metrics"]][1:] == ["parse-failed"] * 4
+    assert [item["reason"] for item in payload["files"][0]["metrics"]][1:] == ["parse-failed"] * 4

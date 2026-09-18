@@ -44,13 +44,13 @@ def test_grouping_partitions_by_language_cohort_version_and_tokens() -> None:
         file("different.py"),
     )
     candidates = (
-        *tuple(candidate(str(item.path)) for item in files[:4]),
+        *tuple(candidate(item.path.root) for item in files[:4]),
         candidate("version.py", version="v2"),
         candidate("different.py", syntax="different"),
     )
     groups = group_clones(files, candidates)
     assert len(groups) == 1
-    assert tuple(str(member.path) for member in groups[0].members) == ("a.py", "b.py")
+    assert tuple(member.path.root for member in groups[0].members) == ("a.py", "b.py")
     assert groups[0].language == "python"
     assert groups[0].cohort.value == "production"
     assert groups[0].normalization_version == "v1"
@@ -75,7 +75,7 @@ def test_grouping_is_independent_of_input_order() -> None:
 def test_fully_contained_smaller_group_collapses() -> None:
     files = (file("a.py"), file("b.py"))
     candidates = tuple(
-        candidate(str(item.path), start, end, syntax=syntax)
+        candidate(item.path.root, start, end, syntax=syntax)
         for item in files
         for start, end, syntax in ((1, 8, "outer"), (2, 4, "inner"))
     )
@@ -89,15 +89,15 @@ def test_fully_contained_smaller_group_collapses() -> None:
 def test_extra_inner_instance_prevents_containment_collapse() -> None:
     files = (file("a.py"), file("b.py"), file("c.py"))
     candidates = tuple(
-        candidate(str(item.path), 1, 8, syntax="outer") for item in files[:2]
-    ) + tuple(candidate(str(item.path), 2, 4, syntax="inner") for item in files)
+        candidate(item.path.root, 1, 8, syntax="outer") for item in files[:2]
+    ) + tuple(candidate(item.path.root, 2, 4, syntax="inner") for item in files)
     assert sorted(len(group.members) for group in group_clones(files, candidates)) == [2, 3]
 
 
 def test_partial_overlap_groups_remain_distinct() -> None:
     files = (file("a.py"), file("b.py"))
     candidates = tuple(
-        candidate(str(item.path), start, end, syntax=syntax)
+        candidate(item.path.root, start, end, syntax=syntax)
         for item in files
         for start, end, syntax in ((1, 4, "first"), (3, 6, "second"))
     )
