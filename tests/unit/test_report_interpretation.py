@@ -261,3 +261,45 @@ def test_findings_json_exposes_empty_scope_evidence_lists(project: Path) -> None
     assert payload["coverage"]
     assert payload["diagnostics"] == []
     assert payload["excluded_directories"] == []
+
+
+@pytest.mark.parametrize(
+    "concepts",
+    [
+        ("v3", "test", "assert", "production", "control"),
+        ("reference", "confidence", "domain"),
+        ("all-zero", "pattern", "sensitivity"),
+        ("clone", "remov"),
+        ("embedded", "self-check", "path"),
+        ("guard", "predicate", "short", "overstat", "algorithm", "understat"),
+    ],
+)
+def test_guide_states_measurement_policy_and_evidence_limits(
+    project: Path, concepts: tuple[str, ...]
+) -> None:
+    runner = CliRunner()
+    machine = runner.invoke(app, ["score", str(project), "--json"])
+    expanded = runner.invoke(app, ["score", str(project), "--verbose", "--ascii", "--no-color"])
+    assert machine.exit_code == expanded.exit_code == 0
+    guidance = json.dumps(json.loads(machine.stdout)["interpretation"]).lower()
+    terminal = " ".join(expanded.stdout.split("How to read this report", 1)[1].lower().split())
+    for output in (guidance, terminal):
+        for concept in concepts:
+            assert concept in output, concept
+
+
+def test_compact_metrics_keep_absolute_impact_in_the_measurement_section() -> None:
+    fixture = Path(__file__).parents[1] / "golden" / "scoring.json"
+    report = AnalysisReport.model_validate_json(fixture.read_text(encoding="utf-8"))
+    project = render_snapshot(report, width=180, ascii=True, color=False)
+    file = render_explanation(report, "a.py", width=180, ascii=True, color=False)
+    for output, numerator, denominator, affected, sloc in (
+        (project, 40, 200, 6, 20),
+        (file, 30, 100, 4, 10),
+    ):
+        section = output.split("How to read this report", 1)[0]
+        erosion = next(line for line in section.splitlines() if "Erosion  " in line)
+        verbosity = next(line for line in section.splitlines() if "Combined verbosity  " in line)
+        assert f"{numerator} / {denominator} mass" in erosion
+        assert f"{affected} / {sloc} SLOC" in verbosity
+        assert "excess" not in erosion.lower()  # Historical v1 has a different numerator.
