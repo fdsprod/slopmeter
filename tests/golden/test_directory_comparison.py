@@ -6,8 +6,19 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from slop_measure.api import AnalysisConfig, ComparisonRequest, DirectorySourceReference, compare
+from slop_measure.api import (
+    AnalysisConfig,
+    ComparisonRequest,
+    DirectorySourceReference,
+    SnapshotRequest,
+    compare,
+    scan,
+)
+from slop_measure.application.comparison import assemble_comparison
 from slop_measure.cli import app
+from slop_measure.domain.inventory import SourceInventory
+from slop_measure.domain.reports import AnalysisReport
+from slop_measure.domain.source import Cohort, ProjectPath, SourceDocument
 from slop_measure.errors import AnalysisFailure
 from slop_measure.languages.python.adapter import PythonAdapter
 from slop_measure.reporting.json import serialize_report
@@ -249,3 +260,38 @@ def test_whole_adapter_failure_preserves_successful_side_without_provenance_conf
     )
     with pytest.raises(AnalysisFailure):
         compare(request(before, after, strict=True))
+
+
+@pytest.mark.parametrize("conflict", ["metric-version", "metric-setting"])
+def test_comparison_assembly_still_rejects_real_provenance_conflicts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    conflict: str,
+) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    source = b"x = 1\n"
+    (tmp_path / "a.py").write_bytes(source)
+    baseline = scan(
+        SnapshotRequest(
+            target=DirectorySourceReference(root=tmp_path),
+            config=AnalysisConfig(calibration_profile="__raw__"),
+        )
+    )
+    payload = baseline.model_dump(mode="json")
+    if conflict == "metric-version":
+        payload["provenance"]["metrics"][0]["version"] = "incompatible-version"
+    else:
+        payload["provenance"]["config"]["complexity_threshold"] = 99
+    current = AnalysisReport.model_validate(payload)
+    inventory = SourceInventory(
+        documents=(
+            SourceDocument(
+                path=ProjectPath("a.py"),
+                content=source,
+                language="python",
+                cohort=Cohort.PRODUCTION,
+            ),
+        )
+    )
+    with pytest.raises(ValueError, match=r"provenance|version|settings|compatible"):
+        assemble_comparison(baseline, current, inventory, inventory)
