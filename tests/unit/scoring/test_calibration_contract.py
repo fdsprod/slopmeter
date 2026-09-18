@@ -205,3 +205,26 @@ def test_score_requires_exact_contribution_total() -> None:
         MeasuredSnapshotScore.model_validate(payload)
     payload["points"] = 25
     assert MeasuredSnapshotScore.model_validate(payload).points == 25
+
+
+def test_optional_pattern_and_clone_distributions_do_not_change_model_inputs() -> None:
+    payload = profile_payload()
+    for population in payload["populations"]:
+        values = population["distributions"][0]["values"]
+        population["distributions"].extend(
+            {"metric_id": name, "values": values}
+            for name in ("m2.pattern-verbosity", "m3.clone-verbosity")
+        )
+    profile = CalibrationProfile.model_validate(payload)
+    assert len(profile.populations[0].distributions) == 4
+    assert {item.metric_id for item in profile.score_models[0].inputs} == {
+        "verbosity.combined",
+        "m4.erosion",
+    }
+
+
+def test_population_distributions_must_have_equal_sample_counts() -> None:
+    payload = profile_payload()
+    payload["populations"][0]["distributions"][0]["values"] = [0, 0.2]
+    with pytest.raises(ValidationError):
+        CalibrationProfile.model_validate(payload)
