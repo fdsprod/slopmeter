@@ -237,7 +237,7 @@ def test_language_evidence_has_immutable_language_neutral_defaults() -> None:
         "language": "python",
         "capabilities": ["files"],
         "files": [file.model_dump(mode="json")],
-        "patterns": [],
+        "pattern_analyses": [],
         "function_analyses": [],
         "clone_candidates": [],
         "diagnostics": [],
