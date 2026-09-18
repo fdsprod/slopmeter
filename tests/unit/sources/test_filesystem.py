@@ -136,8 +136,6 @@ def test_exclusions_generated_markers_and_unsupported_files_reconcile_coverage(
     rows = coverage_rows(inventory)
     assert rows == sorted(rows)
     assert set(rows) == {
-        ("excluded", "production", "python", "configured exclusion", 2),
-        ("excluded", "production", "txt", "configured exclusion", 1),
         ("excluded", "production", "python", "generated marker", 1),
         ("excluded", "production", "python", "outside configured cohorts", 1),
         ("unsupported", "production", "txt", "no language adapter", 1),
@@ -145,7 +143,10 @@ def test_exclusions_generated_markers_and_unsupported_files_reconcile_coverage(
         ("unsupported", "test", "json", "no language adapter", 1),
     }
     assert all(item.sloc == 0 for item in inventory.coverage)
-    assert len(inventory.documents) + sum(item.file_count for item in inventory.coverage) == 9
+    assert len(inventory.documents) + sum(item.file_count for item in inventory.coverage) == 6
+    assert [(item.path.root, item.reason) for item in inventory.excluded_directories] == [
+        ("vendor", "configured exclusion")
+    ]
 
 
 def test_generated_markers_match_utf8_bytes_and_can_be_disabled(tmp_path: Path) -> None:
