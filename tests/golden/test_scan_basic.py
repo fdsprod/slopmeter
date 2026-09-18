@@ -17,7 +17,7 @@ from slop_measure.domain.source import (
     DirectorySourceReference,
     GitSourceReference,
 )
-from slop_measure.errors import AnalysisFailure
+from slop_measure.errors import AnalysisFailure, InvalidSource
 from slop_measure.reporting.json import serialize_report
 from slop_measure.reporting.terminal import render_snapshot
 
@@ -222,8 +222,8 @@ def test_empty_scan_retains_both_python_cohorts(tmp_path: Path) -> None:
         ]
 
 
-def test_git_scan_and_comparison_are_explicitly_unavailable(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="Git revision"):
+def test_git_scan_rejects_nonrepository_and_directory_comparison_works(tmp_path: Path) -> None:
+    with pytest.raises(InvalidSource, match="repository"):
         scan(
             SnapshotRequest(
                 target=GitSourceReference(root=tmp_path, revision="HEAD"),
