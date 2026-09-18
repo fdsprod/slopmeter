@@ -251,6 +251,22 @@ def _coverage(view: _View, report: AnalysisReport) -> None:
                 + (item.reason or "not analyzed")
             )
 
+    _excluded_directories(view, report)
+
+
+def _excluded_directories(view: _View, report: AnalysisReport) -> None:
+    if report.excluded_directories:
+        count = len(report.excluded_directories)
+        noun = "directory" if count == 1 else "directories"
+        view.console.print(f"  {count} excluded {noun} (contents not scanned)")
+        if view.verbose:
+            for record in report.excluded_directories:
+                view.console.print(
+                    f"    {record.source.value}: {record.detail.path.root}"
+                    + view.separator
+                    + record.detail.reason
+                )
+
 
 def _metric_row(view: _View, metric: MeasuredMetric) -> None:
     label = _LABELS.get(metric.metric_id, metric.metric_id)

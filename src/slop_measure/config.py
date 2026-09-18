@@ -23,6 +23,9 @@ class AnalysisConfig(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    languages: frozenset[_Text] = Field(
+        default_factory=frozenset, exclude_if=lambda value: not value
+    )
     production_patterns: tuple[_Text, ...] = ("**/*.py",)
     test_patterns: tuple[_Text, ...] = ("tests/**/*.py", "**/test_*.py", "**/*_test.py")
     exclusions: tuple[_Text, ...] = (
@@ -52,7 +55,7 @@ class AnalysisConfig(BaseModel):
             )
         return self
 
-    @field_serializer("enabled_rules", "disabled_rules", when_used="json")
+    @field_serializer("enabled_rules", "disabled_rules", "languages", when_used="json")
     def serialize_rules(self, values: frozenset[str]) -> list[str]:
         return sorted(values)
 

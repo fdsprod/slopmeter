@@ -69,10 +69,24 @@ def _display(
     return _Display(enabled, ascii, verbose, top, shutil.get_terminal_size().columns)
 
 
-def _scan_report(path: Path, strict: bool | None, revision: str | None = None) -> AnalysisReport:
+def _overrides(strict: bool | None, languages: list[str] | None) -> dict[str, object]:
+    overrides: dict[str, object] = {"strict": strict} if strict is not None else {}
+    if languages:
+        selectors = [part.strip() for value in languages for part in value.split(",")]
+        if any(not selector for selector in selectors):
+            raise InputError("--lang requires nonempty language names.")
+        overrides["languages"] = frozenset(selectors)
+    return overrides
+
+
+def _scan_report(
+    path: Path,
+    strict: bool | None,
+    revision: str | None = None,
+    languages: list[str] | None = None,
+) -> AnalysisReport:
     try:
-        overrides = {"strict": strict} if strict is not None else {}
-        config = load_analysis_config(path, cli_overrides=overrides)
+        config = load_analysis_config(path, cli_overrides=_overrides(strict, languages))
         target = (
             DirectorySourceReference(root=path)
             if revision is None
@@ -99,6 +113,14 @@ def _analyze(request: SnapshotRequest | ComparisonRequest) -> AnalysisReport:
 _Directory = Annotated[Path, typer.Argument(exists=True, file_okay=False, resolve_path=True)]
 _Json = Annotated[bool, typer.Option("--json", help="Emit the complete JSON report.")]
 _Strict = Annotated[bool | None, typer.Option("--strict", help="Stop on analysis errors.")]
+_Languages = Annotated[
+    list[str] | None,
+    typer.Option(
+        "--lang",
+        "--langs",
+        help="Languages or extensions, comma-separated or repeated (py, python).",
+    ),
+]
 _ColorOption = Annotated[_Color, typer.Option("--color", help="Choose auto, always, or never.")]
 _NoColor = Annotated[bool, typer.Option("--no-color", help="Disable terminal colors.")]
 _Ascii = Annotated[bool, typer.Option("--ascii", help="Use plain bars and tree connectors.")]
@@ -117,21 +139,21 @@ _Source = Annotated[
 ]
 
 
-def _evidence_report(
+def _evidence_report(  # noqa: PLR0913 - source selection and configuration are independent
     root: Path,
     strict: bool | None,
     revision: str | None,
     baseline_root: Path | None,
     baseline_revision: str | None,
+    *,
+    languages: list[str] | None = None,
 ) -> AnalysisReport:
     if baseline_root is not None and baseline_revision is not None:
         raise SelectionError("Use only one of --baseline-root and --baseline-rev.")
     if baseline_root is None and baseline_revision is None:
-        return _scan_report(root, strict, revision)
+        return _scan_report(root, strict, revision, languages)
     try:
-        config = load_analysis_config(
-            root, cli_overrides={"strict": strict} if strict is not None else {}
-        )
+        config = load_analysis_config(root, cli_overrides=_overrides(strict, languages))
         current = (
             DirectorySourceReference(root=root)
             if revision is None
@@ -149,7 +171,11 @@ def _evidence_report(
 
 
 def _compare_report(
-    baseline: str, current: str, strict: bool | None, repo: Path | None = None
+    baseline: str,
+    current: str,
+    strict: bool | None,
+    repo: Path | None = None,
+    languages: list[str] | None = None,
 ) -> AnalysisReport:
     try:
         if repo is None:
@@ -165,9 +191,7 @@ def _compare_report(
                 if current == "WORKTREE"
                 else GitSourceReference(root=repo, revision=current)
             )
-        config = load_analysis_config(
-            after.root, cli_overrides={"strict": strict} if strict is not None else {}
-        )
+        config = load_analysis_config(after.root, cli_overrides=_overrides(strict, languages))
         request = ComparisonRequest(
             baseline=before,
             current=after,
@@ -189,6 +213,7 @@ def compare_command(  # noqa: PLR0913
     ] = None,
     json_output: _Json = False,
     strict: _Strict = None,
+    languages: _Languages = None,
     scope: Annotated[
         _Scope, typer.Option(help="Select terminal results; JSON stays complete.")
     ] = _Scope.PRODUCTION,
@@ -200,7 +225,7 @@ def compare_command(  # noqa: PLR0913
 ) -> None:
     """Compare directories, or Git revisions with --repo."""
     display = _display(color, no_color, ascii, verbose, top)
-    report = _compare_report(baseline, current, strict, repo)
+    report = _compare_report(baseline, current, strict, repo, languages)
     output = (
         serialize_report(report)
         if json_output
@@ -228,6 +253,7 @@ def scan_command(  # noqa: PLR0913
     revision: Annotated[str | None, typer.Option("--rev", help="Read a Git revision.")] = None,
     json_output: _Json = False,
     strict: _Strict = None,
+    languages: _Languages = None,
     scope: Annotated[
         _Scope, typer.Option(help="Select terminal results; JSON stays complete.")
     ] = _Scope.PRODUCTION,
@@ -239,7 +265,7 @@ def scan_command(  # noqa: PLR0913
 ) -> None:
     """Inspect snapshot measurements and file evidence."""
     display = _display(color, no_color, ascii, verbose, top)
-    report = _scan_report(path, strict, revision)
+    report = _scan_report(path, strict, revision, languages)
     if json_output:
         typer.echo(serialize_report(report), nl=False)
         return
@@ -286,6 +312,7 @@ def explain_command(  # noqa: PLR0913
     ] = None,
     json_output: _Json = False,
     strict: _Strict = None,
+    languages: _Languages = None,
     color: _ColorOption = _Color.AUTO,
     no_color: _NoColor = False,
     ascii: _Ascii = False,
@@ -300,7 +327,9 @@ def explain_command(  # noqa: PLR0913
             baseline_root if source is SourceSide.BASELINE and baseline_root else root_path
         )
         path = _relative_selector(selector_root, file)
-        report = _evidence_report(root_path, strict, revision, baseline_root, baseline_revision)
+        report = _evidence_report(
+            root_path, strict, revision, baseline_root, baseline_revision, languages=languages
+        )
         selected = select_file(report, path, source=source)
         if symbol is not None:
             select_callable(selected, symbol, line=line)
@@ -339,6 +368,7 @@ def findings_command(  # noqa: PLR0913
     severity: Annotated[DiagnosticSeverity | None, typer.Option("--severity")] = None,
     json_output: _Json = False,
     strict: _Strict = None,
+    languages: _Languages = None,
     color: _ColorOption = _Color.AUTO,
     no_color: _NoColor = False,
     ascii: _Ascii = False,
@@ -348,7 +378,9 @@ def findings_command(  # noqa: PLR0913
     """List matching patterns, clones, and eroded callables from one source state."""
     display = _display(color, no_color, ascii, verbose, top)
     try:
-        report = _evidence_report(root_path, strict, revision, baseline_root, baseline_revision)
+        report = _evidence_report(
+            root_path, strict, revision, baseline_root, baseline_revision, languages=languages
+        )
         selection = query_findings(
             report, path=path, metric=metric, rule=rule, severity=severity, source=source
         )

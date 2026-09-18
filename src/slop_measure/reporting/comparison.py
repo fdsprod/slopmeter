@@ -15,6 +15,7 @@ from slop_measure.domain.source import GitSourceIdentity, SourceIdentity
 from slop_measure.reporting.terminal import (
     _LABELS,
     _REASONS,
+    _excluded_directories,
     _language,
     _population,
     _provenance,
@@ -183,6 +184,7 @@ def render_comparison(  # noqa: PLR0913
     view.console.print("slop.measure  comparison", style="bold")
     view.console.print("Baseline: " + _identity(report.analysis.baseline))
     view.console.print("Current:  " + _identity(report.analysis.current))
+    _excluded_directories(view, report)
     for cohort in report.cohorts:
         if not isinstance(cohort, ComparisonCohortReport) or scope not in {
             "all",

@@ -156,6 +156,8 @@ class _GitInventory:
         relative = entry.path.root
         config = self.provider.config
         adapter = self.provider.registry.for_path(entry.path)
+        if config.languages and (adapter is None or adapter.language_id not in config.languages):
+            return
         language = (
             adapter.language_id
             if adapter

@@ -46,6 +46,7 @@ from slop_measure.domain.reports import (
     ReportCloneGroup,
     ReportCoverage,
     ReportDiagnostic,
+    ReportExcludedDirectory,
     ReportFinding,
     ScoreUnavailableReason,
     SnapshotAnalysis,
@@ -524,6 +525,9 @@ def aggregate_snapshot(
         ),
         cohorts=tuple(cohorts),
         coverage=tuple(sorted(coverage, key=_coverage_key)),
+        excluded_directories=tuple(
+            ReportExcludedDirectory(detail=item) for item in inventory.excluded_directories
+        ),
         diagnostics=diagnostics,
         findings=_findings(evidence),
         clone_groups=tuple(

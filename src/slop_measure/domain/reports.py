@@ -14,6 +14,7 @@ from slop_measure.domain.evidence import (
     CloneGroup,
     Coverage,
     Diagnostic,
+    ExcludedDirectory,
     FileEvidence,
     FunctionEvidence,
     PatternFinding,
@@ -230,6 +231,13 @@ class ReportCoverage(_ReportModel):
     detail: Coverage
 
 
+class ReportExcludedDirectory(_ReportModel):
+    """An uncounted directory exclusion associated with one source state."""
+
+    source: SourceSide = SourceSide.CURRENT
+    detail: ExcludedDirectory
+
+
 class ReportDiagnostic(_ReportModel):
     """A report-owned identifier for an adapter or pipeline diagnostic."""
 
@@ -296,6 +304,9 @@ class AnalysisReport(_ReportModel):
     analysis: Analysis
     provenance: Provenance
     coverage: tuple[ReportCoverage, ...] = ()
+    excluded_directories: tuple[ReportExcludedDirectory, ...] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
     cohorts: tuple[CohortReport, ...] = ()
     findings: tuple[ReportFinding, ...] = ()
     clone_groups: tuple[ReportCloneGroup, ...] = ()
@@ -369,7 +380,8 @@ class AnalysisReport(_ReportModel):
     @model_validator(mode="after")
     def validate_metadata(self) -> Self:
         if isinstance(self.analysis, SnapshotAnalysis) and any(
-            item.source is SourceSide.BASELINE for item in (*self.coverage, *self.diagnostics)
+            item.source is SourceSide.BASELINE
+            for item in (*self.coverage, *self.diagnostics, *self.excluded_directories)
         ):
             raise ValueError("snapshot reports cannot contain baseline metadata")
         _require_unique(
@@ -381,6 +393,10 @@ class AnalysisReport(_ReportModel):
             "coverage record",
         )
         _require_unique((item.id for item in self.diagnostics), "diagnostic ID")
+        _require_unique(
+            ((item.source, item.detail.path.root) for item in self.excluded_directories),
+            "excluded directory",
+        )
         diagnostics = {item.id: item for item in self.diagnostics}
         for cohort in self.cohorts:
             for source, metric in _source_metrics(cohort):

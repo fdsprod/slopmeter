@@ -246,6 +246,11 @@ def assemble_comparison(
             for side, report in sides
             for item in report.coverage
         ),
+        excluded_directories=tuple(
+            item.model_copy(update={"source": side})
+            for side, report in sides
+            for item in report.excluded_directories
+        ),
         findings=tuple(
             item.model_copy(update={"id": f"{side.value}:{item.id}", "source": side})
             for side, report in sides

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import PurePosixPath
 
 from slop_measure.domain.source import ProjectPath
+from slop_measure.errors import InputError
 from slop_measure.languages.base import LanguageAdapter
 
 
@@ -79,6 +80,28 @@ class LanguageRegistry:
             if extension in registration.extensions:
                 return registration.adapter
         return None
+
+    def resolve_languages(self, selectors: frozenset[str]) -> frozenset[str]:
+        """Resolve installed language IDs or extension aliases without guessing support."""
+        resolved: set[str] = set()
+        for selector in sorted(selectors):
+            key = selector.casefold()
+            exact = [name for name in self._registrations if name == selector]
+            names = exact or [name for name in self._registrations if name.casefold() == key]
+            if not names:
+                extension = "." + key.removeprefix(".")
+                names = [
+                    name
+                    for name, registration in self._registrations.items()
+                    if extension in registration.extensions
+                ]
+            if len(names) != 1:
+                installed = ", ".join(sorted(self._registrations)) or "none"
+                raise InputError(
+                    f"Unknown or ambiguous language: {selector}. Installed: {installed}."
+                )
+            resolved.add(names[0])
+        return frozenset(resolved)
 
     @property
     def adapters(self) -> tuple[LanguageAdapter, ...]:

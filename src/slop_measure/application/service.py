@@ -127,26 +127,34 @@ class AnalysisService:
         )
 
     def _scan(self, request: SnapshotRequest) -> _Snapshot:
-        for adapter in self.registry.adapters:
+        config = request.config.model_copy(
+            update={"languages": self.registry.resolve_languages(request.config.languages)}
+        )
+        adapters = (
+            tuple(self.registry.get(language) for language in sorted(config.languages))
+            if config.languages
+            else self.registry.adapters
+        )
+        for adapter in adapters:
             validate_config = getattr(adapter, "validate_config", None)
             if validate_config is not None:
-                validate_config(request.config)
+                validate_config(config)
         provider = (
-            FilesystemSourceProvider(request.target.root, request.config, self.registry)
+            FilesystemSourceProvider(request.target.root, config, self.registry)
             if isinstance(request.target, DirectorySourceReference)
             else GitSourceProvider(
-                request.target.root, request.target.revision, request.config, self.registry
+                request.target.root, request.target.revision, config, self.registry
             )
         )
         inventory = provider.inventory()
         evidence: list[LanguageEvidence] = []
         versions: list[AnalyzerVersion] = []
-        for adapter in self.registry.adapters:
+        for adapter in adapters:
             documents = tuple(
                 doc for doc in inventory.documents if doc.language == adapter.language_id
             )
             try:
-                result = adapter.analyze(documents, request.config)
+                result = adapter.analyze(documents, config)
                 _validate_evidence(adapter, documents, result)
             except Exception:
                 result = _failed_adapter(adapter.language_id, documents)
@@ -165,7 +173,7 @@ class AnalysisService:
             provider.identity(),
             inventory,
             tuple(evidence),
-            request.config,
+            config,
             analyzers=tuple(versions),
         )
         failures = [

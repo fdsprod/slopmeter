@@ -40,6 +40,7 @@ Use the project environment to run a scan:
 
 ```text
 uv run slop score .
+uv run slop score . --lang py --top 10
 uv run slop score tests/fixtures/basic --json
 uv run slop score . --scope all --ascii --no-color
 uv run slop score . --verbose --top 10
@@ -53,6 +54,26 @@ The default scan continues after file errors. `--strict` stops with exit code 3.
 Invalid arguments or configuration return exit code 2. Findings do not cause a
 failure. `scan` remains an alias for the same snapshot analysis. `--scope` and
 `--top` select terminal results. JSON always contains the complete report.
+
+Use `--lang py` to select Python before files are read or analyzed. `--langs` is
+an alias. Both options accept comma-separated names and can be repeated. Language
+IDs and file extensions are accepted, so `python`, `py`, and `.py` select the same
+analyzer. This release includes only Python; other language names return an input
+error. Without a selection, all installed analyzers are used. Set
+`languages = ["python"]` in `slop.toml` to keep that selection for a project.
+
+In a Git working tree, discovery respects Git ignore rules, including nested
+`.gitignore` files. Tracked files remain eligible even when an ignore rule matches
+them. Ignored directories are skipped without walking their contents. Reports
+show their directory count; `--verbose` and JSON also show their paths and reasons.
+Their unknown file counts are not added to coverage totals. Without Git, configured
+whole-directory exclusions such as `vendor/**` also skip traversal.
+
+From PowerShell, run the installed command directly with:
+
+```powershell
+.\.venv\Scripts\slop.exe score . --lang py --top 10
+```
 
 The summary shows measured percentages and bars first. Lower values mean less
 flagged code. These raw percentages are not calibrated scores. Unavailable metrics

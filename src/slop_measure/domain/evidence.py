@@ -29,6 +29,13 @@ class _Evidence(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
 
+class ExcludedDirectory(_Evidence):
+    """A directory whose excluded contents were not enumerated."""
+
+    path: ProjectPath
+    reason: _Text
+
+
 class DiagnosticSeverity(StrEnum):
     """The severity of an analysis notice."""
 

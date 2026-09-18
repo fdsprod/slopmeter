@@ -8,6 +8,7 @@ from slop_measure.domain.evidence import (
     Coverage,
     CoverageState,
     Diagnostic,
+    ExcludedDirectory,
     FileEvidence,
     ParseState,
 )
@@ -23,6 +24,7 @@ class SourceInventory(BaseModel):
     coverage: tuple[Coverage, ...] = ()
     diagnostics: tuple[Diagnostic, ...] = ()
     failed_files: tuple[FileEvidence, ...] = ()
+    excluded_directories: tuple[ExcludedDirectory, ...] = ()
 
     @model_validator(mode="after")
     def validate_coverage(self) -> Self:
