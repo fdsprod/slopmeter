@@ -13,6 +13,8 @@ from typer.testing import CliRunner
 from slop_measure.api import AnalysisConfig, DirectorySourceReference, SnapshotRequest, scan
 from slop_measure.cli import app
 from slop_measure.domain.reports import AnalysisReport
+from slop_measure.domain.scoring import ScoreContribution
+from slop_measure.reporting.terminal import render_explanation, render_snapshot
 
 
 @pytest.fixture
@@ -149,3 +151,78 @@ def test_cli_automatically_uses_ascii_when_stdout_encoding_cannot_encode_glyphs(
     output = result.stdout.decode("cp1252")
     assert "How to read this report" in output
     assert "UnicodeEncodeError" not in output
+
+
+def test_contribution_transform_is_explicit_only_for_severity_weighted_scores() -> None:
+    base = {
+        "metric_id": "m4.erosion",
+        "raw_value": 0.3,
+        "percentile": 75,
+        "weight": 0.4,
+        "points": 30,
+    }
+    legacy = ScoreContribution.model_validate(base)
+    assert getattr(legacy, "transform").value == "percentile"  # noqa: B009
+    assert "transform" not in legacy.model_dump()
+    assert "transform" not in legacy.model_dump(mode="json")
+    weighted = ScoreContribution.model_validate(
+        {**base, "points": 9, "transform": "severity-weighted"}
+    )
+    assert weighted.model_dump(mode="json")["transform"] == "severity-weighted"
+    assert ScoreContribution.model_validate_json(weighted.model_dump_json()) == weighted
+    with pytest.raises(ValidationError):
+        ScoreContribution.model_validate({**base, "transform": "unknown"})
+
+
+def test_explanation_labels_transformed_contribution_without_relabeling_legacy() -> None:
+    fixture = Path(__file__).parents[1] / "golden" / "scoring.json"
+    payload = json.loads(fixture.read_text(encoding="utf-8"))
+    original = AnalysisReport.model_validate(payload)
+    legacy = render_explanation(original, "a.py", width=140, ascii=True, color=False)
+    assert "severity-weighted" not in legacy.split("How to read this report", 1)[0]
+    file = next(
+        item
+        for item in payload["cohorts"][0]["current"]["files"]
+        if item["evidence"]["path"] == "a.py"
+    )
+    contribution = next(
+        item for item in file["score"]["contributions"] if item["metric_id"] == "m4.erosion"
+    )
+    contribution.update(transform="severity-weighted", points=9)
+    file["score"].update(points=54, band="moderate")
+    rendered = render_explanation(
+        AnalysisReport.model_validate(payload), "a.py", width=140, ascii=True, color=False
+    )
+    measurement = rendered.split("How to read this report", 1)[0]
+    transformed = [line for line in measurement.splitlines() if "severity-weighted" in line]
+    assert len(transformed) == 1
+    assert "m4.erosion" in transformed[0] and "9.0" in transformed[0]
+
+
+def test_full_guide_explains_severity_weighted_contributions(project: Path) -> None:
+    runner = CliRunner()
+    machine = runner.invoke(app, ["score", str(project), "--json"])
+    assert machine.exit_code == 0, machine.output
+    definitions = " ".join(json.loads(machine.stdout)["interpretation"]["metric_meanings"]).lower()
+    assert "severity-weighted" in definitions
+    assert "percentile * raw value * weight" in definitions
+    assert "individual" in definitions and "contribution" in definitions
+    expanded = runner.invoke(app, ["score", str(project), "--verbose", "--ascii", "--no-color"])
+    assert expanded.exit_code == 0, expanded.output
+    guide = expanded.stdout.split("How to read this report", 1)[1].lower()
+    assert "severity-weighted" in guide
+    assert "percentile * raw value * weight" in " ".join(guide.split())
+
+
+def test_verbose_raw_metric_names_its_reference_percentile() -> None:
+    fixture = Path(__file__).parents[1] / "golden" / "scoring.json"
+    report = AnalysisReport.model_validate_json(fixture.read_text(encoding="utf-8"))
+    output = render_snapshot(report, width=160, ascii=True, color=False, verbose=True)
+    raw_rows = [
+        line
+        for line in output.split("How to read this report", 1)[0].splitlines()
+        if "[" in line and ("Combined verbosity" in line or "Erosion  " in line)
+    ]
+    assert len(raw_rows) == 2
+    assert all("percentile 33.3" in line.lower() for line in raw_rows)
+    assert all("metric 33.3/100" not in line for line in raw_rows)
