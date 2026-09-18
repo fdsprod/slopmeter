@@ -528,7 +528,7 @@
       }
     ],
     "config": {
-      "calibration_profile": "py-2026.1",
+      "calibration_profile": "py-2026.2",
       "clone_min_sloc": 6,
       "clone_min_statements": 2,
       "complexity_threshold": 10,

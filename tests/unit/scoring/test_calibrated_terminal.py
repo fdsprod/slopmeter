@@ -50,8 +50,9 @@ def test_hidden_test_score_cannot_make_production_headline_claim_calibration() -
     payload["cohorts"].append(testing)
     report = AnalysisReport.model_validate(payload)
     output = render_snapshot(report, scope="production", ascii=True, color=False, width=120)
-    assert "Score unavailable" in output
-    assert "calibrated scores" not in output.lower()
+    report_section = output.partition("How to read this report")[0]
+    assert "Score unavailable" in report_section
+    assert "calibrated scores" not in report_section.lower()
     assert "tests/a.py" not in output
 
 

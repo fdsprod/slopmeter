@@ -1507,7 +1507,7 @@
       },
       {
         "metric_id": "m4.erosion",
-        "version": "1"
+        "version": "2"
       },
       {
         "metric_id": "verbosity.combined",
