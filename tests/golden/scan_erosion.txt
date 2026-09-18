@@ -17,3 +17,19 @@ Files (path order)
   constant.py | 0.0% | -
   high.py | 0.0% | 9.1%
   low.py | 0.0% | 0.0%
+
+How to read this report
+Use this report to prioritize source review. A high score means inspect; it does
+not require a refactor.
+Scores are calibrated relative to a reference corpus; lower is better. Points 
+are neither percent bad code nor probability of a defect. Raw metric ratios and 
+calibrated scores are different measurements.
+Flat guards, predicates, and short readable functions can overstate refactoring 
+need. Algorithm difficulty can understate it. Zero does not prove correctness.
+Check partial analysis, diagnostics, and excluded scope first. Unavailable is 
+not zero. Compare scores only with compatible metric versions, profile, and 
+config.
+Review: <location> | <actionable / defer / no-change> | evidence: <metric and 
+source> | reason: <problem or justified exception; remaining risk> | next: 
+<change, check, or none>.
+Use --verbose or --json for metric definitions and the full review guide.

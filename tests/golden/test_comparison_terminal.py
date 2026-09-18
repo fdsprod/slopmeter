@@ -112,7 +112,7 @@ def test_combined_regression_displays_the_metric_that_ranked_it(
                 }
     report = AnalysisReport.model_validate(payload)
     output = render_comparison(report, ascii=True, color=False, width=120, top=1)
-    row = output.split("a.py | modified", 1)[1]
+    row = output.split("a.py | modified", 1)[1].split("How to read this report", 1)[0]
     assert "combined" in row.lower()
     assert "+50.0" in row
     assert "worse" in row

@@ -110,6 +110,18 @@ def test_ascii_narrow_views_fit_without_ansi_or_fake_values(
     assert "/100" not in output
 
 
+@pytest.mark.parametrize("width", [40, 140])
+def test_explicit_width_is_preserved_for_colored_output_on_dumb_terminals(
+    visual_report: AnalysisReport, monkeypatch: pytest.MonkeyPatch, width: int
+) -> None:
+    monkeypatch.setenv("TERM", "dumb")
+    colored = render_snapshot(visual_report, color=True, width=width)
+    plain = render_snapshot(visual_report, color=False, width=width)
+    assert "\x1b[" in colored
+    assert re.sub(r"\x1b\[[0-9;]*m", "", colored) == plain
+    assert all(len(line) <= width for line in plain.splitlines())
+
+
 def test_color_is_optional_and_raw_bars_use_no_severity_thresholds(
     visual_report: AnalysisReport,
 ) -> None:
