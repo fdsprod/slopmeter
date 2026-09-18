@@ -1,6 +1,7 @@
 """Evidence filters preserve source ownership and complete clone groups."""
 
 from copy import deepcopy
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -119,6 +120,13 @@ def test_default_selection_is_frozen_complete_and_sorted_with_only_eroded_functi
         selected.patterns = ()
 
 
+def test_erosion_filter_uses_strict_effective_threshold_from_report() -> None:
+    payload = snapshot().model_dump(mode="json")
+    payload["provenance"]["config"]["complexity_threshold"] = 11
+    selected = query_findings(AnalysisReport.model_validate(payload), metric="m4")
+    assert selected.functions == ()
+
+
 @pytest.mark.parametrize(
     "metric,counts",
     [
@@ -189,3 +197,35 @@ def test_invalid_filters_and_snapshot_baseline_queries_are_explicit_errors() -> 
             select(owned, "pkg/app.py", source=SourceSide.BASELINE)
     with pytest.raises(SelectionError):
         change_for_file(owned, "pkg/app.py")
+
+
+def test_queries_preserve_report_bytes_and_frozen_native_evidence() -> None:
+    owned = comparison()
+    original = owned.model_dump_json()
+    selected = query_findings(owned, source=SourceSide.BASELINE)
+    assert all(any(item is original for original in owned.findings) for item in selected.patterns)
+    with pytest.raises(ValidationError):
+        selected.functions[0].language = "changed"
+    with pytest.raises(ValidationError):
+        selected.clone_groups[0].id = "changed"
+    assert owned.model_dump_json() == original
+
+
+@pytest.mark.parametrize("path", ["../app.py", "/app.py", "C:/app.py"])
+def test_all_exact_queries_reject_paths_outside_the_report(path: str) -> None:
+    owned = comparison()
+    for select in (select_file, findings_for_file, clones_for_file, change_for_file):
+        with pytest.raises(SelectionError):
+            select(owned, path, source=SourceSide.CURRENT)
+    with pytest.raises(SelectionError):
+        query_findings(owned, path=path)
+
+
+def test_invalid_source_does_not_silently_select_current_or_baseline() -> None:
+    owned = comparison()
+    invalid = cast(SourceSide, "neither")
+    for select in (select_file, findings_for_file, clones_for_file, change_for_file):
+        with pytest.raises(SelectionError):
+            select(owned, "pkg/other.py", source=invalid)
+    with pytest.raises(SelectionError):
+        query_findings(owned, source=invalid)
