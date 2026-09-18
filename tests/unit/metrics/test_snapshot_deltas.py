@@ -168,3 +168,30 @@ def test_unavailable_score_and_unrelated_metrics_do_not_corrupt_raw_deltas() -> 
     assert score.reason == "unavailable-input"
     with pytest.raises(ValueError):
         metric_deltas(None, None)
+
+
+@pytest.mark.parametrize("field,value", [("language", "other"), ("cohort", "test")])
+def test_file_deltas_reject_distinct_populations_even_with_compatible_scores(
+    field: str, value: str
+) -> None:
+    before, after = payload(), payload()
+    after["evidence"][field] = value
+    if field == "cohort":
+        for metric in after["metrics"]:
+            metric["scope"]["cohort"] = value
+    baseline = FileResult.model_validate(before)
+    current = FileResult.model_validate(after)
+    with pytest.raises(ValueError):
+        metric_deltas(baseline, current)
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_file_and_project_deltas_reject_mixed_scopes_even_without_metrics(reverse: bool) -> None:
+    file_payload = payload()
+    project_payload = payload(project=True)
+    file_payload["metrics"] = []
+    project_payload["metrics"] = []
+    file = FileResult.model_validate(file_payload)
+    project = CohortResult.model_validate(project_payload)
+    with pytest.raises(ValueError):
+        metric_deltas(project if reverse else file, file if reverse else project)
