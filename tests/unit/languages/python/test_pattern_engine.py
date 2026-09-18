@@ -198,3 +198,42 @@ def test_literal_format_spec_is_not_a_standalone_literal_fstring(expression: str
 
     assert isinstance(result, AnalyzedPatterns)
     assert result.findings == ()
+
+
+def run_catalog_source(source: str, rule_id: str) -> AnalyzedPatterns:
+    lines = tuple(range(1, len(source.splitlines()) + 1))
+    evidence = FileEvidence.model_validate(
+        {
+            "path": "app.py",
+            "language": "python",
+            "cohort": "production",
+            "sloc": len(lines),
+            "sloc_lines": lines,
+            "parse_state": "parsed",
+        }
+    )
+    parsed = PythonParsedUnit(tree=ast.parse(source), file=evidence, source=source)
+    result = run_patterns(
+        parsed, PythonProjectContext(), AnalysisConfig(enabled_rules=frozenset({rule_id}))
+    )
+    assert isinstance(result, AnalyzedPatterns)
+    return result
+
+
+@pytest.mark.parametrize("parameter", ["list", "*list", "**list"])
+def test_type_parameters_prevent_builtin_constructor_assumptions(parameter: str) -> None:
+    source = f"def f[{parameter}]():\n    return list([1])\n"
+    assert run_catalog_source(source, "py.redundant-literal-container").findings == ()
+
+
+@pytest.mark.parametrize(
+    "following",
+    [
+        "    for item in items:\n        _relay(item)\n",
+        "    if items:\n        _relay(items)\n",
+        "    return consume(_relay(items))\n",
+    ],
+)
+def test_trivial_wrapper_requires_a_direct_immediately_following_call(following: str) -> None:
+    source = "def outer(items):\n    def _relay(item):\n        return target(item)\n" + following
+    assert run_catalog_source(source, "py.trivial-wrapper").findings == ()
