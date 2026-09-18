@@ -14,8 +14,8 @@ from slop_measure.api import compare, scan
 from slop_measure.config import load_analysis_config
 from slop_measure.domain.reports import AnalysisReport
 from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
-from slop_measure.domain.source import DirectorySourceReference
-from slop_measure.errors import AnalysisFailure, InvalidRuleSelection, SelectionError
+from slop_measure.domain.source import DirectorySourceReference, GitSourceReference
+from slop_measure.errors import AnalysisFailure, InvalidRuleSelection, InvalidSource, SelectionError
 from slop_measure.reporting import terminal
 from slop_measure.reporting.comparison import render_comparison
 from slop_measure.reporting.json import serialize_report
@@ -65,11 +65,16 @@ def _display(
     return _Display(enabled, ascii, verbose, top, shutil.get_terminal_size().columns)
 
 
-def _scan_report(path: Path, strict: bool | None) -> AnalysisReport:
+def _scan_report(path: Path, strict: bool | None, revision: str | None = None) -> AnalysisReport:
     try:
         overrides = {"strict": strict} if strict is not None else {}
         config = load_analysis_config(path, cli_overrides=overrides)
-        request = SnapshotRequest(target=DirectorySourceReference(root=path), config=config)
+        target = (
+            DirectorySourceReference(root=path)
+            if revision is None
+            else GitSourceReference(root=path, revision=revision)
+        )
+        request = SnapshotRequest(target=target, config=config)
     except (ValueError, OSError) as error:
         typer.echo(f"Invalid analysis input: {error}", err=True)
         raise typer.Exit(2) from error
@@ -79,7 +84,7 @@ def _scan_report(path: Path, strict: bool | None) -> AnalysisReport:
 def _analyze(request: SnapshotRequest | ComparisonRequest) -> AnalysisReport:
     try:
         return scan(request) if isinstance(request, SnapshotRequest) else compare(request)
-    except InvalidRuleSelection as error:
+    except (InvalidRuleSelection, InvalidSource) as error:
         typer.echo(f"Invalid analysis input: {error}", err=True)
         raise typer.Exit(2) from error
     except AnalysisFailure as error:
@@ -100,14 +105,29 @@ _Verbose = Annotated[bool, typer.Option("--verbose", help="Show counts, evidence
 _Top = Annotated[int | None, typer.Option("--top", min=1, help="Limit terminal file rows.")]
 
 
-def _compare_report(baseline: Path, current: Path, strict: bool | None) -> AnalysisReport:
+def _compare_report(
+    baseline: str, current: str, strict: bool | None, repo: Path | None = None
+) -> AnalysisReport:
     try:
+        if repo is None:
+            roots = (Path(baseline).resolve(), Path(current).resolve())
+            if not all(root.is_dir() for root in roots):
+                raise InvalidSource("Comparison directories must exist.")
+            before = DirectorySourceReference(root=roots[0])
+            after = DirectorySourceReference(root=roots[1])
+        else:
+            before = GitSourceReference(root=repo, revision=baseline)
+            after = (
+                DirectorySourceReference(root=repo)
+                if current == "WORKTREE"
+                else GitSourceReference(root=repo, revision=current)
+            )
         config = load_analysis_config(
-            current, cli_overrides={"strict": strict} if strict is not None else {}
+            after.root, cli_overrides={"strict": strict} if strict is not None else {}
         )
         request = ComparisonRequest(
-            baseline=DirectorySourceReference(root=baseline),
-            current=DirectorySourceReference(root=current),
+            baseline=before,
+            current=after,
             config=config,
         )
     except (ValueError, OSError) as error:
@@ -119,9 +139,12 @@ def _compare_report(baseline: Path, current: Path, strict: bool | None) -> Analy
 @app.command("compare")
 # Source selection and terminal controls are independent public options.
 def compare_command(  # noqa: PLR0913
-    baseline: _Directory,
-    current: _Directory,
+    baseline: str,
+    current: str,
     *,
+    repo: Annotated[
+        Path | None, typer.Option("--repo", exists=True, file_okay=False, resolve_path=True)
+    ] = None,
     json_output: _Json = False,
     strict: _Strict = None,
     scope: Annotated[
@@ -133,9 +156,9 @@ def compare_command(  # noqa: PLR0913
     verbose: _Verbose = False,
     top: _Top = None,
 ) -> None:
-    """Compare two directories under the current directory's analysis settings."""
+    """Compare directories, or Git revisions with --repo."""
     display = _display(color, no_color, ascii, verbose, top)
-    report = _compare_report(baseline, current, strict)
+    report = _compare_report(baseline, current, strict, repo)
     output = (
         serialize_report(report)
         if json_output
@@ -160,6 +183,7 @@ def scan_command(  # noqa: PLR0913
     context: typer.Context,
     path: _Directory = Path("."),
     *,
+    revision: Annotated[str | None, typer.Option("--rev", help="Read a Git revision.")] = None,
     json_output: _Json = False,
     strict: _Strict = None,
     scope: Annotated[
@@ -173,7 +197,7 @@ def scan_command(  # noqa: PLR0913
 ) -> None:
     """Inspect snapshot measurements and file evidence."""
     display = _display(color, no_color, ascii, verbose, top)
-    report = _scan_report(path, strict)
+    report = _scan_report(path, strict, revision)
     if json_output:
         typer.echo(serialize_report(report), nl=False)
         return

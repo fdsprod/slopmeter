@@ -7,7 +7,7 @@ The raw scan reports Python source lines, production and test coverage, excluded
 files, diagnostics, M2 pattern verbosity, M3 clone verbosity, their combined line
 union, and M4 structural erosion. Compatible calibration profiles add file and
 project scores. Directory comparisons add exact M1 and metric changes. M1 remains
-unavailable for snapshots. Git revision scans arrive in the next slice. See
+unavailable for snapshots. Git revisions use the same analysis pipeline. See
 `.specs/python-slop-detector/` for the design and checkpoint.
 
 ## Read a snapshot
@@ -155,6 +155,24 @@ profile and model. Added or deleted files have unavailable ratio comparisons;
 their missing side is not treated as zero. Source failures preserve successful
 results and diagnostics. The default view bounds file details; JSON keeps every
 change, including unchanged files.
+
+## Compare Git revisions
+
+Git inputs read committed objects without a checkout:
+
+```text
+uv run slop score . --rev HEAD
+uv run slop tree . --rev HEAD
+uv run slop compare HEAD~1 HEAD --repo .
+uv run slop compare HEAD WORKTREE --repo . --ascii --no-color
+```
+
+The directory must be the repository root. Branches, tags, and commit IDs resolve
+to a full commit ID in the report. `WORKTREE` selects current tracked and eligible
+untracked files. Both inputs use the repository's current configuration.
+Git rename metadata can match edited renames. Missing revisions return exit code 2.
+Analysis does not change the index or working tree, fetch objects, or run source
+files. Symbolic links and submodules are excluded.
 
 ## Development checks
 

@@ -25,7 +25,7 @@ from slop_measure.domain.reports import (
     SourceSide,
     UnavailableSnapshotScore,
 )
-from slop_measure.domain.source import Cohort, SourceDocument
+from slop_measure.domain.source import Cohort, ProjectPath, SourceDocument
 from slop_measure.metrics.deltas import metric_deltas
 from slop_measure.metrics.loc_delta import measure_line_delta, sum_line_deltas
 from slop_measure.sources.compare import match_files
@@ -100,7 +100,11 @@ class _Side:
 
 
 def _changes(
-    baseline: CohortResult, current: CohortResult, before: _Side, after: _Side
+    baseline: CohortResult,
+    current: CohortResult,
+    before: _Side,
+    after: _Side,
+    renames: tuple[tuple[ProjectPath, ProjectPath], ...],
 ) -> tuple[FileChange, ...]:
     old = {file.evidence.path.root: file for file in baseline.files}
     new = {file.evidence.path.root: file for file in current.files}
@@ -111,6 +115,7 @@ def _changes(
             old[path].evidence for path in old if path not in before.documents
         ),
         current_unreadable=tuple(new[path].evidence for path in new if path not in after.documents),
+        renames=renames,
     )
     changes = []
     for pair in pairs:
@@ -150,13 +155,15 @@ def _m1(cohort: Cohort, totals: LineTotals) -> MetricResult:
     )
 
 
-def _cohorts(before: _Side, after: _Side) -> tuple[ComparisonCohortReport, ...]:
+def _cohorts(
+    before: _Side, after: _Side, renames: tuple[tuple[ProjectPath, ProjectPath], ...]
+) -> tuple[ComparisonCohortReport, ...]:
     cohorts = []
     unknown_source = before.unassigned_error() or after.unassigned_error()
     for language, cohort in sorted(before.cohorts.keys() | after.cohorts.keys()):
         baseline = before.cohorts.get((language, cohort), _empty(cohort))
         current = after.cohorts.get((language, cohort), _empty(cohort))
-        changes = _changes(baseline, current, before, after)
+        changes = _changes(baseline, current, before, after, renames)
         totals = (
             UnavailableLineDelta(reason=UnavailableReason.PARSE_FAILED)
             if unknown_source
@@ -214,6 +221,8 @@ def assemble_comparison(
     current: AnalysisReport,
     baseline_inventory: SourceInventory,
     current_inventory: SourceInventory,
+    *,
+    renames: tuple[tuple[ProjectPath, ProjectPath], ...] = (),
 ) -> AnalysisReport:
     """Preserve source facts and require compatible snapshot provenance."""
     if not isinstance(baseline.analysis, SnapshotAnalysis) or not isinstance(
@@ -230,6 +239,7 @@ def assemble_comparison(
         cohorts=_cohorts(
             _Side.from_snapshot(baseline, baseline_inventory, SourceSide.BASELINE),
             _Side.from_snapshot(current, current_inventory, SourceSide.CURRENT),
+            renames,
         ),
         coverage=tuple(
             item.model_copy(update={"source": side})

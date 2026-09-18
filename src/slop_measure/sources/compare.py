@@ -12,7 +12,7 @@ from slop_measure.domain.changes import (
     UnresolvedFile,
 )
 from slop_measure.domain.evidence import FileEvidence, ParseState
-from slop_measure.domain.source import Cohort, SourceDocument
+from slop_measure.domain.source import Cohort, ProjectPath, SourceDocument
 
 _Entry = SourceDocument | FileEvidence
 
@@ -65,6 +65,23 @@ def _renames(old: dict[str, _Entry], new: dict[str, _Entry]) -> list[FilePair]:
     return pairs
 
 
+def _hinted_renames(
+    old: dict[str, _Entry],
+    new: dict[str, _Entry],
+    hints: tuple[tuple[ProjectPath, ProjectPath], ...],
+) -> list[FilePair]:
+    pairs: list[FilePair] = []
+    for old_path, new_path in hints:
+        baseline, current = old.get(old_path.root), new.get(new_path.root)
+        if baseline is None or current is None or old_path == new_path:
+            continue
+        if (baseline.language, baseline.cohort) != (current.language, current.cohort):
+            continue
+        pairs.append(RenamedFile(baseline_path=old_path, current_path=new_path))
+        del old[old_path.root], new[new_path.root]
+    return pairs
+
+
 def _pair_key(pair: FilePair) -> tuple[str, str, str]:
     if isinstance(pair, AddedFile):
         return pair.current_path.root, "", pair.kind
@@ -77,12 +94,18 @@ def match_files(
     baseline: tuple[SourceDocument, ...],
     current: tuple[SourceDocument, ...],
     *,
+    renames: tuple[tuple[ProjectPath, ProjectPath], ...] = (),
     baseline_unreadable: tuple[FileEvidence, ...] = (),
     current_unreadable: tuple[FileEvidence, ...] = (),
 ) -> tuple[FilePair, ...]:
     """Keep each file once, without guessing unreadable content or crossing populations."""
+    if len({old.root for old, _ in renames}) != len(renames) or len(
+        {new.root for _, new in renames}
+    ) != len(renames):
+        raise ValueError("Rename hints must have unique baseline and current endpoints.")
     old, new = _entries(baseline, baseline_unreadable), _entries(current, current_unreadable)
     pairs = _same_paths(old, new)
+    pairs.extend(_hinted_renames(old, new, renames))
     pairs.extend(_renames(old, new))
     pairs.extend(DeletedFile(baseline_path=item.path) for item in old.values())
     pairs.extend(AddedFile(current_path=item.path) for item in new.values())

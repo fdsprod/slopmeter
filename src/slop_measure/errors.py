@@ -5,6 +5,10 @@ class AnalysisFailure(RuntimeError):
     """Analysis cannot complete, including an error under strict mode."""
 
 
+class InvalidSource(ValueError):
+    """A source root or revision cannot be resolved for analysis."""
+
+
 class InvalidRuleSelection(ValueError):
     """Configured rule identifiers do not belong to the selected catalog."""
 

@@ -16,7 +16,7 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q07, T01-T60, and T79-T84 are complete through TB-6.
+Current checkpoint: Q01-Q07, T01-T64, and T79-T84 are complete through TB-7.
 Snapshot and directory comparison share the same analysis and calibration pipeline.
 The retained learning tests record the external behavior that adapters rely on.
 
@@ -119,7 +119,16 @@ TB-6 passes its validation gate:
 - [x] 1,023 deterministic tests and 38 retained learning tests pass. Branch coverage
   is 96.71 percent. Ruff, Pyright, five import contracts, builds, and CLI smoke pass.
 
-Next is TB-7 Git comparison. [comparison-design.md](comparison-design.md) records
+TB-7 passes its validation gate:
+
+- [x] T61-T64: Pinned read-only Git sources, exact source policies, edited rename
+  hints, snapshot and comparison CLI routing, and stable full commit identities.
+- [x] Git and directory measurements agree. Tests preserve index bytes, working
+  files, and status, including staged renames with unstaged edits.
+- [x] 1,058 deterministic tests and 41 retained learning tests pass. Branch coverage
+  is 96.58 percent. Ruff, Pyright, five import contracts, builds, and Git CLI smoke pass.
+
+Next is TB-8 explainability. [comparison-design.md](comparison-design.md) records
 the owned change data contract. Continue through TB-9, with quality gates between slices.
 TB-2 retains Radon learning tests for AST traversal and complete callable spans.
 The scoring package now has its own import boundary. M1 remains unavailable for snapshots.
@@ -338,10 +347,10 @@ comparison report.
 
 **Validation:**
 
-- [ ] Analysis does not modify the index or working tree.
-- [ ] Equivalent Git and directory comparisons return the same M1-M4 values.
-- [ ] Git rename metadata maps baseline and current file identities.
-- [ ] Missing revisions produce exit code 2 and a direct error message.
+- [x] Analysis does not modify the index or working tree.
+- [x] Equivalent Git and directory comparisons return the same M1-M4 values.
+- [x] Git rename metadata maps baseline and current file identities.
+- [x] Missing revisions produce exit code 2 and a direct error message.
 
 **Dependencies:** TB-6.
 
@@ -361,7 +370,7 @@ behavior, and plain output.
 **Validation:**
 
 - [ ] Every contribution links to raw metrics and evidence.
-- [ ] `slop inspect FILE` shows all findings and eroded callables for that file.
+- [ ] `slop explain FILE` shows all findings and eroded callables for that file.
 - [ ] `slop findings` filters by path, metric, rule, and severity.
 - [ ] `NO_COLOR` and narrow terminals remain readable.
 
@@ -529,11 +538,11 @@ These IDs extend the existing task list without renumbering retained checkpoints
 | T56 | Diff physical lines and count added/deleted SLOC from both SLOC sets | `src/slop_measure/metrics/loc_delta.py` | T14, T54-T55 | Per-file and project M1 reconcile |
 | T57 | Orchestrate two directory snapshots and derive deltas | `src/slop_measure/application/service.py` | T17, T42, T54-T56 | Comparison reuses snapshot analysis for M2-M4 |
 | T58 | Render comparison summary, M1, metric movement, and regressions | `src/slop_measure/reporting/terminal.py` | T52, T57 | Better and worse labels do not depend on color |
-| T59 | Implement directory mode for `slop diff` | `src/slop_measure/cli.py` | T21, T57-T58 | Approved directory comparison command works |
+| T59 | Implement directory mode for `slop compare` | `src/slop_measure/cli.py` | T21, T57-T58 | Approved directory comparison command works |
 | T60 | Add directory comparison fixtures and golden reports | `tests/golden/test_diff_directories.py` | T59 | All TB-6 validation items pass |
 | T61 | Read repository inventory and file bytes from Git revisions without checkout | `src/slop_measure/sources/git.py` | T04, T05, T10 | Branch, tag, commit, and working-tree fixtures work |
 | T62 | Apply Git rename metadata to comparison file identities | `src/slop_measure/sources/git.py` | T54-T55, T61 | Renames do not become unrelated delete/add pairs |
-| T63 | Add Git revision routing to `slop diff` | `src/slop_measure/cli.py` | T59, T61-T62 | Git and directory modes share the same comparison renderer |
+| T63 | Add Git revision routing to `slop compare` | `src/slop_measure/cli.py` | T59, T61-T62 | Git and directory modes share the same comparison renderer |
 | T64 | Add read-only Git integration tests and equivalent-directory assertions | `tests/integration/test_git_comparison.py` | T63 | All TB-7 validation items pass and worktree status stays unchanged |
 
 ### Phase 7: TB-8 explainability
@@ -541,7 +550,7 @@ These IDs extend the existing task list without renumbering retained checkpoints
 | ID | Deliverable | Location | Depends on | Done when |
 |---|---|---|---|---|
 | T65 | Query one file's metrics, functions, patterns, clones, and deltas | `src/slop_measure/reporting/queries.py` | T53, T64 | File query returns every contributing evidence record |
-| T66 | Implement the `slop inspect` file-detail view | `src/slop_measure/cli.py` | T65 | Snapshot and comparison file views match approved output |
+| T66 | Implement the `slop explain` file-detail view | `src/slop_measure/cli.py` | T65 | Snapshot and comparison file views match approved output |
 | T67 | Implement filterable `slop findings` output | `src/slop_measure/cli.py` | T65 | Path, metric, rule, and severity filters compose |
 | T68 | Implement versioned `slop rules` catalog output | `src/slop_measure/cli.py` | T33 | Enabled state and catalog version are visible |
 | T69 | Add width-aware, no-color, and ASCII terminal behavior | `src/slop_measure/reporting/terminal.py` | T52, T58, T66-T68 | Narrow and redirected golden outputs remain readable |

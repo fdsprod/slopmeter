@@ -15,7 +15,7 @@ from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.reports import AnalysisReport, AnalyzerVersion, ScoreUnavailableReason
 from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
 from slop_measure.domain.scoring import CalibrationProfile
-from slop_measure.domain.source import DirectorySourceReference, SourceDocument
+from slop_measure.domain.source import DirectorySourceReference, GitSourceIdentity, SourceDocument
 from slop_measure.errors import AnalysisFailure
 from slop_measure.languages.base import LanguageAdapter
 from slop_measure.languages.python.adapter import PythonAdapter
@@ -24,6 +24,7 @@ from slop_measure.metrics.aggregate import aggregate_snapshot
 from slop_measure.scoring.engine import score_report
 from slop_measure.scoring.profiles import load_profile
 from slop_measure.sources.filesystem import FilesystemSourceProvider
+from slop_measure.sources.git import GitSourceProvider, rename_pairs
 
 
 def _failed_adapter(language: str, documents: tuple[SourceDocument, ...]) -> LanguageEvidence:
@@ -118,16 +119,25 @@ class AnalysisService:
             score_report(current.report, profile, failure=failure),
             baseline.inventory,
             current.inventory,
+            renames=(
+                rename_pairs(baseline.report.analysis.current, current.report.analysis.current)
+                if isinstance(baseline.report.analysis.current, GitSourceIdentity)
+                else ()
+            ),
         )
 
     def _scan(self, request: SnapshotRequest) -> _Snapshot:
-        if not isinstance(request.target, DirectorySourceReference):
-            raise ValueError("Git revision scans are not available yet")
         for adapter in self.registry.adapters:
             validate_config = getattr(adapter, "validate_config", None)
             if validate_config is not None:
                 validate_config(request.config)
-        provider = FilesystemSourceProvider(request.target.root, request.config, self.registry)
+        provider = (
+            FilesystemSourceProvider(request.target.root, request.config, self.registry)
+            if isinstance(request.target, DirectorySourceReference)
+            else GitSourceProvider(
+                request.target.root, request.target.revision, request.config, self.registry
+            )
+        )
         inventory = provider.inventory()
         evidence: list[LanguageEvidence] = []
         versions: list[AnalyzerVersion] = []

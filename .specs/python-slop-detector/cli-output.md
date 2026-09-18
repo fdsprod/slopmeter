@@ -132,3 +132,15 @@ directory score, or symbol score.
 Comparison and trend examples in the shared discussion remain design references.
 They do not introduce coupling, comment-volume penalties, changed-code scores,
 mixed production/test headlines, or automatic fixes into the current metric model.
+
+## Git source selection
+
+Git support keeps paths and revisions separate so Windows drive names remain
+unambiguous. `score`, `scan`, and `tree` accept `DIRECTORY --rev REVISION`.
+`compare BASE CURRENT --repo DIRECTORY` treats both positional selectors as Git
+revisions. `CURRENT` can be `WORKTREE` to read current local files. Without
+`--repo`, the two comparison arguments remain directory paths.
+
+The repository's current configuration applies to both Git inputs. JSON records
+resolved commit IDs. The [Git source contract](git-design.md) defines object reads,
+rename matching, and the read-only validation gate.
