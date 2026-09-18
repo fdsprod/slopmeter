@@ -10,7 +10,7 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q05, T01-T08, and T10 are complete. Q06 waits for the
+Current checkpoint: Q01-Q05 and T01-T12 are complete. Q06 waits for the
 architecture packages, and Q07 waits for the first end-to-end scan. The retained
 learning tests record the external behavior that production adapters may rely on.
 
@@ -21,9 +21,12 @@ until the CLI and API can scan a fixture end to end:
 - [x] T07: Diagnostics, coverage, exact file SLOC evidence, and language evidence.
 - [x] T08: Measured and unavailable metrics with validated ratio arithmetic.
 - [x] T10: Immutable configuration with tested file and CLI precedence.
-- [x] Validate 200 tests, Ruff format/lint, and Pyright. Coverage reports 99 percent.
-- [ ] T09: Report envelope, provenance, cohorts, and analysis variants.
-- [ ] T11-T22: Adapter boundary and the first complete scan.
+- [x] T09: Report envelope, provenance, cohorts, and analysis variants.
+- [x] T11: Read-only adapter protocol with owned evidence and capability declarations.
+- [x] T12: Explicit registration with stable routing metadata and atomic validation.
+- [x] Validate 307 tests, Ruff format/lint, and Pyright. Coverage reports 99 percent.
+- [ ] T13-T15: Source inventory, Python SLOC, and the Python adapter.
+- [ ] T16-T22: Aggregation, orchestration, API, renderers, and the first complete scan.
 
 Language evidence currently accepts only empty pattern, function, and clone
 collections. T23, T28, and the clone slice add their owned element contracts before adapters
@@ -31,12 +34,18 @@ emit those facts. File SLOC counts are checked immutable projections of exact li
 identities. Metric values are immutable calculation projections with ratio inputs
 checked at construction.
 
-The report work must resolve these remaining contract decisions before aggregation:
+The report contracts now resolve the decisions required before aggregation:
 
-- [ ] Define how report-owned diagnostic IDs resolve to diagnostic records.
-- [ ] Represent missing calibration as an explicit score-unavailable report state.
-- [ ] Represent unsupported evidence capabilities during TB-1 without false zeros
-  or claiming an analyzer failed when it did not run.
+- [x] Report-owned diagnostic wrappers have unique IDs and source-state ownership.
+  Nested metrics resolve links within their source state. Comparison-level metrics
+  can refer to either input's diagnostic.
+- [x] Snapshot scores use measured and unavailable variants with closed reasons.
+- [x] The `unsupported-capability` metric reason distinguishes missing evidence
+  support from a failed analyzer.
+
+Next, build the filesystem inventory and exact Python line classification. Preserve
+the separation between adapter diagnostics and report-owned diagnostic IDs. The
+report builder will assign those IDs in stable order when T16-T17 joins the layers.
 
 The dependency graph keeps M1 work independent from M2-M4 after the first working
 scan. The quality gate is established before dependency characterization. Calibration

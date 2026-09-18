@@ -72,6 +72,7 @@ class UnavailableReason(StrEnum):
     NO_SOURCE_LINES = "no-source-lines"
     NO_FUNCTIONS = "no-functions"
     UNSUPPORTED_LANGUAGE = "unsupported-language"
+    UNSUPPORTED_CAPABILITY = "unsupported-capability"
     PARSE_FAILED = "parse-failed"
     ANALYZER_FAILED = "analyzer-failed"
     CALIBRATION_MISSING = "calibration-missing"

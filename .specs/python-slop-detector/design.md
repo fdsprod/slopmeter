@@ -204,6 +204,7 @@ no-baseline
 no-source-lines
 no-functions
 unsupported-language
+unsupported-capability
 parse-failed
 analyzer-failed
 calibration-missing
@@ -223,17 +224,110 @@ fields:
   - { name: schema_version, type: string, required: true, description: Report contract version }
   - { name: analysis, type: SnapshotAnalysis | ComparisonAnalysis, required: true, description: Tagged analysis request and result }
   - { name: provenance, type: Provenance, required: true, description: Tool and rules and calibration versions }
-  - { name: coverage, type: list[Coverage], required: true, description: Included and excluded source inventory }
+  - { name: coverage, type: list[ReportCoverage], required: true, description: Included and excluded source inventory by source state }
   - { name: cohorts, type: list[CohortReport], required: true, description: Production and test results }
   - { name: findings, type: list[Finding], required: true, description: Source-level evidence }
   - { name: clone_groups, type: list[CloneGroup], required: true, description: Cross-file duplicate evidence }
-  - { name: diagnostics, type: list[Diagnostic], required: true, description: Partial and failed analyzer evidence }
+  - { name: diagnostics, type: list[ReportDiagnostic], required: true, description: Identified diagnostics by source state }
 ```
 
 This shape keeps one source of truth. Project scores derive from project evidence.
 File scores derive from file evidence. Renderers do not store or recompute alternate
 totals. The tagged analysis and metric states prevent snapshot runs from pretending
 that an absent M1 value is zero.
+
+### Source states and report ownership
+
+Snapshot and comparison analyses contain resolved source identities. Their matching
+cohort variants own each source state's results exactly once. A comparison requires
+both baseline and current results. A snapshot cannot contain baseline results.
+
+The analysis and cohort unions have matching `kind` discriminators:
+
+```mermaid
+flowchart TD
+    Report[AnalysisReport] --> Analysis[SnapshotAnalysis or ComparisonAnalysis]
+    Report --> Cohorts[SnapshotCohortReport or ComparisonCohortReport]
+    Cohorts --> Current[Current CohortResult]
+    Cohorts --> Baseline[Baseline CohortResult: comparison only]
+    Current --> Files[FileResult]
+    Baseline --> Files
+    Files --> Evidence[FileEvidence]
+```
+
+A cohort result owns project measurements and file results. The enclosing cohort
+record supplies the language and cohort. Nested metric scopes are checked against
+their owner, so a test metric cannot appear under production results.
+
+```datamodel
+name: CohortResult
+store: in-memory and JSON report
+summary: Results for one language and cohort in one source state.
+fields:
+  - { name: files, type: tuple[FileResult], required: true, description: Unique source paths with evidence and file metrics }
+  - { name: metrics, type: tuple[MetricResult], required: true, description: Unique project metric identifiers }
+  - { name: score, type: SnapshotScore, required: true, description: Explicit measured or unavailable snapshot score }
+```
+
+A file result stores its path and source population only in its evidence. Its metric
+scopes must match that evidence.
+
+```datamodel
+name: FileResult
+store: in-memory and JSON report
+summary: One file's evidence and derived results.
+fields:
+  - { name: evidence, type: FileEvidence, required: true, description: Authoritative source facts }
+  - { name: metrics, type: tuple[MetricResult], required: true, description: Unique file metric identifiers }
+  - { name: score, type: SnapshotScore, required: true, description: Explicit measured or unavailable snapshot score }
+```
+
+`SnapshotScore` uses a `state` discriminator. Measured scores require finite points
+from 0 through 100 and a profile ID. Unavailable scores carry no points or profile.
+Their reasons distinguish missing or incompatible calibration, no source lines,
+and unavailable required metrics.
+
+Report diagnostics wrap adapter diagnostics without adding report identity to the
+adapter boundary. The report builder assigns stable IDs after deterministic sorting.
+
+```datamodel
+name: ReportDiagnostic
+store: in-memory and JSON report
+summary: A diagnostic identified within one report and source state.
+fields:
+  - { name: id, type: string, required: true, description: Unique report-owned identifier }
+  - { name: source, type: current | baseline, required: true, default: current, description: Source state that produced the diagnostic }
+  - { name: detail, type: Diagnostic, required: true, description: Adapter or pipeline diagnostic }
+```
+
+`ReportCoverage` similarly pairs a source state with a coverage record. Snapshot
+reports reject baseline coverage and diagnostics. Metric diagnostic references must
+resolve within their source state. Comparison-level metrics may refer to either
+source state because either input can prevent a valid comparison. A file metric
+cannot reference a diagnostic located in another file.
+
+Provenance contains the resolved configuration, tool version, and immutable analyzer
+and metric version records. Analyzer languages and metric identifiers are unique.
+The analyzer record contains its adapter version and optional rule-set version.
+The selected calibration profile remains in configuration; a measured score records
+the profile that actually produced it.
+
+> [!NOTE]
+> TB-1 reports M2-M4 as `unsupported-capability` while the Python adapter supplies
+> file evidence only. This does not claim a parser or analyzer failed. Findings and
+> clone groups accept only empty collections until their evidence models exist.
+
+### Language registration
+
+The language protocol exposes read-only language ID, extension, and capability
+properties. It accepts immutable source documents and resolved `AnalysisConfig`,
+then returns owned `LanguageEvidence`.
+
+The registry records the exact language ID and a case-insensitive extension snapshot
+at registration. It rejects empty routing metadata and duplicate IDs or extensions
+before changing its state. A later adapter mutation cannot change registered routes.
+Adapters are returned in language-ID order. No third-party plugin discovery runs
+implicitly.
 
 ## Terminal Behavior
 
@@ -484,13 +578,19 @@ evidence:
 
 ```python
 class LanguageAdapter(Protocol):
-    language_id: str
-    extensions: frozenset[str]
+    @property
+    def language_id(self) -> str: ...
+
+    @property
+    def extensions(self) -> frozenset[str]: ...
+
+    @property
+    def capabilities(self) -> frozenset[EvidenceCapability]: ...
 
     def analyze(
         self,
         documents: tuple[SourceDocument, ...],
-        config: LanguageConfig,
+        config: AnalysisConfig,
     ) -> LanguageEvidence: ...
 ```
 
