@@ -8,20 +8,38 @@ files, diagnostics, M2 pattern verbosity, and M4 structural erosion. M1, M3, and
 calibrated scores remain explicitly unavailable. Directory comparisons and Git revision scans arrive
 in later slices. See `.specs/python-slop-detector/` for the design and checkpoint.
 
-## Scan a directory
+## Read a snapshot
 
 Use the project environment to run a scan:
 
 ```text
-uv run slop scan .
-uv run slop scan tests/fixtures/basic --json
-uv run slop scan . --scope all --no-color
-uv run slop scan . --strict
+uv run slop score .
+uv run slop score tests/fixtures/basic --json
+uv run slop score . --scope all --ascii --no-color
+uv run slop score . --verbose --top 10
+uv run slop tree src
+uv run slop explain src/slop_measure/api.py --root .
+uv run slop explain src/slop_measure/api.py --root . --symbol scan
+uv run slop score . --strict
 ```
 
 The default scan continues after file errors. `--strict` stops with exit code 3.
 Invalid arguments or configuration return exit code 2. Findings do not cause a
-failure. `--scope` selects terminal results; JSON always contains the complete report.
+failure. `scan` remains an alias for the same snapshot analysis. `--scope` and
+`--top` select terminal results. JSON always contains the complete report.
+
+The summary shows measured percentages and bars first. Lower values mean less
+flagged code. These raw percentages are not calibrated scores. Unavailable metrics
+show a reason instead of a bar. Production and test results stay separate. File
+rows use path order until calibrated hotspot scores are available.
+
+`tree` shows files under their directories. `explain` shows a file's metrics,
+findings, and callable facts. `--symbol` selects an exact qualified callable name.
+If that name occurs more than once, add `--line` with its definition start line.
+
+Color is automatic for a terminal and disabled for redirected output or `NO_COLOR`.
+Use `--color always` to force color, `--no-color` to disable it, and `--ascii` for
+plain character bars and tree branches. Narrow views remove secondary columns.
 
 The Python API returns the same report as the CLI:
 
@@ -65,7 +83,7 @@ threshold is `CC > 10`. Set `complexity_threshold` in `slop.toml` or `[tool.slop
 to change it. Project M4 uses summed mass, not an average of file ratios.
 
 JSON records every callable's name, source span, complexity, exact SLOC lines, and
-mass. Terminal output shows mass totals and the largest eroded callables. Files
+mass. Verbose terminal output shows mass totals and the largest eroded callables. Files
 without callables report `no-functions`. A complexity failure preserves source-line
 counts and makes M4 unavailable for that file and its cohort.
 

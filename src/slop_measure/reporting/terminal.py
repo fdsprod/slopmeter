@@ -1,18 +1,37 @@
 """Concise terminal output for the raw snapshot slice."""
 
+from dataclasses import dataclass
 from io import StringIO
+from pathlib import PurePosixPath
 
 from rich.console import Console
 
 from slop_measure.config import AnalysisConfig
-from slop_measure.domain.evidence import DiagnosticSeverity, PatternFinding, pattern_source_lines
-from slop_measure.domain.metrics import MeasuredMetric
+from slop_measure.domain.evidence import (
+    CoverageState,
+    DiagnosticSeverity,
+    FunctionEvidence,
+    PatternFinding,
+    pattern_source_lines,
+)
+from slop_measure.domain.metrics import (
+    MeasuredMetric,
+    MetricResult,
+    MetricUnit,
+    UnavailableMetric,
+    UnavailableReason,
+)
 from slop_measure.domain.reports import (
     AnalysisReport,
     CohortResult,
+    FileResult,
     MeasuredSnapshotScore,
     SnapshotAnalysis,
+    SnapshotCohortReport,
 )
+from slop_measure.domain.source import Cohort
+from slop_measure.errors import SelectionError
+from slop_measure.reporting.queries import findings_for_file, select_callable, select_file
 
 
 def _render_erosion(
@@ -85,26 +104,54 @@ def _render_patterns(
         )
 
 
-def _render_metrics(console: Console, result: CohortResult, report: AnalysisReport) -> None:
-    for metric in result.metrics:
-        if isinstance(metric, MeasuredMetric):
-            console.print(f"  {metric.metric_id}: {metric.raw.value:g} {metric.raw.unit.value}")
-            if metric.metric_id == "m4.erosion":
-                _render_erosion(console, metric, result, report.provenance.config)
-            elif metric.metric_id == "m2.pattern-verbosity":
-                _render_patterns(console, metric, result, report)
-        else:
-            console.print(f"  {metric.metric_id}: unavailable ({metric.reason.value})")
+_LABELS = {
+    "m1.loc-delta": "LOC delta",
+    "m2.pattern-verbosity": "Pattern verbosity",
+    "m3.clone-verbosity": "Clone verbosity",
+    "m4.erosion": "Erosion",
+}
+_REASONS = {
+    UnavailableReason.NO_BASELINE: "no baseline",
+    UnavailableReason.NO_SOURCE_LINES: "no source lines",
+    UnavailableReason.NO_FUNCTIONS: "no callables",
+    UnavailableReason.UNSUPPORTED_LANGUAGE: "unsupported language",
+    UnavailableReason.UNSUPPORTED_CAPABILITY: "not supported yet",
+    UnavailableReason.PARSE_FAILED: "source error",
+    UnavailableReason.ANALYZER_FAILED: "analysis error",
+    UnavailableReason.CALIBRATION_MISSING: "no calibration profile",
+    UnavailableReason.CALIBRATION_INCOMPATIBLE: "incompatible calibration profile",
+}
+_ERROR_REASONS = {UnavailableReason.PARSE_FAILED, UnavailableReason.ANALYZER_FAILED}
+_FULL_COLUMNS_WIDTH = 60
+_BAR_WIDTH = 20
 
 
-def render_snapshot(
-    report: AnalysisReport, *, scope: str = "production", width: int = 80, color: bool = False
-) -> str:
-    """Render coverage and selected cohort results without hiding unavailable values."""
-    if scope not in {"production", "test", "all"}:
-        raise ValueError("scope must be production, test, or all")
-    if not isinstance(report.analysis, SnapshotAnalysis):
-        raise ValueError("snapshot rendering requires a snapshot report")
+@dataclass(frozen=True)
+class _View:
+    console: Console
+    ascii: bool
+    verbose: bool
+    limit: int
+
+    @property
+    def separator(self) -> str:
+        return " | " if self.ascii else " · "
+
+    @property
+    def missing(self) -> str:
+        return "-" if self.ascii else "—"
+
+    def bar(self, ratio: float) -> str:
+        filled = round(max(0, min(1, ratio)) * _BAR_WIDTH)
+        used, empty = ("#", "-") if self.ascii else ("█", "░")
+        return f"[{used * filled}{empty * (_BAR_WIDTH - filled)}]"
+
+
+def _view(
+    width: int, color: bool, ascii: bool, verbose: bool, limit: int
+) -> tuple[StringIO, _View]:
+    if width < 1 or isinstance(limit, bool) or limit < 1:
+        raise ValueError("terminal width and top must be positive")
     stream = StringIO()
     console = Console(
         file=stream,
@@ -115,30 +162,362 @@ def render_snapshot(
         markup=False,
         highlight=False,
     )
-    console.print("slop.measure", style="bold" if color else None)
-    console.print(str(report.analysis.current.root))
-    console.print("snapshot - higher is worse")
-    console.print()
-    console.print("source coverage")
-    for record in report.coverage:
+    return stream, _View(console, ascii, verbose, limit)
+
+
+def _cohorts(report: AnalysisReport, scope: str) -> tuple[SnapshotCohortReport, ...]:
+    if scope not in {"production", "test", "all"}:
+        raise ValueError("scope must be production, test, or all")
+    if not isinstance(report.analysis, SnapshotAnalysis):
+        raise ValueError("snapshot rendering requires a snapshot report")
+    return tuple(
+        item
+        for item in report.cohorts
+        if isinstance(item, SnapshotCohortReport) and scope in {"all", item.cohort.value}
+    )
+
+
+def _population(cohort: Cohort) -> str:
+    return "Production" if cohort is Cohort.PRODUCTION else "Tests"
+
+
+def _language(language: str) -> str:
+    return "Python" if language == "python" else language
+
+
+def _count(count: int, noun: str) -> str:
+    return f"{count} {noun}" + ("" if count == 1 else "s")
+
+
+def _partial(metrics: tuple[MetricResult, ...]) -> bool:
+    return any(
+        isinstance(item, UnavailableMetric) and item.reason in _ERROR_REASONS for item in metrics
+    )
+
+
+def _header(view: _View, report: AnalysisReport) -> None:
+    view.console.print(f"slop.measure  {report.analysis.current.root}", style="bold")
+    partial = any(item.detail.severity is DiagnosticSeverity.ERROR for item in report.diagnostics)
+    measured = any(isinstance(item.current.score, MeasuredSnapshotScore) for item in report.cohorts)
+    score = "Calibrated scores; lower is better" if measured else "Score unavailable"
+    status = "analysis partial" if partial else "raw measurements available"
+    view.console.print(score + view.separator + status)
+
+
+def _coverage(view: _View, report: AnalysisReport) -> None:
+    view.console.print()
+    view.console.print("Coverage")
+    states = {CoverageState.SCORED: 0, CoverageState.EXCLUDED: 1, CoverageState.UNSUPPORTED: 2}
+    for record in sorted(
+        report.coverage,
+        key=lambda item: (
+            states[item.detail.state],
+            item.detail.cohort.value,
+            item.detail.language,
+            item.detail.reason or "",
+        ),
+    ):
         item = record.detail
-        unit = "file" if item.file_count == 1 else "files"
-        console.print(
-            f"  {item.cohort.value} {item.language}: {item.file_count} {unit}, {item.sloc} SLOC"
-        )
-        console.print(f"    {item.state.value}" + (f" - {item.reason}" if item.reason else ""))
-    for cohort in report.cohorts:
-        if scope not in {"all", cohort.cohort.value}:
-            continue
-        console.print()
-        console.print(f"{cohort.cohort.value} {cohort.language}")
-        score = cohort.current.score
-        if isinstance(score, MeasuredSnapshotScore):
-            console.print(f"  snapshot slop {score.points:g}/100")
+        population = f"{_population(item.cohort)} {_language(item.language)}"
+        if item.state is CoverageState.SCORED:
+            partial = any(
+                _partial(cohort.current.metrics)
+                for cohort in report.cohorts
+                if cohort.language == item.language and cohort.cohort is item.cohort
+            )
+            status = "partial" if partial else "analyzed"
+            view.console.print(
+                f"  {population}: {_count(item.file_count, 'file')}, {item.sloc} SLOC"
+                + view.separator
+                + status
+            )
         else:
-            console.print(f"  snapshot slop unavailable: {score.reason.value}")
-        _render_metrics(console, cohort.current, report)
+            view.console.print(
+                f"  {item.state.value.title()} {population}: {_count(item.file_count, 'file')}"
+                + view.separator
+                + (item.reason or "not analyzed")
+            )
+
+
+def _metric_row(view: _View, metric: MeasuredMetric) -> None:
+    label = _LABELS.get(metric.metric_id, metric.metric_id)
+    if metric.raw.unit is MetricUnit.RATIO:
+        text = f"  {label}  {metric.raw.value:.1%} {view.bar(metric.raw.value)}"
+    else:
+        text = f"  {label}  {metric.raw.value:g} source lines"
+    if metric.metric_id in {"m2.pattern-verbosity", "m3.clone-verbosity"}:
+        text += f"  {metric.raw.numerator:g} / {metric.raw.denominator:g} SLOC"
+    view.console.print(text, style="cyan")
+
+
+def _measured(view: _View, result: CohortResult, report: AnalysisReport) -> None:
+    for metric in result.metrics:
+        if isinstance(metric, MeasuredMetric) and (
+            view.verbose or metric.metric_id != "m1.loc-delta"
+        ):
+            _metric_row(view, metric)
+            if view.verbose and metric.metric_id == "m4.erosion":
+                _render_erosion(view.console, metric, result, report.provenance.config)
+            elif view.verbose and metric.metric_id == "m2.pattern-verbosity":
+                _render_patterns(view.console, metric, result, report)
+
+
+def _unavailable(view: _View, metrics: tuple[MetricResult, ...]) -> None:
+    missing = tuple(
+        item
+        for item in metrics
+        if isinstance(item, UnavailableMetric)
+        and (view.verbose or item.metric_id != "m1.loc-delta")
+    )
+    if missing:
+        view.console.print()
+        view.console.print("Not measured")
+    for item in missing:
+        view.console.print(
+            f"  {_LABELS.get(item.metric_id, item.metric_id)}: {view.missing}"
+            + view.separator
+            + _REASONS[item.reason]
+        )
+
+
+def _percentage(file: FileResult, metric_id: str, missing: str) -> str:
+    metric = next((item for item in file.metrics if item.metric_id == metric_id), None)
+    return f"{metric.raw.value:.1%}" if isinstance(metric, MeasuredMetric) else missing
+
+
+def _file_values(view: _View, file: FileResult, label: str) -> str:
+    text = label + " | " + _percentage(file, "m2.pattern-verbosity", view.missing)
+    if view.console.width >= _FULL_COLUMNS_WIDTH:
+        text += " | " + _percentage(file, "m4.erosion", view.missing)
+    return text
+
+
+def _omitted(view: _View, files: tuple[FileResult, ...]) -> None:
+    count = len(files) - view.limit
+    if count > 0:
+        view.console.print(f"  {_count(count, 'file')} omitted")
+
+
+def _file_table(view: _View, files: tuple[FileResult, ...]) -> None:
+    view.console.print()
+    view.console.print("Files (path order)")
+    view.console.print(
+        "  File | Patterns" + (" | Erosion" if view.console.width >= _FULL_COLUMNS_WIDTH else "")
+    )
+    for file in sorted(files, key=lambda item: item.evidence.path.root)[: view.limit]:
+        view.console.print("  " + _file_values(view, file, file.evidence.path.root))
+    _omitted(view, files)
+
+
+def _heading(view: _View, cohort: SnapshotCohortReport) -> None:
+    files = cohort.current.files
+    view.console.print()
+    view.console.print(
+        view.separator.join(
+            (
+                _population(cohort.cohort),
+                _language(cohort.language),
+                _count(len(files), "file"),
+                f"{sum(file.evidence.sloc for file in files)} SLOC",
+            )
+        )
+    )
+    score = cohort.current.score
+    if isinstance(score, MeasuredSnapshotScore):
+        view.console.print(
+            f"  Score {score.points:.1f}/100 {view.bar(score.points / 100)}; lower is better"
+        )
+
+
+def _footer(view: _View, report: AnalysisReport, cohorts: tuple[SnapshotCohortReport, ...]) -> None:
+    paths = {file.evidence.path.root for cohort in cohorts for file in cohort.current.files}
+    findings = sum(item.detail.path.root in paths for item in report.findings)
+    counts = []
+    if findings:
+        counts.append(_count(findings, "finding"))
     if report.diagnostics:
-        console.print()
-        console.print(f"diagnostics: {len(report.diagnostics)} (see --json for full details)")
+        counts.append(_count(len(report.diagnostics), "diagnostic"))
+    if counts:
+        view.console.print()
+        view.console.print(view.separator.join((*counts, "use explain for source evidence")))
+    if view.verbose:
+        _provenance(view, report)
+
+
+def _provenance(view: _View, report: AnalysisReport) -> None:
+    view.console.print()
+    view.console.print("Provenance")
+    view.console.print(f"  slop.measure {report.provenance.tool_version}")
+    for adapter in report.provenance.analyzers:
+        view.console.print(
+            f"  {adapter.language}: {adapter.adapter_version}"
+            + (f"; {adapter.rule_set_version}" if adapter.rule_set_version else "")
+        )
+    for metric in report.provenance.metrics:
+        view.console.print(f"  {metric.metric_id}: {metric.version}")
+
+
+# Public keyword options preserve the renderer API while keeping analysis configuration separate.
+def render_snapshot(  # noqa: PLR0913
+    report: AnalysisReport,
+    *,
+    scope: str = "production",
+    width: int = 80,
+    color: bool = False,
+    ascii: bool = False,
+    verbose: bool = False,
+    top: int | None = None,
+) -> str:
+    """Show measured percentages first, followed by files and unavailable reasons."""
+    cohorts = _cohorts(report, scope)
+    stream, view = _view(
+        width,
+        color,
+        ascii,
+        verbose,
+        top if top is not None else report.provenance.config.default_hotspot_count,
+    )
+    _header(view, report)
+    _coverage(view, report)
+    for cohort in cohorts:
+        _heading(view, cohort)
+        _measured(view, cohort.current, report)
+        _file_table(view, cohort.current.files)
+        _unavailable(view, cohort.current.metrics)
+    _footer(view, report, cohorts)
+    return stream.getvalue()
+
+
+def _tree_rows(
+    view: _View, files: tuple[FileResult, ...], prefix: str = "", depth: int = 0
+) -> None:
+    children: dict[str, list[FileResult]] = {}
+    for file in files:
+        name = PurePosixPath(file.evidence.path.root).parts[depth]
+        children.setdefault(name, []).append(file)
+    names = sorted(children)
+    for index, name in enumerate(names):
+        last = index == len(names) - 1
+        branch = ("`-- " if last else "|-- ") if view.ascii else ("└── " if last else "├── ")
+        members = tuple(children[name])
+        directory = len(PurePosixPath(members[0].evidence.path.root).parts) > depth + 1
+        label = name + "/" if directory else _file_values(view, members[0], name)
+        view.console.print(prefix + branch + label)
+        if directory:
+            guide = "    " if last else ("|   " if view.ascii else "│   ")
+            _tree_rows(view, members, prefix + guide, depth + 1)
+
+
+# Keep the same public presentation options as the summary renderer.
+def render_tree(  # noqa: PLR0913
+    report: AnalysisReport,
+    *,
+    scope: str = "production",
+    width: int = 80,
+    color: bool = False,
+    ascii: bool = False,
+    verbose: bool = False,
+    top: int | None = None,
+) -> str:
+    """Show file measurements in directories without inventing directory metrics."""
+    cohorts = _cohorts(report, scope)
+    stream, view = _view(
+        width,
+        color,
+        ascii,
+        verbose,
+        top if top is not None else report.provenance.config.default_hotspot_count,
+    )
+    _header(view, report)
+    _coverage(view, report)
+    for cohort in cohorts:
+        _heading(view, cohort)
+        view.console.print(
+            "File | Patterns" + (" | Erosion" if width >= _FULL_COLUMNS_WIDTH else "")
+        )
+        files = tuple(sorted(cohort.current.files, key=lambda item: item.evidence.path.root))
+        _tree_rows(view, files[: view.limit])
+        _omitted(view, files)
+        _unavailable(view, cohort.current.metrics)
+    _footer(view, report, cohorts)
+    return stream.getvalue()
+
+
+def _callable_row(view: _View, function: FunctionEvidence) -> None:
+    view.console.print(
+        f"  {function.path.root}:{function.span.start_line}-{function.span.end_line} "
+        f"{function.qualified_name}: CC {function.cyclomatic_complexity}, "
+        f"SLOC {function.sloc}, mass {function.mass:g}"
+    )
+
+
+def _explain_findings(
+    view: _View, report: AnalysisReport, file: FileResult, function: FunctionEvidence | None
+) -> None:
+    findings = tuple(
+        record.detail
+        for record in findings_for_file(report, file.evidence.path.root)
+        if function is None
+        or (
+            record.detail.span.start_line <= function.span.end_line
+            and record.detail.span.end_line >= function.span.start_line
+        )
+    )
+    view.console.print()
+    view.console.print(f"Findings ({len(findings)})")
+    for finding in findings:
+        view.console.print(
+            f"  {finding.path.root}:{finding.span.start_line}-{finding.span.end_line} "
+            f"{finding.rule_id}: {finding.message}"
+        )
+        if finding.remediation:
+            view.console.print(f"    {finding.remediation}")
+
+
+# Callable selectors and terminal presentation are separate public options.
+def render_explanation(  # noqa: PLR0913
+    report: AnalysisReport,
+    path: str,
+    *,
+    symbol: str | None = None,
+    line: int | None = None,
+    width: int = 80,
+    color: bool = False,
+    ascii: bool = False,
+    verbose: bool = False,
+) -> str:
+    """Explain exact file or callable evidence without fabricating callable scores."""
+    if line is not None and symbol is None:
+        raise SelectionError("--line requires --symbol.")
+    file = select_file(report, path)
+    function = select_callable(file, symbol, line=line) if symbol is not None else None
+    stream, view = _view(
+        width, color, ascii, verbose, report.provenance.config.default_hotspot_count
+    )
+    view.console.print(f"slop.measure  {file.evidence.path.root}", style="bold")
+    view.console.print(
+        view.separator.join((_population(file.evidence.cohort), _language(file.evidence.language)))
+    )
+    if function is not None:
+        _callable_row(view, function)
+    else:
+        for metric in file.metrics:
+            if isinstance(metric, MeasuredMetric):
+                _metric_row(view, metric)
+                if metric.metric_id == "m4.erosion":
+                    view.console.print(
+                        f"  mass: {metric.raw.numerator:g} / {metric.raw.denominator:g}; "
+                        f"CC threshold: > {report.provenance.config.complexity_threshold}"
+                    )
+        _unavailable(view, file.metrics)
+        view.console.print()
+        view.console.print("Callables")
+        for callable_evidence in file.functions:
+            _callable_row(view, callable_evidence)
+    _explain_findings(view, report, file, function)
+    for record in report.diagnostics:
+        if record.detail.path is None or record.detail.path == file.evidence.path:
+            view.console.print(f"  {record.detail.severity.value}: {record.detail.message}")
+    if verbose:
+        _provenance(view, report)
     return stream.getvalue()

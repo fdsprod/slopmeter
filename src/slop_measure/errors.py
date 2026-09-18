@@ -7,3 +7,7 @@ class AnalysisFailure(RuntimeError):
 
 class InvalidRuleSelection(ValueError):
     """Configured rule identifiers do not belong to the selected catalog."""
+
+
+class SelectionError(ValueError):
+    """A report selector is unknown, ambiguous, or outside its source root."""

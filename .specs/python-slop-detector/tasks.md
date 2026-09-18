@@ -16,7 +16,7 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q07 and T01-T37 are complete through TB-3. The raw scan
+Current checkpoint: Q01-Q07, T01-T37, and T79-T84 are complete through TB-3a. The raw scan
 reports pattern findings, M2, callable evidence, and M4 through the CLI and public API. Comparison has a
 public entry point that explicitly raises `NotImplementedError` until TB-6. The retained learning tests
 record the external behavior that production adapters rely on.
@@ -80,8 +80,17 @@ The report contracts now resolve the decisions required before aggregation:
 - [x] The `unsupported-capability` metric reason distinguishes missing evidence
   support from a failed analyzer.
 
-Next is TB-3a: compact visual snapshots, a file tree, and evidence drill-down.
-Then continue through TB-4 to TB-9, with quality gates between slices.
+TB-3a passes its validation gate:
+
+- [x] T79-T84: `score`, compatible `scan`, `tree`, and exact file/callable `explain`.
+- [x] Compact raw percentage bars, distinct unavailable states, optional color,
+  ASCII, narrow views, and top-N without changing the JSON report.
+- [x] Independent tests were committed before implementation. Query review found no defects.
+- [x] 678 deterministic tests and 37 retained learning tests pass. Coverage is 97.42 percent.
+- [x] Ruff, Pyright, four import contracts, package builds, and CLI smoke checks pass.
+
+Next is TB-4, using [clone-design.md](clone-design.md). Continue through TB-9,
+with quality gates between slices.
 TB-2 retains Radon learning tests for AST traversal and complete callable spans.
 The scoring package's import-linter source contract must be added when that package
 exists. M1, M3, and calibrated snapshot scores remain explicitly unavailable.
@@ -210,11 +219,11 @@ Use [cli-output.md](cli-output.md) as the presentation contract.
 
 **Validation:**
 
-- [ ] Full JSON is equivalent through `score` and `scan`.
-- [ ] Summary, file tree, and explanations reconcile with the same report evidence.
-- [ ] Unavailable and measured-zero values remain distinct.
-- [ ] Color, redirected output, ASCII, and narrow-width contracts pass.
-- [ ] Unknown file and ambiguous symbol selectors return clear errors.
+- [x] Full JSON is equivalent through `score` and `scan`.
+- [x] Summary, file tree, and explanations reconcile with the same report evidence.
+- [x] Unavailable and measured-zero values remain distinct.
+- [x] Color, redirected output, ASCII, and narrow-width contracts pass.
+- [x] Unknown file and ambiguous symbol selectors return clear errors.
 
 **Dependencies:** TB-3.
 
