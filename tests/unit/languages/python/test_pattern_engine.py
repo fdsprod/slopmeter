@@ -237,3 +237,47 @@ def test_type_parameters_prevent_builtin_constructor_assumptions(parameter: str)
 def test_trivial_wrapper_requires_a_direct_immediately_following_call(following: str) -> None:
     source = "def outer(items):\n    def _relay(item):\n        return target(item)\n" + following
     assert run_catalog_source(source, "py.trivial-wrapper").findings == ()
+
+
+@pytest.mark.parametrize(
+    "source,lines",
+    [
+        (
+            "def outer(value):\n"
+            "    def _relay(item):\n"
+            "        # type: (int) -> int\n"
+            "        return target(item)\n"
+            "    return _relay(value)\n",
+            (1, 2, 4, 5),
+        ),
+        (
+            "def outer(value):\n"
+            "    def _relay(item):  # type: (int) -> int\n"
+            "        return target(item)\n"
+            "    return _relay(value)\n",
+            (1, 2, 3, 4),
+        ),
+    ],
+)
+def test_trivial_wrapper_preserves_pep484_type_comments(
+    source: str, lines: tuple[int, ...]
+) -> None:
+    evidence = FileEvidence.model_validate(
+        {
+            "path": "app.py",
+            "language": "python",
+            "cohort": "production",
+            "sloc": len(lines),
+            "sloc_lines": lines,
+            "parse_state": "parsed",
+        }
+    )
+    parsed = PythonParsedUnit(tree=ast.parse(source), file=evidence, source=source)
+    result = run_patterns(
+        parsed,
+        PythonProjectContext(),
+        AnalysisConfig(enabled_rules=frozenset({"py.trivial-wrapper"})),
+    )
+
+    assert isinstance(result, AnalyzedPatterns)
+    assert result.findings == ()
