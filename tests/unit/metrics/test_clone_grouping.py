@@ -72,6 +72,29 @@ def test_grouping_is_independent_of_input_order() -> None:
     ]
 
 
+def test_distinct_same_line_runs_form_separate_token_groups() -> None:
+    files = (file("a.py"), file("b.py"))
+    candidates = tuple(
+        candidate(item.path.root, 1, 1, syntax=syntax)
+        for item in files
+        for syntax in ("first-run", "second-run")
+    )
+    groups = group_clones(files, candidates)
+    assert len(groups) == 2
+    assert len({group.fingerprint for group in groups}) == 2
+    for group in groups:
+        assert tuple(member.path.root for member in group.members) == ("a.py", "b.py")
+        assert all(member.span.start_line == member.span.end_line == 1 for member in group.members)
+
+
+def test_grouping_rejects_duplicate_same_token_member_span() -> None:
+    with pytest.raises(ValueError):
+        group_clones(
+            (file("a.py"), file("b.py")),
+            (candidate("a.py"), candidate("a.py"), candidate("b.py")),
+        )
+
+
 def test_fully_contained_smaller_group_collapses() -> None:
     files = (file("a.py"), file("b.py"))
     candidates = tuple(

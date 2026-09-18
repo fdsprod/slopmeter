@@ -213,6 +213,28 @@ def test_failed_parse_file_has_no_clone_outcome() -> None:
     assert LanguageEvidence.model_validate(payload).clone_analyses == ()
 
 
+@pytest.mark.parametrize("difference", ["tokens", "version"])
+def test_distinct_candidate_identity_can_share_physical_span(difference: str) -> None:
+    first = candidate_payload()
+    second = candidate_payload()
+    if difference == "tokens":
+        second["normalized_tokens"] = ("different", "executable", "run")
+    else:
+        second["normalization_version"] = "py-clones-2"
+    outcome = AnalyzedClones.model_validate({"path": "a.py", "candidates": [first, second]})
+    assert len(outcome.candidates) == 2
+    payload = language_payload()
+    payload["clone_analyses"] = [outcome.model_dump()]
+    assert len(LanguageEvidence.model_validate(payload).clone_candidates) == 2
+
+
+def test_analyzed_clones_reject_exact_duplicate_candidate_identity() -> None:
+    with pytest.raises(ValidationError):
+        AnalyzedClones.model_validate(
+            {"path": "a.py", "candidates": [candidate_payload(), candidate_payload()]}
+        )
+
+
 @pytest.mark.parametrize(
     "change", ["one-member", "duplicate-member", "overlap-only", "fingerprint", "lines"]
 )
