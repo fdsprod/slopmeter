@@ -153,3 +153,26 @@ def test_invalid_rule_output_fails_the_file_without_partial_findings(change: str
     assert result.diagnostic.code == "python.pattern-error"
     assert result.diagnostic.severity.value == "error"
     assert result.diagnostic.path == result.path
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+def test_pattern_span_cannot_include_phantom_line_after_final_newline(newline: str) -> None:
+    source = "value = 1" + newline
+    file = FileEvidence.model_validate(
+        {
+            "path": "app.py",
+            "language": "python",
+            "cohort": "production",
+            "sloc": 1,
+            "sloc_lines": (1,),
+            "parse_state": "parsed",
+        }
+    )
+    parsed = PythonParsedUnit(tree=ast.parse(source), file=file, source=source)
+    invalid = finding(span={"start_line": 1, "end_line": 2})
+    result = run_patterns(
+        parsed, PythonProjectContext(), AnalysisConfig(), rules=(FakeRule(metadata(), (invalid,)),)
+    )
+
+    assert isinstance(result, FailedPatterns)
+    assert result.diagnostic.code == "python.pattern-error"

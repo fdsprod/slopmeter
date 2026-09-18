@@ -106,7 +106,7 @@ def test_basic_scan_matches_hand_counted_manifest_and_never_executes_source(
     assert report.provenance.tool_version == __version__
     assert report.provenance.config == AnalysisConfig()
     assert [(item.language, item.adapter_version) for item in report.provenance.analyzers] == [
-        ("python", "python-functions-1")
+        ("python", "python-patterns-1")
     ]
     for cohort in payload["cohorts"]:
         assert [item["metric_id"] for item in cohort["current"]["metrics"]] == METRIC_IDS

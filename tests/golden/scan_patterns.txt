@@ -5,6 +5,8 @@ snapshot - higher is worse
 source coverage
   production python: 2 files, 4 SLOC
     scored
+  test python: 0 files, 0 SLOC
+    scored
 
 production python
   snapshot slop unavailable: required-metric-unavailable

@@ -12,7 +12,7 @@
   ],
   "cohort_metric_results": {
     "production": ["no-baseline", "parse-failed", "parse-failed", "parse-failed"],
-    "test": ["no-baseline", "unsupported-capability", "unsupported-capability", {"value": 0}]
+    "test": ["no-baseline", {"value": 0}, "unsupported-capability", {"value": 0}]
   },
   "score_reasons": {"production": "required-metric-unavailable", "test": "required-metric-unavailable"},
   "diagnostics": [["diagnostic-0001", "current", "python.parse-error", "bad.py", "error"]]

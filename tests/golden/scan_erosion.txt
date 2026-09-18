@@ -11,7 +11,8 @@ source coverage
 production python
   snapshot slop unavailable: required-metric-unavailable
   m1.loc-delta: unavailable (no-baseline)
-  m2.pattern-verbosity: unavailable (unsupported-capability)
+  m2.pattern-verbosity: 0 ratio
+  pattern SLOC: 0 / 5; findings: 0
   m3.clone-verbosity: unavailable (unsupported-capability)
   m4.erosion: 0.916667 ratio
   mass: 15.5563 / 16.9706
