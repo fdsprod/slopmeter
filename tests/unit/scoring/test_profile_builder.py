@@ -84,8 +84,11 @@ def test_only_no_functions_can_enter_verbosity_only_model(reason: str, eligible:
         erosion.pop("raw")
         erosion.update(state="unavailable", reason=reason)
         erosion.pop("score", None)
+    if not eligible:
+        with pytest.raises(ValueError):
+            build([value])
+        return
     profile = build([value])
-    assert bool(profile.populations) is eligible
     assert all(item.model_id == "verbosity-only" for item in profile.populations)
 
 
