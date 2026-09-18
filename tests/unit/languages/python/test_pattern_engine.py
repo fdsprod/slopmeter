@@ -176,3 +176,25 @@ def test_pattern_span_cannot_include_phantom_line_after_final_newline(newline: s
 
     assert isinstance(result, FailedPatterns)
     assert result.diagnostic.code == "python.pattern-error"
+
+
+@pytest.mark.parametrize("expression", ['f"{value:>10}"', 'f"{value!r:>10}"'])
+def test_literal_format_spec_is_not_a_standalone_literal_fstring(expression: str) -> None:
+    source = f"result = {expression}\n"
+    evidence = FileEvidence.model_validate(
+        {
+            "path": "app.py",
+            "language": "python",
+            "cohort": "production",
+            "sloc": 1,
+            "sloc_lines": (1,),
+            "parse_state": "parsed",
+        }
+    )
+    parsed = PythonParsedUnit(tree=ast.parse(source), file=evidence, source=source)
+    config = AnalysisConfig(enabled_rules=frozenset({"py.literal-fstring"}))
+
+    result = run_patterns(parsed, PythonProjectContext(), config)
+
+    assert isinstance(result, AnalyzedPatterns)
+    assert result.findings == ()
