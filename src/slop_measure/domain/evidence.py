@@ -2,6 +2,8 @@
 
 from collections.abc import Mapping
 from enum import StrEnum
+from hashlib import sha256
+from json import dumps
 from math import sqrt
 from typing import Annotated, Literal, Self
 
@@ -295,17 +297,181 @@ class FailedPatterns(_Evidence):
 PatternAnalysis = Annotated[AnalyzedPatterns | FailedPatterns, Field(discriminator="state")]
 
 
+class CloneMember(_Evidence):
+    """One clone instance with exact physical source-line ownership."""
+
+    path: ProjectPath
+    span: SourceSpan
+    sloc_lines: tuple[_Line, ...]
+
+    @model_validator(mode="after")
+    def validate_lines(self) -> Self:
+        if not self.sloc_lines or self.sloc_lines != tuple(sorted(set(self.sloc_lines))):
+            raise ValueError("clone source lines must be nonempty, sorted, and unique")
+        if self.sloc_lines[0] < self.span.start_line or self.sloc_lines[-1] > self.span.end_line:
+            raise ValueError("clone source lines must fall within its span")
+        return self
+
+
+class CloneCandidate(CloneMember):
+    """A normalized complete block before project-level grouping."""
+
+    statement_count: _Line
+    normalization_version: _Text
+    normalized_tokens: Annotated[tuple[_Text, ...], Field(min_length=1)]
+
+    @computed_field
+    @property
+    def fingerprint(self) -> str:
+        """Hash a length-safe encoding, independent of source location."""
+        payload = dumps(
+            (self.normalization_version, self.normalized_tokens),
+            ensure_ascii=True,
+            separators=(",", ":"),
+        )
+        return sha256(payload.encode("ascii")).hexdigest()
+
+    @model_validator(mode="wrap")
+    @classmethod
+    def validate_projection(cls, value: object, handler: ModelWrapValidatorHandler[Self]) -> Self:
+        if not isinstance(value, Mapping):
+            return handler(value)
+        values = dict(value)
+        supplied = values.pop("fingerprint", None)
+        result = handler(values)
+        if "fingerprint" in value and supplied != result.fingerprint:
+            raise ValueError("clone fingerprint must match its normalized tokens and version")
+        return result
+
+
+def clone_member_key(member: CloneMember) -> tuple[str, int, int]:
+    """Return the stable identity and source ordering of one clone instance."""
+    return member.path.root, member.span.start_line, member.span.end_line
+
+
+def clone_candidate_key(
+    candidate: CloneCandidate,
+) -> tuple[tuple[str, int, int], str, tuple[str, ...]]:
+    """Distinguish normalized runs that share a physical source span."""
+    return clone_member_key(candidate), candidate.normalization_version, candidate.normalized_tokens
+
+
+def validate_clone_member(file: FileEvidence, member: CloneMember) -> None:
+    """Reconcile a clone instance with its authoritative parsed file."""
+    if member.path != file.path or file.parse_state is not ParseState.PARSED:
+        raise ValueError("clone instance requires its owning parsed file")
+    expected = tuple(
+        line for line in file.sloc_lines if member.span.start_line <= line <= member.span.end_line
+    )
+    if member.sloc_lines != expected:
+        raise ValueError("clone source lines must equal its file span intersection")
+
+
+def has_distinct_clone_instances(members: tuple[CloneMember, ...]) -> bool:
+    """Require two instances that do not merely overlap in the same file."""
+    if len({member.path.root for member in members}) > 1:
+        return True
+    if not members:
+        return False
+    return min(member.span.end_line for member in members) < max(
+        member.span.start_line for member in members
+    )
+
+
+class CloneGroup(_Evidence):
+    """At least two distinct instances in one language and cohort."""
+
+    language: _Text
+    cohort: Cohort
+    normalization_version: _Text
+    fingerprint: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
+    members: Annotated[tuple[CloneMember, ...], Field(min_length=2)]
+
+    @model_validator(mode="after")
+    def validate_members(self) -> Self:
+        identities = tuple(clone_member_key(member) for member in self.members)
+        if len(set(identities)) != len(identities):
+            raise ValueError("duplicate clone member")
+        if not has_distinct_clone_instances(self.members):
+            raise ValueError("clone groups require distinct nonoverlapping instances")
+        return self
+
+
+class AnalyzedClones(_Evidence):
+    """Successful clone extraction, including no eligible candidates."""
+
+    state: Literal["analyzed"] = "analyzed"
+    path: ProjectPath
+    candidates: tuple[CloneCandidate, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_candidates(self) -> Self:
+        identities = tuple(clone_candidate_key(candidate) for candidate in self.candidates)
+        if len(set(identities)) != len(identities):
+            raise ValueError("duplicate clone candidate")
+        if any(candidate.path != self.path for candidate in self.candidates):
+            raise ValueError("clone candidate path must match its analysis")
+        return self
+
+
+class FailedClones(_Evidence):
+    """Clone extraction failed after source parsing succeeded."""
+
+    state: Literal["failed"] = "failed"
+    path: ProjectPath
+    diagnostic: Diagnostic
+
+    @model_validator(mode="after")
+    def validate_diagnostic(self) -> Self:
+        if (
+            self.diagnostic.path != self.path
+            or self.diagnostic.severity is not DiagnosticSeverity.ERROR
+        ):
+            raise ValueError("failed clone analysis requires a same-file error diagnostic")
+        return self
+
+
+CloneAnalysis = Annotated[AnalyzedClones | FailedClones, Field(discriminator="state")]
+
+
 class LanguageEvidence(_Evidence):
     """Owned facts from one language adapter, without parser objects."""
 
     language: _Text
     capabilities: frozenset[EvidenceCapability]
     files: tuple[FileEvidence, ...]
-    # Later metric slices replace empty-only collections with their owned models.
     pattern_analyses: tuple[PatternAnalysis, ...] = ()
     function_analyses: tuple[FunctionAnalysis, ...] = ()
-    clone_candidates: tuple[()] = ()
+    clone_analyses: tuple[CloneAnalysis, ...] = ()
     diagnostics: tuple[Diagnostic, ...] = ()
+
+    @property
+    def clone_candidates(self) -> tuple[CloneCandidate, ...]:
+        """Read candidates from authoritative per-file extraction outcomes."""
+        return tuple(
+            candidate
+            for analysis in self.clone_analyses
+            if isinstance(analysis, AnalyzedClones)
+            for candidate in analysis.candidates
+        )
+
+    @model_validator(mode="after")
+    def validate_clone_analyses(self) -> Self:
+        if EvidenceCapability.CLONES not in self.capabilities:
+            if self.clone_analyses:
+                raise ValueError("clone outcomes require the clones capability")
+            return self
+        files = {
+            file.path.root: file for file in self.files if file.parse_state is ParseState.PARSED
+        }
+        paths = tuple(analysis.path.root for analysis in self.clone_analyses)
+        if len(set(paths)) != len(paths) or set(paths) != set(files):
+            raise ValueError("clone outcomes must cover each parsed file exactly once")
+        for analysis in self.clone_analyses:
+            if isinstance(analysis, AnalyzedClones):
+                for candidate in analysis.candidates:
+                    validate_clone_member(files[analysis.path.root], candidate)
+        return self
 
     @property
     def patterns(self) -> tuple[PatternFinding, ...]:

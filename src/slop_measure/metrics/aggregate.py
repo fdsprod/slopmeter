@@ -1,17 +1,21 @@
 """Build deterministic raw snapshot reports from source and adapter facts."""
 
 from dataclasses import dataclass
+from hashlib import sha256
 
 from slop_measure import __version__
 from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
     AnalyzedFunctions,
     AnalyzedPatterns,
+    CloneAnalysis,
+    CloneGroup,
     Coverage,
     CoverageState,
     Diagnostic,
     DiagnosticSeverity,
     EvidenceCapability,
+    FailedClones,
     FailedFunctions,
     FailedPatterns,
     FileEvidence,
@@ -25,6 +29,7 @@ from slop_measure.domain.evidence import (
 from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.metrics import (
     FileMetricScope,
+    MeasuredMetric,
     MetricResult,
     MetricScope,
     ProjectMetricScope,
@@ -38,6 +43,7 @@ from slop_measure.domain.reports import (
     FileResult,
     MetricVersion,
     Provenance,
+    ReportCloneGroup,
     ReportCoverage,
     ReportDiagnostic,
     ReportFinding,
@@ -47,10 +53,20 @@ from slop_measure.domain.reports import (
     UnavailableSnapshotScore,
 )
 from slop_measure.domain.source import Cohort, SourceIdentity
+from slop_measure.metrics.clones import group_clones
 from slop_measure.metrics.erosion import measure_erosion
-from slop_measure.metrics.verbosity import measure_patterns
+from slop_measure.metrics.verbosity import (
+    measure_clones,
+    measure_combined_verbosity,
+    measure_patterns,
+)
 
-_SNAPSHOT_METRICS = ("m2.pattern-verbosity", "m3.clone-verbosity", "m4.erosion")
+_SNAPSHOT_METRICS = (
+    "m2.pattern-verbosity",
+    "m3.clone-verbosity",
+    "m4.erosion",
+    "verbosity.combined",
+)
 
 
 @dataclass(frozen=True)
@@ -138,9 +154,64 @@ class _PatternContext:
 
 
 @dataclass(frozen=True)
+class _CloneContext:
+    analyses: tuple[CloneAnalysis, ...] | None
+    groups: tuple[CloneGroup, ...]
+    diagnostics: tuple[ReportDiagnostic, ...]
+
+    def selected_groups(self, files: tuple[FileEvidence, ...]) -> tuple[CloneGroup, ...]:
+        paths = {file.path.root for file in files}
+        return tuple(
+            group
+            for group in self.groups
+            if any(member.path.root in paths for member in group.members)
+        )
+
+    def measure(self, base: UnavailableMetric, files: tuple[FileEvidence, ...]) -> MetricResult:
+        if self.analyses is None or base.reason in {
+            UnavailableReason.PARSE_FAILED,
+            UnavailableReason.ANALYZER_FAILED,
+        }:
+            return base
+        paths = {file.path.root for file in files}
+        failures = tuple(
+            outcome.diagnostic
+            for outcome in self.analyses
+            if isinstance(outcome, FailedClones) and outcome.path.root in paths
+        )
+        if failures:
+            diagnostic = next(item for item in self.diagnostics if item.detail in failures)
+            return UnavailableMetric(
+                metric_id=base.metric_id,
+                scope=base.scope,
+                reason=UnavailableReason.ANALYZER_FAILED,
+                diagnostic_id=diagnostic.id,
+            )
+        return measure_clones(files, self.selected_groups(files), base.scope)
+
+
+@dataclass(frozen=True)
 class _SnapshotMetrics:
     erosion: _ErosionContext
     patterns: _PatternContext
+    clones: _CloneContext
+
+    def combined(
+        self, pattern: MetricResult, clone: MetricResult, files: tuple[FileEvidence, ...]
+    ) -> MetricResult:
+        for metric in (pattern, clone):
+            if isinstance(metric, UnavailableMetric):
+                return metric.model_copy(update={"metric_id": "verbosity.combined"})
+        paths = {file.path.root for file in files}
+        findings = tuple(
+            finding
+            for outcome in self.patterns.analyses or ()
+            if isinstance(outcome, AnalyzedPatterns) and outcome.path.root in paths
+            for finding in outcome.findings
+        )
+        return measure_combined_verbosity(
+            files, findings, self.clones.selected_groups(files), pattern.scope
+        )
 
     def measure(
         self,
@@ -149,11 +220,14 @@ class _SnapshotMetrics:
         failure: tuple[UnavailableReason, str | None],
     ) -> tuple[MetricResult, ...]:
         base = _metrics(scope, *failure)
+        patterns = self.patterns.measure(base[1], files)
+        clones = self.clones.measure(base[2], files)
         return (
             base[0],
-            self.patterns.measure(base[1], files),
-            base[2],
+            patterns,
+            clones,
             self.erosion.measure(base[3], files),
+            self.combined(patterns, clones, files),
         )
 
 
@@ -216,7 +290,12 @@ def _metrics(
     )
 
 
-def _score(reason: UnavailableReason) -> UnavailableSnapshotScore:
+def _score(
+    reason: UnavailableReason, metrics: tuple[MetricResult, ...]
+) -> UnavailableSnapshotScore:
+    available = {metric.metric_id for metric in metrics if isinstance(metric, MeasuredMetric)}
+    if {"verbosity.combined", "m4.erosion"} <= available:
+        return UnavailableSnapshotScore(reason=ScoreUnavailableReason.CALIBRATION_MISSING)
     return UnavailableSnapshotScore(
         reason=ScoreUnavailableReason.NO_SOURCE_LINES
         if reason is UnavailableReason.NO_SOURCE_LINES
@@ -234,23 +313,27 @@ def _cohort_result(
     results: list[FileResult] = []
     for file in files:
         reason, diagnostic_id = _state((file,), diagnostics)
+        file_metrics = metrics.measure(
+            FileMetricScope(path=file.path, cohort=cohort), (file,), (reason, diagnostic_id)
+        )
         results.append(
             FileResult(
                 evidence=file,
                 functions=metrics.erosion.functions((file,)),
-                metrics=metrics.measure(
-                    FileMetricScope(path=file.path, cohort=cohort), (file,), (reason, diagnostic_id)
-                ),
-                score=_score(reason),
+                metrics=file_metrics,
+                score=_score(reason, file_metrics),
             )
         )
     reason, diagnostic_id = _state(files, diagnostics)
     if project_errors:
         reason, diagnostic_id = _failure_reason(project_errors[0].detail), project_errors[0].id
+    project_metrics = metrics.measure(
+        ProjectMetricScope(cohort=cohort), files, (reason, diagnostic_id)
+    )
     return CohortResult(
         files=tuple(results),
-        metrics=metrics.measure(ProjectMetricScope(cohort=cohort), files, (reason, diagnostic_id)),
-        score=_score(reason),
+        metrics=project_metrics,
+        score=_score(reason, project_metrics),
     )
 
 
@@ -287,6 +370,7 @@ def _snapshot_metrics(
     evidence: tuple[LanguageEvidence, ...],
     diagnostics: tuple[ReportDiagnostic, ...],
     config: AnalysisConfig,
+    groups: tuple[CloneGroup, ...],
 ) -> _SnapshotMetrics:
     functions = tuple(
         item
@@ -297,6 +381,11 @@ def _snapshot_metrics(
         item
         for item in evidence
         if item.language == language and EvidenceCapability.PATTERNS in item.capabilities
+    )
+    clones = tuple(
+        item
+        for item in evidence
+        if item.language == language and EvidenceCapability.CLONES in item.capabilities
     )
     return _SnapshotMetrics(
         erosion=_ErosionContext(
@@ -310,6 +399,13 @@ def _snapshot_metrics(
             tuple(analysis for item in patterns for analysis in item.pattern_analyses)
             if patterns
             else None,
+            diagnostics,
+        ),
+        clones=_CloneContext(
+            tuple(outcome for item in clones for outcome in item.clone_analyses)
+            if clones
+            else None,
+            tuple(group for group in groups if group.language == language),
             diagnostics,
         ),
     )
@@ -329,13 +425,20 @@ def _findings(evidence: tuple[LanguageEvidence, ...]) -> tuple[ReportFinding, ..
 def _versions(evidence: tuple[LanguageEvidence, ...]) -> tuple[MetricVersion, ...]:
     families = (
         (EvidenceCapability.PATTERNS, "m2.pattern-verbosity"),
+        (EvidenceCapability.CLONES, "m3.clone-verbosity"),
         (EvidenceCapability.FUNCTIONS, "m4.erosion"),
     )
-    return tuple(
+    versions = tuple(
         MetricVersion(metric_id=metric_id, version="1")
         for capability, metric_id in families
         if any(capability in item.capabilities for item in evidence)
     )
+    if any(
+        {EvidenceCapability.PATTERNS, EvidenceCapability.CLONES} <= item.capabilities
+        for item in evidence
+    ):
+        versions += (MetricVersion(metric_id="verbosity.combined", version="1"),)
+    return versions
 
 
 def aggregate_snapshot(
@@ -362,6 +465,12 @@ def aggregate_snapshot(
             for analysis in language.pattern_analyses
             if isinstance(analysis, FailedPatterns)
         )
+        + tuple(
+            outcome.diagnostic
+            for language in evidence
+            for outcome in language.clone_analyses
+            if isinstance(outcome, FailedClones)
+        )
     )
     files = tuple(
         sorted(
@@ -369,6 +478,9 @@ def aggregate_snapshot(
             + tuple(file for language in evidence for file in language.files),
             key=lambda file: file.path.root,
         )
+    )
+    groups = group_clones(
+        files, tuple(candidate for language in evidence for candidate in language.clone_candidates)
     )
     languages = sorted(
         {item.language for item in evidence}
@@ -379,7 +491,7 @@ def aggregate_snapshot(
     coverage = [ReportCoverage(detail=item) for item in inventory.coverage]
     for language in languages:
         project_errors = _project_errors(language, inventory, evidence, diagnostics)
-        metrics = _snapshot_metrics(language, evidence, diagnostics, config)
+        metrics = _snapshot_metrics(language, evidence, diagnostics, config, groups)
         for cohort in Cohort:
             members = tuple(
                 file for file in files if file.language == language and file.cohort is cohort
@@ -414,4 +526,11 @@ def aggregate_snapshot(
         coverage=tuple(sorted(coverage, key=_coverage_key)),
         diagnostics=diagnostics,
         findings=_findings(evidence),
+        clone_groups=tuple(
+            ReportCloneGroup(
+                id="clone-" + sha256(group.model_dump_json().encode()).hexdigest()[:20],
+                detail=group,
+            )
+            for group in groups
+        ),
     )

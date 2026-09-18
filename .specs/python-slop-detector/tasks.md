@@ -16,8 +16,8 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-Current checkpoint: Q01-Q07, T01-T37, and T79-T84 are complete through TB-3a. The raw scan
-reports pattern findings, M2, callable evidence, and M4 through the CLI and public API. Comparison has a
+Current checkpoint: Q01-Q07, T01-T44, and T79-T84 are complete through TB-4. The raw scan
+reports patterns, clones, callable evidence, M2-M4, and combined verbosity through the CLI and public API. Comparison has a
 public entry point that explicitly raises `NotImplementedError` until TB-6. The retained learning tests
 record the external behavior that production adapters rely on.
 
@@ -65,8 +65,7 @@ collection. Its source remains directly scannable with `slop scan tests/fixtures
 The normal test command excludes learning tests. Architecture tests inject each of
 the 16 forbidden dependency directions into isolated package copies.
 
-Language evidence accepts only empty clone collections until their owned contract
-exists. TB-2 and TB-3 add explicit per-file function and pattern outcomes.
+Language evidence has explicit per-file function, pattern, and clone outcomes.
 File SLOC counts are checked immutable projections of exact line
 identities. Metric values are immutable calculation projections with ratio inputs
 checked at construction.
@@ -89,11 +88,21 @@ TB-3a passes its validation gate:
 - [x] 678 deterministic tests and 37 retained learning tests pass. Coverage is 97.42 percent.
 - [x] Ruff, Pyright, four import contracts, package builds, and CLI smoke checks pass.
 
-Next is TB-4, using [clone-design.md](clone-design.md). Continue through TB-9,
-with quality gates between slices.
+TB-4 passes its validation gate:
+
+- [x] T38-T44: Versioned complete-block extraction, conservative local renaming,
+  stable clone groups, M3 and combined line unions, and source-linked views.
+- [x] Independent red tests cover cohorts, maximal containment, failure isolation,
+  line continuations, match suites, nested docstrings, and same-line runs.
+- [x] 805 deterministic tests and 37 retained learning tests pass. Coverage is 97.50 percent.
+- [x] Ruff, Pyright, four import contracts, and package builds pass.
+
+Next is TB-5 calibration. The pinned corpus and its limits are recorded in
+[calibration-corpus-research.md](calibration-corpus-research.md). Continue through
+TB-9, with quality gates between slices.
 TB-2 retains Radon learning tests for AST traversal and complete callable spans.
 The scoring package's import-linter source contract must be added when that package
-exists. M1, M3, and calibrated snapshot scores remain explicitly unavailable.
+exists. M1 and calibrated snapshot scores remain explicitly unavailable.
 
 The dependency graph keeps M1 work independent from M2-M4 after the first working
 scan. The quality gate is established before dependency characterization. Calibration
@@ -242,10 +251,10 @@ groups, M3, and M2/M3 source-line union.
 
 **Validation:**
 
-- [ ] Formatting and comments do not break an otherwise equal clone.
-- [ ] Tiny and signature-only matches do not create clone groups.
-- [ ] Cross-file clone members appear under one stable group identifier.
-- [ ] Overlapping groups never raise M3 or combined verbosity above one.
+- [x] Formatting and comments do not break an otherwise equal clone.
+- [x] Tiny and signature-only matches do not create clone groups.
+- [x] Cross-file clone members appear under one stable group identifier.
+- [x] Overlapping groups never raise M3 or combined verbosity above one.
 
 **Dependencies:** TB-3a.
 

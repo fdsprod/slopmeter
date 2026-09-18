@@ -106,6 +106,9 @@ class AnalysisService:
                     language=adapter.language_id,
                     adapter_version=getattr(adapter, "adapter_version", "unversioned"),
                     rule_set_version=getattr(adapter, "rule_set_version", None),
+                    clone_normalization_version=getattr(
+                        adapter, "clone_normalization_version", None
+                    ),
                 )
             )
         report = aggregate_snapshot(

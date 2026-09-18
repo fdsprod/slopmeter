@@ -26,8 +26,10 @@ from slop_measure.domain.reports import (
     CohortResult,
     FileResult,
     MeasuredSnapshotScore,
+    ReportCloneGroup,
     SnapshotAnalysis,
     SnapshotCohortReport,
+    SourceSide,
 )
 from slop_measure.domain.source import Cohort
 from slop_measure.errors import SelectionError
@@ -109,6 +111,7 @@ _LABELS = {
     "m2.pattern-verbosity": "Pattern verbosity",
     "m3.clone-verbosity": "Clone verbosity",
     "m4.erosion": "Erosion",
+    "verbosity.combined": "Combined verbosity",
 }
 _REASONS = {
     UnavailableReason.NO_BASELINE: "no baseline",
@@ -245,7 +248,7 @@ def _metric_row(view: _View, metric: MeasuredMetric) -> None:
         text = f"  {label}  {metric.raw.value:.1%} {view.bar(metric.raw.value)}"
     else:
         text = f"  {label}  {metric.raw.value:g} source lines"
-    if metric.metric_id in {"m2.pattern-verbosity", "m3.clone-verbosity"}:
+    if metric.metric_id in {"m2.pattern-verbosity", "m3.clone-verbosity", "verbosity.combined"}:
         text += f"  {metric.raw.numerator:g} / {metric.raw.denominator:g} SLOC"
     view.console.print(text, style="cyan")
 
@@ -352,9 +355,67 @@ def _provenance(view: _View, report: AnalysisReport) -> None:
         view.console.print(
             f"  {adapter.language}: {adapter.adapter_version}"
             + (f"; {adapter.rule_set_version}" if adapter.rule_set_version else "")
+            + (
+                f"; {adapter.clone_normalization_version}"
+                if adapter.clone_normalization_version
+                else ""
+            )
         )
     for metric in report.provenance.metrics:
         view.console.print(f"  {metric.metric_id}: {metric.version}")
+
+
+def _groups_for(
+    report: AnalysisReport, paths: set[str], function: FunctionEvidence | None = None
+) -> tuple[ReportCloneGroup, ...]:
+    return tuple(
+        sorted(
+            (
+                group
+                for group in report.clone_groups
+                if group.source is SourceSide.CURRENT
+                and any(
+                    member.path.root in paths
+                    and (
+                        function is None
+                        or (
+                            member.span.start_line <= function.span.end_line
+                            and member.span.end_line >= function.span.start_line
+                        )
+                    )
+                    for member in group.detail.members
+                )
+            ),
+            key=lambda group: (
+                -len(
+                    {
+                        (member.path.root, line)
+                        for member in group.detail.members
+                        for line in member.sloc_lines
+                    }
+                ),
+                group.id,
+            ),
+        )
+    )
+
+
+def _render_clone_groups(
+    view: _View, groups: tuple[ReportCloneGroup, ...], limit: int | None = None
+) -> None:
+    if not groups:
+        return
+    view.console.print()
+    view.console.print("Clone groups")
+    for group in groups[:limit]:
+        view.console.print(f"  {group.id} | {_count(len(group.detail.members), 'instance')}")
+        for member in group.detail.members:
+            view.console.print(
+                f"    {member.path.root}:{member.span.start_line}-{member.span.end_line}"
+                f" | {len(member.sloc_lines)} SLOC"
+            )
+    if limit is not None and len(groups) > limit:
+        view.console.print(f"  {_count(len(groups) - limit, 'clone group')} omitted")
 
 
 # Public keyword options preserve the renderer API while keeping analysis configuration separate.
@@ -383,6 +444,11 @@ def render_snapshot(  # noqa: PLR0913
         _heading(view, cohort)
         _measured(view, cohort.current, report)
         _file_table(view, cohort.current.files)
+        _render_clone_groups(
+            view,
+            _groups_for(report, {file.evidence.path.root for file in cohort.current.files}),
+            view.limit,
+        )
         _unavailable(view, cohort.current.metrics)
     _footer(view, report, cohorts)
     return stream.getvalue()
@@ -438,6 +504,9 @@ def render_tree(  # noqa: PLR0913
         files = tuple(sorted(cohort.current.files, key=lambda item: item.evidence.path.root))
         _tree_rows(view, files[: view.limit])
         _omitted(view, files)
+        _render_clone_groups(
+            view, _groups_for(report, {file.evidence.path.root for file in files}), view.limit
+        )
         _unavailable(view, cohort.current.metrics)
     _footer(view, report, cohorts)
     return stream.getvalue()
@@ -515,6 +584,7 @@ def render_explanation(  # noqa: PLR0913
         for callable_evidence in file.functions:
             _callable_row(view, callable_evidence)
     _explain_findings(view, report, file, function)
+    _render_clone_groups(view, _groups_for(report, {file.evidence.path.root}, function))
     for record in report.diagnostics:
         if record.detail.path is None or record.detail.path == file.evidence.path:
             view.console.print(f"  {record.detail.severity.value}: {record.detail.message}")

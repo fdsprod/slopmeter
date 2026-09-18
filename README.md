@@ -4,7 +4,8 @@
 release targets Python and provides the `slop` command plus an importable API.
 
 The raw scan reports Python source lines, production and test coverage, excluded
-files, diagnostics, M2 pattern verbosity, and M4 structural erosion. M1, M3, and
+files, diagnostics, M2 pattern verbosity, M3 clone verbosity, their combined line
+union, and M4 structural erosion. M1 and
 calibrated scores remain explicitly unavailable. Directory comparisons and Git revision scans arrive
 in later slices. See `.specs/python-slop-detector/` for the design and checkpoint.
 
@@ -76,6 +77,24 @@ An empty `enabled_rules` set selects all rules. A nonempty set selects only thos
 IDs. Disabled rules are then removed. Unknown IDs are configuration errors.
 The report records the selection and rule-set version. A pattern analyzer failure
 makes M2 unavailable for that file and its cohort while preserving M4 results.
+
+M3 measures the fraction of source lines in duplicated statement blocks. The
+Python detector ignores whitespace and comments, including explicit line
+continuations. It can match consistently renamed callable parameters and local
+variables. Operators, literal spelling, external names, attributes, and keyword
+names stay significant. Uncertain binding contexts retain exact names.
+
+The default minimum is two direct statements and six SLOC. Set
+`clone_min_statements` and `clone_min_sloc` to change those limits. Candidates are
+complete executable runs within each suite, including nested suites. Imports,
+definitions, and actual docstrings separate runs. Partial subranges within unequal
+larger runs are outside this version's detection guarantee.
+
+Clone groups stay within a language and cohort. Summary and explanation views
+link each group to its member files and line spans. M3 counts overlapping clone
+lines once. Combined verbosity unions M2 and M3 lines, so their overlap contributes
+once. A clone analyzer failure makes M3 and combined verbosity unavailable for
+the affected file and cohort while preserving M2 and M4.
 
 M4 measures the share of callable mass above the complexity threshold. Each
 function, method, or nested function contributes `CC * sqrt(SLOC)` mass. The default

@@ -67,9 +67,9 @@ The initial extraction and normalization rules are explicit:
 | Nested suites | Analyze independently |
 | Thresholds | Inclusive configured statement and exact SLOC minima |
 | Trivia | Remove whitespace and comments |
-| Local renaming | Normalize consistently bound local names and enclosing callable parameters |
-| Semantics retained | Operators, literal values and types, external names, attributes, keyword names |
-| Uncertain binding | Retain exact spelling instead of guessing identity |
+| Local renaming | Normalize consistently bound callable-local names and enclosing callable parameters; retain module and class binding names |
+| Semantics retained | Operators, literal spelling and type, external names, attributes, keyword names |
+| Uncertain binding | Retain exact names for callable contexts with dynamic name access, global/nonlocal declarations, comprehensions, lambdas, or assignment expressions |
 | Parser recovery | Fail clone analysis for the file, retain other successful analysis families |
 | Self-overlap | A group needs two nonoverlapping instances, possibly in different files |
 | Containment | Remove a smaller group only when all members map to distinct containing members of one larger group |
@@ -78,6 +78,10 @@ The initial extraction and normalization rules are explicit:
 > This version does not promise matches for arbitrary partial subranges inside
 > unequal larger runs. It avoids enumerating a quadratic number of statement windows.
 > Wider matching requires a new normalization or metric version and its own fixtures.
+
+Statement counts include direct siblings only. Different quote styles or numeric
+literal spellings can prevent a match in this first version. Whitespace and comment
+normalization do not rewrite literals.
 
 M3 counts the union of clone member `(path, line)` identities. Combined verbosity
 counts the union of pattern and clone identities. File measurement accepts cross-file

@@ -6,10 +6,13 @@ import tokenize
 
 from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
+    AnalyzedClones,
     AnalyzedFunctions,
+    CloneAnalysis,
     Diagnostic,
     DiagnosticSeverity,
     EvidenceCapability,
+    FailedClones,
     FailedFunctions,
     FailedPatterns,
     FileEvidence,
@@ -20,7 +23,9 @@ from slop_measure.domain.evidence import (
     SourceSpan,
 )
 from slop_measure.domain.source import SourceDocument
+from slop_measure.languages.python.clones import extract_clone_candidates
 from slop_measure.languages.python.complexity import extract_functions
+from slop_measure.languages.python.parsing import NORMALIZATION_VERSION
 from slop_measure.languages.python.patterns import (
     PythonParsedUnit,
     PythonProjectContext,
@@ -114,16 +119,39 @@ def _analyze_patterns(
         )
 
 
+def _analyze_clones(unit: PythonParsedUnit, config: AnalysisConfig) -> CloneAnalysis:
+    try:
+        return AnalyzedClones(
+            path=unit.file.path, candidates=extract_clone_candidates(unit, config)
+        )
+    except Exception as error:
+        return FailedClones(
+            path=unit.file.path,
+            diagnostic=Diagnostic(
+                severity=DiagnosticSeverity.ERROR,
+                code="python.clone-error",
+                message=str(error) or "Python clone analysis failed.",
+                path=unit.file.path,
+            ),
+        )
+
+
 class PythonAdapter:
     """Produce file evidence without importing or executing source documents."""
 
     language_id = "python"
     extensions = frozenset({".py", ".pyi"})
     capabilities = frozenset(
-        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS, EvidenceCapability.PATTERNS}
+        {
+            EvidenceCapability.FILES,
+            EvidenceCapability.FUNCTIONS,
+            EvidenceCapability.PATTERNS,
+            EvidenceCapability.CLONES,
+        }
     )
-    adapter_version = "python-patterns-1"
+    adapter_version = "python-clones-1"
     rule_set_version = RULE_SET_VERSION
+    clone_normalization_version = NORMALIZATION_VERSION
 
     def validate_config(self, config: AnalysisConfig) -> None:
         """Reject unknown rule selections before any file analysis."""
@@ -142,6 +170,7 @@ class PythonAdapter:
         diagnostics: list[Diagnostic] = []
         function_analyses: list[FunctionAnalysis] = []
         pattern_analyses: list[PatternAnalysis] = []
+        clone_analyses: list[CloneAnalysis] = []
         ordered = tuple(sorted(documents, key=lambda item: item.path.root))
         context = PythonProjectContext(paths=tuple(document.path for document in ordered))
         for document in ordered:
@@ -152,11 +181,13 @@ class PythonAdapter:
             else:
                 function_analyses.append(_analyze_functions(outcome.tree, file))
                 pattern_analyses.append(_analyze_patterns(outcome, context, config))
+                clone_analyses.append(_analyze_clones(outcome, config))
         return LanguageEvidence(
             language=self.language_id,
             capabilities=self.capabilities,
             files=tuple(files),
             function_analyses=tuple(function_analyses),
             pattern_analyses=tuple(pattern_analyses),
+            clone_analyses=tuple(clone_analyses),
             diagnostics=tuple(diagnostics),
         )

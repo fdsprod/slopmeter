@@ -8,12 +8,14 @@ from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, StringConstraint
 
 from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
+    CloneGroup,
     Coverage,
     Diagnostic,
     FileEvidence,
     FunctionEvidence,
     PatternFinding,
     pattern_source_lines,
+    validate_clone_member,
     validate_function_evidence,
 )
 from slop_measure.domain.metrics import (
@@ -68,6 +70,7 @@ class AnalyzerVersion(_ReportModel):
     language: _Text
     adapter_version: _Text
     rule_set_version: _Text | None = None
+    clone_normalization_version: _Text | None = None
 
 
 class MetricVersion(_ReportModel):
@@ -230,6 +233,14 @@ class ReportFinding(_ReportModel):
     detail: PatternFinding
 
 
+class ReportCloneGroup(_ReportModel):
+    """A stable clone group linked to its owning source state."""
+
+    id: _Text
+    source: SourceSide = SourceSide.CURRENT
+    detail: CloneGroup
+
+
 def _source_results(cohort: CohortReport) -> Iterator[tuple[SourceSide, CohortResult]]:
     yield SourceSide.CURRENT, cohort.current
     if isinstance(cohort, ComparisonCohortReport):
@@ -274,8 +285,28 @@ class AnalysisReport(_ReportModel):
     coverage: tuple[ReportCoverage, ...] = ()
     cohorts: tuple[CohortReport, ...] = ()
     findings: tuple[ReportFinding, ...] = ()
-    clone_groups: tuple[()] = ()
+    clone_groups: tuple[ReportCloneGroup, ...] = ()
     diagnostics: tuple[ReportDiagnostic, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_clones(self) -> Self:
+        _require_unique((group.id for group in self.clone_groups), "clone group ID")
+        files = {
+            (source, file.evidence.path.root): file.evidence
+            for cohort in self.cohorts
+            for source, result in _source_results(cohort)
+            for file in result.files
+        }
+        for record in self.clone_groups:
+            group = record.detail
+            for member in group.members:
+                file = files.get((record.source, member.path.root))
+                if file is None:
+                    raise ValueError("clone member must exist in its source state")
+                if file.language != group.language or file.cohort is not group.cohort:
+                    raise ValueError("clone member must match its group's language and cohort")
+                validate_clone_member(file, member)
+        return self
 
     @model_validator(mode="after")
     def validate_ownership(self) -> Self:
