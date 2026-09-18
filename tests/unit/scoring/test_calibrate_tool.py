@@ -31,7 +31,7 @@ def corpus(tmp_path: Path):
     git(repo, "config", "user.email", "corpus@example.invalid")
     (repo / "LICENSE").write_text("MIT fixture license\n", encoding="utf-8")
     (repo / "app.py").write_text(
-        "from pathlib import Path\nPath('EXECUTED').write_text('bad')\n"
+        f"from pathlib import Path\nPath({str(repo / 'EXECUTED')!r}).write_text('bad')\n"
         "def f(value):\n    return value + 1\n",
         encoding="utf-8",
     )
