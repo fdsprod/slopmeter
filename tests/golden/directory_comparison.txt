@@ -1,0 +1,33 @@
+slop.measure  comparison
+Baseline: BASE
+Current:  CURRENT
+
+Production | Python
+Baseline
+  Score unavailable | required metric unavailable
+Current
+  Score unavailable | required metric unavailable
+  Source lines: 4 -> 6 SLOC
+  M1 LOC delta  +3 added | -1 deleted | +2 net | growth +50.0%
+  Pattern verbosity  0.0% -> 0.0% | +0.0 percentage points | unchanged
+  Clone verbosity  0.0% -> 0.0% | +0.0 percentage points | unchanged
+  Erosion  - -> - | - | unavailable input
+  Score change  - | unavailable input
+  Combined verbosity  0.0% -> 0.0% | +0.0 percentage points | unchanged
+
+Other changes
+  added.py | added
+    Lines  +1 added | -0 deleted | +1 net | growth unavailable: no baseline SLOC
+    Pattern verbosity: - | missing baseline
+  edit.py | modified
+    Lines  +2 added | -0 deleted | +2 net | growth +200.0%
+    Combined verbosity: +0.0 percentage points | unchanged
+  gone.py | deleted
+    Lines  +0 added | -1 deleted | -1 net | growth -100.0%
+    Pattern verbosity: - | missing current
+  old.py -> new.py | renamed
+    Lines  +0 added | -0 deleted | +0 net | growth +0.0%
+    Combined verbosity: +0.0 percentage points | unchanged
+  same.py | unchanged
+    Lines  +0 added | -0 deleted | +0 net | growth +0.0%
+    Combined verbosity: +0.0 percentage points | unchanged

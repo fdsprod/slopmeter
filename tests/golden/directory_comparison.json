@@ -1,0 +1,1492 @@
+{
+  "analysis": {
+    "baseline": {
+      "kind": "directory",
+      "root": "BASE"
+    },
+    "current": {
+      "kind": "directory",
+      "root": "CURRENT"
+    },
+    "kind": "comparison"
+  },
+  "clone_groups": [],
+  "cohorts": [
+    {
+      "baseline": {
+        "files": [
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "edit.py",
+              "sloc": 1,
+              "sloc_lines": [
+                2
+              ]
+            },
+            "functions": [],
+            "metrics": [
+              {
+                "diagnostic_id": null,
+                "metric_id": "m1.loc-delta",
+                "reason": "no-baseline",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "m2.pattern-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "metric_id": "m3.clone-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "diagnostic_id": null,
+                "metric_id": "m4.erosion",
+                "reason": "no-functions",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "score": null,
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "reason": "required-metric-unavailable",
+              "state": "unavailable"
+            }
+          },
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "gone.py",
+              "sloc": 1,
+              "sloc_lines": [
+                1
+              ]
+            },
+            "functions": [],
+            "metrics": [
+              {
+                "diagnostic_id": null,
+                "metric_id": "m1.loc-delta",
+                "reason": "no-baseline",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "gone.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "m2.pattern-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "gone.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "metric_id": "m3.clone-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "gone.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "diagnostic_id": null,
+                "metric_id": "m4.erosion",
+                "reason": "no-functions",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "gone.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "gone.py"
+                },
+                "score": null,
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "reason": "required-metric-unavailable",
+              "state": "unavailable"
+            }
+          },
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "old.py",
+              "sloc": 1,
+              "sloc_lines": [
+                1
+              ]
+            },
+            "functions": [],
+            "metrics": [
+              {
+                "diagnostic_id": null,
+                "metric_id": "m1.loc-delta",
+                "reason": "no-baseline",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "old.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "m2.pattern-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "old.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "metric_id": "m3.clone-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "old.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "diagnostic_id": null,
+                "metric_id": "m4.erosion",
+                "reason": "no-functions",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "old.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "old.py"
+                },
+                "score": null,
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "reason": "required-metric-unavailable",
+              "state": "unavailable"
+            }
+          },
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "same.py",
+              "sloc": 1,
+              "sloc_lines": [
+                1
+              ]
+            },
+            "functions": [],
+            "metrics": [
+              {
+                "diagnostic_id": null,
+                "metric_id": "m1.loc-delta",
+                "reason": "no-baseline",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "m2.pattern-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "metric_id": "m3.clone-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "diagnostic_id": null,
+                "metric_id": "m4.erosion",
+                "reason": "no-functions",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "score": null,
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "reason": "required-metric-unavailable",
+              "state": "unavailable"
+            }
+          }
+        ],
+        "metrics": [
+          {
+            "diagnostic_id": null,
+            "metric_id": "m1.loc-delta",
+            "reason": "no-baseline",
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "metric_id": "m2.pattern-verbosity",
+            "raw": {
+              "denominator": 4.0,
+              "numerator": 0.0,
+              "unit": "ratio",
+              "value": 0.0
+            },
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "score": null,
+            "state": "measured"
+          },
+          {
+            "metric_id": "m3.clone-verbosity",
+            "raw": {
+              "denominator": 4.0,
+              "numerator": 0.0,
+              "unit": "ratio",
+              "value": 0.0
+            },
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "score": null,
+            "state": "measured"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "m4.erosion",
+            "reason": "no-functions",
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "metric_id": "verbosity.combined",
+            "raw": {
+              "denominator": 4.0,
+              "numerator": 0.0,
+              "unit": "ratio",
+              "value": 0.0
+            },
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "score": null,
+            "state": "measured"
+          }
+        ],
+        "score": {
+          "reason": "required-metric-unavailable",
+          "state": "unavailable"
+        }
+      },
+      "changes": [
+        {
+          "deltas": [
+            {
+              "metric_id": "m2.pattern-verbosity",
+              "reason": "missing-baseline",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "m3.clone-verbosity",
+              "reason": "missing-baseline",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "m4.erosion",
+              "reason": "missing-baseline",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "snapshot.score",
+              "reason": "missing-baseline",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "verbosity.combined",
+              "reason": "missing-baseline",
+              "state": "unavailable"
+            }
+          ],
+          "lines": {
+            "added": 1,
+            "added_lines": [
+              1
+            ],
+            "baseline_sloc": 0,
+            "current_sloc": 1,
+            "deleted": 0,
+            "deleted_lines": [],
+            "growth": {
+              "reason": "no-baseline-sloc",
+              "state": "unavailable"
+            },
+            "net": 1,
+            "state": "measured"
+          },
+          "pair": {
+            "current_path": "added.py",
+            "kind": "added"
+          }
+        },
+        {
+          "deltas": [
+            {
+              "metric_id": "m2.pattern-verbosity",
+              "state": "measured",
+              "unit": "ratio",
+              "value": 0.0
+            },
+            {
+              "metric_id": "m3.clone-verbosity",
+              "state": "measured",
+              "unit": "ratio",
+              "value": 0.0
+            },
+            {
+              "metric_id": "m4.erosion",
+              "reason": "unavailable-input",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "snapshot.score",
+              "reason": "unavailable-input",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "verbosity.combined",
+              "state": "measured",
+              "unit": "ratio",
+              "value": 0.0
+            }
+          ],
+          "lines": {
+            "added": 2,
+            "added_lines": [
+              1,
+              2
+            ],
+            "baseline_sloc": 1,
+            "current_sloc": 3,
+            "deleted": 0,
+            "deleted_lines": [],
+            "growth": {
+              "state": "measured",
+              "value": 2.0
+            },
+            "net": 2,
+            "state": "measured"
+          },
+          "pair": {
+            "baseline_path": "edit.py",
+            "current_path": "edit.py",
+            "kind": "modified"
+          }
+        },
+        {
+          "deltas": [
+            {
+              "metric_id": "m2.pattern-verbosity",
+              "reason": "missing-current",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "m3.clone-verbosity",
+              "reason": "missing-current",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "m4.erosion",
+              "reason": "missing-current",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "snapshot.score",
+              "reason": "missing-current",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "verbosity.combined",
+              "reason": "missing-current",
+              "state": "unavailable"
+            }
+          ],
+          "lines": {
+            "added": 0,
+            "added_lines": [],
+            "baseline_sloc": 1,
+            "current_sloc": 0,
+            "deleted": 1,
+            "deleted_lines": [
+              1
+            ],
+            "growth": {
+              "state": "measured",
+              "value": -1.0
+            },
+            "net": -1,
+            "state": "measured"
+          },
+          "pair": {
+            "baseline_path": "gone.py",
+            "kind": "deleted"
+          }
+        },
+        {
+          "deltas": [
+            {
+              "metric_id": "m2.pattern-verbosity",
+              "state": "measured",
+              "unit": "ratio",
+              "value": 0.0
+            },
+            {
+              "metric_id": "m3.clone-verbosity",
+              "state": "measured",
+              "unit": "ratio",
+              "value": 0.0
+            },
+            {
+              "metric_id": "m4.erosion",
+              "reason": "unavailable-input",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "snapshot.score",
+              "reason": "unavailable-input",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "verbosity.combined",
+              "state": "measured",
+              "unit": "ratio",
+              "value": 0.0
+            }
+          ],
+          "lines": {
+            "added": 0,
+            "added_lines": [],
+            "baseline_sloc": 1,
+            "current_sloc": 1,
+            "deleted": 0,
+            "deleted_lines": [],
+            "growth": {
+              "state": "measured",
+              "value": 0.0
+            },
+            "net": 0,
+            "state": "measured"
+          },
+          "pair": {
+            "baseline_path": "old.py",
+            "current_path": "new.py",
+            "kind": "renamed"
+          }
+        },
+        {
+          "deltas": [
+            {
+              "metric_id": "m2.pattern-verbosity",
+              "state": "measured",
+              "unit": "ratio",
+              "value": 0.0
+            },
+            {
+              "metric_id": "m3.clone-verbosity",
+              "state": "measured",
+              "unit": "ratio",
+              "value": 0.0
+            },
+            {
+              "metric_id": "m4.erosion",
+              "reason": "unavailable-input",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "snapshot.score",
+              "reason": "unavailable-input",
+              "state": "unavailable"
+            },
+            {
+              "metric_id": "verbosity.combined",
+              "state": "measured",
+              "unit": "ratio",
+              "value": 0.0
+            }
+          ],
+          "lines": {
+            "added": 0,
+            "added_lines": [],
+            "baseline_sloc": 1,
+            "current_sloc": 1,
+            "deleted": 0,
+            "deleted_lines": [],
+            "growth": {
+              "state": "measured",
+              "value": 0.0
+            },
+            "net": 0,
+            "state": "measured"
+          },
+          "pair": {
+            "baseline_path": "same.py",
+            "current_path": "same.py",
+            "kind": "unchanged"
+          }
+        }
+      ],
+      "cohort": "production",
+      "current": {
+        "files": [
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "added.py",
+              "sloc": 1,
+              "sloc_lines": [
+                1
+              ]
+            },
+            "functions": [],
+            "metrics": [
+              {
+                "diagnostic_id": null,
+                "metric_id": "m1.loc-delta",
+                "reason": "no-baseline",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "added.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "m2.pattern-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "added.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "metric_id": "m3.clone-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "added.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "diagnostic_id": null,
+                "metric_id": "m4.erosion",
+                "reason": "no-functions",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "added.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "added.py"
+                },
+                "score": null,
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "reason": "required-metric-unavailable",
+              "state": "unavailable"
+            }
+          },
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "edit.py",
+              "sloc": 3,
+              "sloc_lines": [
+                1,
+                2,
+                3
+              ]
+            },
+            "functions": [],
+            "metrics": [
+              {
+                "diagnostic_id": null,
+                "metric_id": "m1.loc-delta",
+                "reason": "no-baseline",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "m2.pattern-verbosity",
+                "raw": {
+                  "denominator": 3.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "metric_id": "m3.clone-verbosity",
+                "raw": {
+                  "denominator": 3.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "diagnostic_id": null,
+                "metric_id": "m4.erosion",
+                "reason": "no-functions",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 3.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "edit.py"
+                },
+                "score": null,
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "reason": "required-metric-unavailable",
+              "state": "unavailable"
+            }
+          },
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "new.py",
+              "sloc": 1,
+              "sloc_lines": [
+                1
+              ]
+            },
+            "functions": [],
+            "metrics": [
+              {
+                "diagnostic_id": null,
+                "metric_id": "m1.loc-delta",
+                "reason": "no-baseline",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "new.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "m2.pattern-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "new.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "metric_id": "m3.clone-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "new.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "diagnostic_id": null,
+                "metric_id": "m4.erosion",
+                "reason": "no-functions",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "new.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "new.py"
+                },
+                "score": null,
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "reason": "required-metric-unavailable",
+              "state": "unavailable"
+            }
+          },
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "same.py",
+              "sloc": 1,
+              "sloc_lines": [
+                1
+              ]
+            },
+            "functions": [],
+            "metrics": [
+              {
+                "diagnostic_id": null,
+                "metric_id": "m1.loc-delta",
+                "reason": "no-baseline",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "m2.pattern-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "metric_id": "m3.clone-verbosity",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "score": null,
+                "state": "measured"
+              },
+              {
+                "diagnostic_id": null,
+                "metric_id": "m4.erosion",
+                "reason": "no-functions",
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "state": "unavailable"
+              },
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 1.0,
+                  "numerator": 0.0,
+                  "unit": "ratio",
+                  "value": 0.0
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "same.py"
+                },
+                "score": null,
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "reason": "required-metric-unavailable",
+              "state": "unavailable"
+            }
+          }
+        ],
+        "metrics": [
+          {
+            "diagnostic_id": null,
+            "metric_id": "m1.loc-delta",
+            "reason": "no-baseline",
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "metric_id": "m2.pattern-verbosity",
+            "raw": {
+              "denominator": 6.0,
+              "numerator": 0.0,
+              "unit": "ratio",
+              "value": 0.0
+            },
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "score": null,
+            "state": "measured"
+          },
+          {
+            "metric_id": "m3.clone-verbosity",
+            "raw": {
+              "denominator": 6.0,
+              "numerator": 0.0,
+              "unit": "ratio",
+              "value": 0.0
+            },
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "score": null,
+            "state": "measured"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "m4.erosion",
+            "reason": "no-functions",
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "metric_id": "verbosity.combined",
+            "raw": {
+              "denominator": 6.0,
+              "numerator": 0.0,
+              "unit": "ratio",
+              "value": 0.0
+            },
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "score": null,
+            "state": "measured"
+          }
+        ],
+        "score": {
+          "reason": "required-metric-unavailable",
+          "state": "unavailable"
+        }
+      },
+      "deltas": [
+        {
+          "metric_id": "m2.pattern-verbosity",
+          "state": "measured",
+          "unit": "ratio",
+          "value": 0.0
+        },
+        {
+          "metric_id": "m3.clone-verbosity",
+          "state": "measured",
+          "unit": "ratio",
+          "value": 0.0
+        },
+        {
+          "metric_id": "m4.erosion",
+          "reason": "unavailable-input",
+          "state": "unavailable"
+        },
+        {
+          "metric_id": "snapshot.score",
+          "reason": "unavailable-input",
+          "state": "unavailable"
+        },
+        {
+          "metric_id": "verbosity.combined",
+          "state": "measured",
+          "unit": "ratio",
+          "value": 0.0
+        }
+      ],
+      "kind": "comparison",
+      "language": "python",
+      "line_delta": {
+        "added": 3,
+        "baseline_sloc": 4,
+        "current_sloc": 6,
+        "deleted": 1,
+        "growth": {
+          "state": "measured",
+          "value": 0.5
+        },
+        "net": 2,
+        "state": "measured"
+      },
+      "metrics": [
+        {
+          "metric_id": "m1.loc-delta",
+          "raw": {
+            "denominator": 1.0,
+            "numerator": 3.0,
+            "unit": "lines",
+            "value": 2.0
+          },
+          "scope": {
+            "cohort": "production",
+            "kind": "project"
+          },
+          "score": null,
+          "state": "measured"
+        }
+      ]
+    },
+    {
+      "baseline": {
+        "files": [],
+        "metrics": [
+          {
+            "diagnostic_id": null,
+            "metric_id": "m1.loc-delta",
+            "reason": "no-baseline",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "m2.pattern-verbosity",
+            "reason": "no-source-lines",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "m3.clone-verbosity",
+            "reason": "no-source-lines",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "m4.erosion",
+            "reason": "no-functions",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "verbosity.combined",
+            "reason": "no-source-lines",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          }
+        ],
+        "score": {
+          "reason": "no-source-lines",
+          "state": "unavailable"
+        }
+      },
+      "changes": [],
+      "cohort": "test",
+      "current": {
+        "files": [],
+        "metrics": [
+          {
+            "diagnostic_id": null,
+            "metric_id": "m1.loc-delta",
+            "reason": "no-baseline",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "m2.pattern-verbosity",
+            "reason": "no-source-lines",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "m3.clone-verbosity",
+            "reason": "no-source-lines",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "m4.erosion",
+            "reason": "no-functions",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          },
+          {
+            "diagnostic_id": null,
+            "metric_id": "verbosity.combined",
+            "reason": "no-source-lines",
+            "scope": {
+              "cohort": "test",
+              "kind": "project"
+            },
+            "state": "unavailable"
+          }
+        ],
+        "score": {
+          "reason": "no-source-lines",
+          "state": "unavailable"
+        }
+      },
+      "deltas": [
+        {
+          "metric_id": "m2.pattern-verbosity",
+          "reason": "unavailable-input",
+          "state": "unavailable"
+        },
+        {
+          "metric_id": "m3.clone-verbosity",
+          "reason": "unavailable-input",
+          "state": "unavailable"
+        },
+        {
+          "metric_id": "m4.erosion",
+          "reason": "unavailable-input",
+          "state": "unavailable"
+        },
+        {
+          "metric_id": "snapshot.score",
+          "reason": "unavailable-input",
+          "state": "unavailable"
+        },
+        {
+          "metric_id": "verbosity.combined",
+          "reason": "unavailable-input",
+          "state": "unavailable"
+        }
+      ],
+      "kind": "comparison",
+      "language": "python",
+      "line_delta": {
+        "added": 0,
+        "baseline_sloc": 0,
+        "current_sloc": 0,
+        "deleted": 0,
+        "growth": {
+          "reason": "no-baseline-sloc",
+          "state": "unavailable"
+        },
+        "net": 0,
+        "state": "measured"
+      },
+      "metrics": [
+        {
+          "metric_id": "m1.loc-delta",
+          "raw": {
+            "denominator": 0.0,
+            "numerator": 0.0,
+            "unit": "lines",
+            "value": 0.0
+          },
+          "scope": {
+            "cohort": "test",
+            "kind": "project"
+          },
+          "score": null,
+          "state": "measured"
+        }
+      ]
+    }
+  ],
+  "coverage": [
+    {
+      "detail": {
+        "cohort": "production",
+        "file_count": 4,
+        "language": "python",
+        "reason": null,
+        "sloc": 4,
+        "state": "scored"
+      },
+      "source": "baseline"
+    },
+    {
+      "detail": {
+        "cohort": "test",
+        "file_count": 0,
+        "language": "python",
+        "reason": null,
+        "sloc": 0,
+        "state": "scored"
+      },
+      "source": "baseline"
+    },
+    {
+      "detail": {
+        "cohort": "production",
+        "file_count": 4,
+        "language": "python",
+        "reason": null,
+        "sloc": 6,
+        "state": "scored"
+      },
+      "source": "current"
+    },
+    {
+      "detail": {
+        "cohort": "test",
+        "file_count": 0,
+        "language": "python",
+        "reason": null,
+        "sloc": 0,
+        "state": "scored"
+      },
+      "source": "current"
+    }
+  ],
+  "diagnostics": [],
+  "findings": [],
+  "provenance": {
+    "analyzers": [
+      {
+        "adapter_version": "python-clones-1",
+        "clone_normalization_version": "py-clones-1",
+        "language": "python",
+        "rule_set_version": "py-patterns-1"
+      }
+    ],
+    "config": {
+      "calibration_profile": "__raw__",
+      "clone_min_sloc": 6,
+      "clone_min_statements": 2,
+      "complexity_threshold": 10,
+      "default_hotspot_count": 5,
+      "disabled_rules": [],
+      "enabled_rules": [],
+      "exclusions": [
+        ".git/**",
+        ".venv/**",
+        "venv/**",
+        "**/__pycache__/**",
+        "build/**",
+        "dist/**"
+      ],
+      "generated_markers": [
+        "@generated",
+        "Generated by"
+      ],
+      "production_patterns": [
+        "**/*.py"
+      ],
+      "strict": false,
+      "test_patterns": [
+        "tests/**/*.py",
+        "**/test_*.py",
+        "**/*_test.py"
+      ]
+    },
+    "metrics": [
+      {
+        "metric_id": "m1.loc-delta",
+        "version": "1"
+      },
+      {
+        "metric_id": "m2.pattern-verbosity",
+        "version": "1"
+      },
+      {
+        "metric_id": "m3.clone-verbosity",
+        "version": "1"
+      },
+      {
+        "metric_id": "m4.erosion",
+        "version": "1"
+      },
+      {
+        "metric_id": "verbosity.combined",
+        "version": "1"
+      }
+    ],
+    "tool_version": "0.1.0"
+  },
+  "schema_version": "1.0"
+}

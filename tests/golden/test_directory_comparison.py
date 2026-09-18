@@ -17,10 +17,11 @@ from slop_measure.api import (
 from slop_measure.application.comparison import assemble_comparison
 from slop_measure.cli import app
 from slop_measure.domain.inventory import SourceInventory
-from slop_measure.domain.reports import AnalysisReport
-from slop_measure.domain.source import Cohort, ProjectPath, SourceDocument
+from slop_measure.domain.reports import AnalysisReport, ComparisonAnalysis
+from slop_measure.domain.source import Cohort, DirectorySourceIdentity, ProjectPath, SourceDocument
 from slop_measure.errors import AnalysisFailure
 from slop_measure.languages.python.adapter import PythonAdapter
+from slop_measure.reporting.comparison import render_comparison
 from slop_measure.reporting.json import serialize_report
 from slop_measure.sources.filesystem import FilesystemSourceProvider
 
@@ -295,3 +296,52 @@ def test_comparison_assembly_still_rejects_real_provenance_conflicts(
     )
     with pytest.raises(ValueError, match=r"provenance|version|settings|compatible"):
         assemble_comparison(baseline, current, inventory, inventory)
+
+
+def normalized_comparison(before: Path, after: Path) -> AnalysisReport:
+    return compare(request(before, after)).model_copy(
+        update={
+            "analysis": ComparisonAnalysis(
+                baseline=DirectorySourceIdentity(root=Path("BASE")),
+                current=DirectorySourceIdentity(root=Path("CURRENT")),
+            )
+        }
+    )
+
+
+def test_comparison_matches_complete_json_and_terminal_goldens(directories) -> None:
+    report = normalized_comparison(*directories)
+    golden = Path(__file__).parent
+    assert serialize_report(report) == (golden / "directory_comparison.json").read_text(
+        encoding="utf-8"
+    )
+    assert render_comparison(report, ascii=True, color=False, width=100, top=10) == (
+        golden / "directory_comparison.txt"
+    ).read_text(encoding="utf-8")
+
+
+def test_owned_comparison_states_equal_standalone_snapshot_results(directories) -> None:
+    before, after = directories
+    comparison = compare(request(before, after))
+    for source, root in (("baseline", before), ("current", after)):
+        snapshot = scan(
+            SnapshotRequest(
+                target=DirectorySourceReference(root=root),
+                config=AnalysisConfig(calibration_profile="__raw__"),
+            )
+        )
+        for original in snapshot.cohorts:
+            paired = next(
+                item
+                for item in comparison.cohorts
+                if (item.language, item.cohort) == (original.language, original.cohort)
+            )
+            assert paired.kind == "comparison"
+            owned = paired.baseline if source == "baseline" else paired.current
+            assert owned == original.current
+        assert [item.detail for item in comparison.coverage if item.source.value == source] == [
+            item.detail for item in snapshot.coverage
+        ]
+        assert [item.detail for item in comparison.findings if item.source.value == source] == [
+            item.detail for item in snapshot.findings
+        ]
