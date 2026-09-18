@@ -1,0 +1,16 @@
+slop.measure  PROJECT
+Calibrated scores; lower is better | raw measurements available
+
+Coverage
+  Production Python: 2 files, 20 SLOC | analyzed
+
+Production | Python | 2 files | 20 SLOC
+  Score 33.3/100 [#######-------------]; lower is better
+  low | profile synthetic-1 | model snapshot
+  Combined verbosity  30.0% [######--------------]  6 / 20 SLOC
+  Erosion  30.0% [######--------------]
+
+Files (score order)
+  File | Score | Patterns | Erosion
+  a.py | 75.0/100 | - | 40.0%
+  b.py | 25.0/100 | - | 20.0%

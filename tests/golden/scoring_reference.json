@@ -1,0 +1,126 @@
+{
+  "bands": [
+    {
+      "label": "low",
+      "lower": 0
+    },
+    {
+      "label": "moderate",
+      "lower": 40
+    },
+    {
+      "label": "high",
+      "lower": 70
+    }
+  ],
+  "clone_normalization_version": "clones-1",
+  "corpus_manifest_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "language": "python",
+  "metric_versions": [
+    {
+      "metric_id": "m2.pattern-verbosity",
+      "version": "1"
+    },
+    {
+      "metric_id": "m3.clone-verbosity",
+      "version": "1"
+    },
+    {
+      "metric_id": "verbosity.combined",
+      "version": "1"
+    },
+    {
+      "metric_id": "m4.erosion",
+      "version": "1"
+    }
+  ],
+  "percentile_policy": "strictly-below-zero-floor",
+  "populations": [
+    {
+      "cohort": "production",
+      "distributions": [
+        {
+          "metric_id": "verbosity.combined",
+          "values": [
+            0,
+            0.2,
+            0.2,
+            0.8
+          ]
+        },
+        {
+          "metric_id": "m4.erosion",
+          "values": [
+            0,
+            0.2,
+            0.2,
+            0.8
+          ]
+        }
+      ],
+      "kind": "file",
+      "max_sloc": 100,
+      "min_sloc": 1,
+      "model_id": "snapshot"
+    },
+    {
+      "cohort": "production",
+      "distributions": [
+        {
+          "metric_id": "verbosity.combined",
+          "values": [
+            0,
+            0.5,
+            0.9
+          ]
+        },
+        {
+          "metric_id": "m4.erosion",
+          "values": [
+            0,
+            0.5,
+            0.9
+          ]
+        }
+      ],
+      "kind": "project",
+      "model_id": "snapshot"
+    }
+  ],
+  "profile_id": "synthetic-1",
+  "rule_set_version": "rules-1",
+  "schema_version": "1.0",
+  "score_models": [
+    {
+      "eligibility": "all-metrics",
+      "inputs": [
+        {
+          "metric_id": "verbosity.combined",
+          "weight": 0.6
+        },
+        {
+          "metric_id": "m4.erosion",
+          "weight": 0.4
+        }
+      ],
+      "model_id": "snapshot"
+    },
+    {
+      "eligibility": "no-functions",
+      "inputs": [
+        {
+          "metric_id": "verbosity.combined",
+          "weight": 1
+        }
+      ],
+      "model_id": "verbosity-only"
+    }
+  ],
+  "settings": {
+    "clone_min_sloc": 6,
+    "clone_min_statements": 2,
+    "complexity_threshold": 10,
+    "disabled_rules": [],
+    "enabled_rules": []
+  }
+}

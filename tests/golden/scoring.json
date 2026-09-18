@@ -1,0 +1,553 @@
+{
+  "analysis": {
+    "current": {
+      "kind": "directory",
+      "root": "PROJECT"
+    },
+    "kind": "snapshot"
+  },
+  "clone_groups": [],
+  "cohorts": [
+    {
+      "cohort": "production",
+      "current": {
+        "files": [
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "b.py",
+              "sloc": 10,
+              "sloc_lines": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            },
+            "functions": [
+              {
+                "cyclomatic_complexity": 20,
+                "mass": 20.0,
+                "path": "b.py",
+                "qualified_name": "f1",
+                "sloc": 1,
+                "sloc_lines": [
+                  1
+                ],
+                "span": {
+                  "end_line": 1,
+                  "start_line": 1
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "b.py",
+                "qualified_name": "f2",
+                "sloc": 1,
+                "sloc_lines": [
+                  2
+                ],
+                "span": {
+                  "end_line": 2,
+                  "start_line": 2
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "b.py",
+                "qualified_name": "f3",
+                "sloc": 1,
+                "sloc_lines": [
+                  3
+                ],
+                "span": {
+                  "end_line": 3,
+                  "start_line": 3
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "b.py",
+                "qualified_name": "f4",
+                "sloc": 1,
+                "sloc_lines": [
+                  4
+                ],
+                "span": {
+                  "end_line": 4,
+                  "start_line": 4
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "b.py",
+                "qualified_name": "f5",
+                "sloc": 1,
+                "sloc_lines": [
+                  5
+                ],
+                "span": {
+                  "end_line": 5,
+                  "start_line": 5
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "b.py",
+                "qualified_name": "f6",
+                "sloc": 1,
+                "sloc_lines": [
+                  6
+                ],
+                "span": {
+                  "end_line": 6,
+                  "start_line": 6
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "b.py",
+                "qualified_name": "f7",
+                "sloc": 1,
+                "sloc_lines": [
+                  7
+                ],
+                "span": {
+                  "end_line": 7,
+                  "start_line": 7
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "b.py",
+                "qualified_name": "f8",
+                "sloc": 1,
+                "sloc_lines": [
+                  8
+                ],
+                "span": {
+                  "end_line": 8,
+                  "start_line": 8
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "b.py",
+                "qualified_name": "f9",
+                "sloc": 1,
+                "sloc_lines": [
+                  9
+                ],
+                "span": {
+                  "end_line": 9,
+                  "start_line": 9
+                }
+              }
+            ],
+            "metrics": [
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 10.0,
+                  "numerator": 2.0,
+                  "unit": "ratio",
+                  "value": 0.2
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "b.py"
+                },
+                "score": {
+                  "points": 25.0,
+                  "profile_id": "synthetic-1"
+                },
+                "state": "measured"
+              },
+              {
+                "metric_id": "m4.erosion",
+                "raw": {
+                  "denominator": 100.0,
+                  "numerator": 20.0,
+                  "unit": "ratio",
+                  "value": 0.2
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "b.py"
+                },
+                "score": {
+                  "points": 25.0,
+                  "profile_id": "synthetic-1"
+                },
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "band": "low",
+              "contributions": [
+                {
+                  "metric_id": "m4.erosion",
+                  "percentile": 25.0,
+                  "points": 10.0,
+                  "raw_value": 0.2,
+                  "weight": 0.4
+                },
+                {
+                  "metric_id": "verbosity.combined",
+                  "percentile": 25.0,
+                  "points": 15.0,
+                  "raw_value": 0.2,
+                  "weight": 0.6
+                }
+              ],
+              "model_id": "snapshot",
+              "points": 25.0,
+              "profile_id": "synthetic-1",
+              "state": "measured"
+            }
+          },
+          {
+            "evidence": {
+              "cohort": "production",
+              "language": "python",
+              "parse_state": "parsed",
+              "path": "a.py",
+              "sloc": 10,
+              "sloc_lines": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            },
+            "functions": [
+              {
+                "cyclomatic_complexity": 40,
+                "mass": 40.0,
+                "path": "a.py",
+                "qualified_name": "f1",
+                "sloc": 1,
+                "sloc_lines": [
+                  1
+                ],
+                "span": {
+                  "end_line": 1,
+                  "start_line": 1
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "a.py",
+                "qualified_name": "f2",
+                "sloc": 1,
+                "sloc_lines": [
+                  2
+                ],
+                "span": {
+                  "end_line": 2,
+                  "start_line": 2
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "a.py",
+                "qualified_name": "f3",
+                "sloc": 1,
+                "sloc_lines": [
+                  3
+                ],
+                "span": {
+                  "end_line": 3,
+                  "start_line": 3
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "a.py",
+                "qualified_name": "f4",
+                "sloc": 1,
+                "sloc_lines": [
+                  4
+                ],
+                "span": {
+                  "end_line": 4,
+                  "start_line": 4
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "a.py",
+                "qualified_name": "f5",
+                "sloc": 1,
+                "sloc_lines": [
+                  5
+                ],
+                "span": {
+                  "end_line": 5,
+                  "start_line": 5
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "a.py",
+                "qualified_name": "f6",
+                "sloc": 1,
+                "sloc_lines": [
+                  6
+                ],
+                "span": {
+                  "end_line": 6,
+                  "start_line": 6
+                }
+              },
+              {
+                "cyclomatic_complexity": 10,
+                "mass": 10.0,
+                "path": "a.py",
+                "qualified_name": "f7",
+                "sloc": 1,
+                "sloc_lines": [
+                  7
+                ],
+                "span": {
+                  "end_line": 7,
+                  "start_line": 7
+                }
+              }
+            ],
+            "metrics": [
+              {
+                "metric_id": "verbosity.combined",
+                "raw": {
+                  "denominator": 10.0,
+                  "numerator": 4.0,
+                  "unit": "ratio",
+                  "value": 0.4
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "a.py"
+                },
+                "score": {
+                  "points": 75.0,
+                  "profile_id": "synthetic-1"
+                },
+                "state": "measured"
+              },
+              {
+                "metric_id": "m4.erosion",
+                "raw": {
+                  "denominator": 100.0,
+                  "numerator": 40.0,
+                  "unit": "ratio",
+                  "value": 0.4
+                },
+                "scope": {
+                  "cohort": "production",
+                  "kind": "file",
+                  "path": "a.py"
+                },
+                "score": {
+                  "points": 75.0,
+                  "profile_id": "synthetic-1"
+                },
+                "state": "measured"
+              }
+            ],
+            "score": {
+              "band": "high",
+              "contributions": [
+                {
+                  "metric_id": "m4.erosion",
+                  "percentile": 75.0,
+                  "points": 30.0,
+                  "raw_value": 0.4,
+                  "weight": 0.4
+                },
+                {
+                  "metric_id": "verbosity.combined",
+                  "percentile": 75.0,
+                  "points": 45.0,
+                  "raw_value": 0.4,
+                  "weight": 0.6
+                }
+              ],
+              "model_id": "snapshot",
+              "points": 75.0,
+              "profile_id": "synthetic-1",
+              "state": "measured"
+            }
+          }
+        ],
+        "metrics": [
+          {
+            "metric_id": "verbosity.combined",
+            "raw": {
+              "denominator": 20.0,
+              "numerator": 6.0,
+              "unit": "ratio",
+              "value": 0.3
+            },
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "score": {
+              "points": 33.3,
+              "profile_id": "synthetic-1"
+            },
+            "state": "measured"
+          },
+          {
+            "metric_id": "m4.erosion",
+            "raw": {
+              "denominator": 200.0,
+              "numerator": 60.0,
+              "unit": "ratio",
+              "value": 0.3
+            },
+            "scope": {
+              "cohort": "production",
+              "kind": "project"
+            },
+            "score": {
+              "points": 33.3,
+              "profile_id": "synthetic-1"
+            },
+            "state": "measured"
+          }
+        ],
+        "score": {
+          "band": "low",
+          "contributions": [
+            {
+              "metric_id": "m4.erosion",
+              "percentile": 33.333333333333336,
+              "points": 13.3,
+              "raw_value": 0.3,
+              "weight": 0.4
+            },
+            {
+              "metric_id": "verbosity.combined",
+              "percentile": 33.333333333333336,
+              "points": 20.0,
+              "raw_value": 0.3,
+              "weight": 0.6
+            }
+          ],
+          "model_id": "snapshot",
+          "points": 33.3,
+          "profile_id": "synthetic-1",
+          "state": "measured"
+        }
+      },
+      "kind": "snapshot",
+      "language": "python"
+    }
+  ],
+  "coverage": [
+    {
+      "detail": {
+        "cohort": "production",
+        "file_count": 2,
+        "language": "python",
+        "reason": null,
+        "sloc": 20,
+        "state": "scored"
+      },
+      "source": "current"
+    }
+  ],
+  "diagnostics": [],
+  "findings": [],
+  "provenance": {
+    "analyzers": [
+      {
+        "adapter_version": "test",
+        "clone_normalization_version": "clones-1",
+        "language": "python",
+        "rule_set_version": "rules-1"
+      }
+    ],
+    "config": {
+      "calibration_profile": "py-2026.1",
+      "clone_min_sloc": 6,
+      "clone_min_statements": 2,
+      "complexity_threshold": 10,
+      "default_hotspot_count": 5,
+      "disabled_rules": [],
+      "enabled_rules": [],
+      "exclusions": [
+        ".git/**",
+        ".venv/**",
+        "venv/**",
+        "**/__pycache__/**",
+        "build/**",
+        "dist/**"
+      ],
+      "generated_markers": [
+        "@generated",
+        "Generated by"
+      ],
+      "production_patterns": [
+        "**/*.py"
+      ],
+      "strict": false,
+      "test_patterns": [
+        "tests/**/*.py",
+        "**/test_*.py",
+        "**/*_test.py"
+      ]
+    },
+    "metrics": [
+      {
+        "metric_id": "m2.pattern-verbosity",
+        "version": "1"
+      },
+      {
+        "metric_id": "m3.clone-verbosity",
+        "version": "1"
+      },
+      {
+        "metric_id": "verbosity.combined",
+        "version": "1"
+      },
+      {
+        "metric_id": "m4.erosion",
+        "version": "1"
+      }
+    ],
+    "tool_version": "test"
+  },
+  "schema_version": "1.0"
+}
