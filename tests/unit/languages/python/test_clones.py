@@ -166,3 +166,23 @@ def test_match_case_container_is_not_an_executable_sibling_run() -> None:
         "    case 2:\n        b = 2\n        consume(b)\n"
     )
     assert {(item.span.start_line, item.span.end_line) for item in result} == {(3, 4), (6, 7)}
+
+
+def test_nested_actual_docstring_is_trivia_in_parent_compound_candidate() -> None:
+    template = 'if flag:\n    def f():\n        "{}"\n        x = 1\n        return x\nvalue = 2\n'
+    first = next(
+        item for item in candidates(template.format("first docs")) if item.span.start_line == 1
+    )
+    second = next(
+        item for item in candidates(template.format("changed docs")) if item.span.start_line == 1
+    )
+    assert first.normalized_tokens == second.normalized_tokens
+
+
+@pytest.mark.parametrize("tail, count", [("a=1;b=2", 1), ("c=3;d=4", 2)])
+def test_same_line_runs_deduplicate_only_identical_observable_candidates(
+    tail: str, count: int
+) -> None:
+    result = candidates(f"a=1;b=2;import os;{tail}\n", sloc=1)
+    assert len(result) == count
+    assert all(item.sloc_lines == (1,) for item in result)

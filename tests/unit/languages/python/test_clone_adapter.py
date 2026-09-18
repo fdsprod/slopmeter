@@ -92,3 +92,13 @@ def test_tree_sitter_recovery_is_a_clone_failure_not_an_empty_success(
     assert isinstance(result.clone_analyses[0], FailedClones)
     assert result.clone_analyses[0].diagnostic.code == "python.clone-error"
     assert result.clone_candidates == ()
+
+
+@pytest.mark.parametrize("tail, count", [("a=1;b=2", 1), ("c=3;d=4", 2)])
+def test_same_line_runs_do_not_turn_valid_file_into_clone_failure(tail: str, count: int) -> None:
+    result = PythonAdapter().analyze(
+        (document("app.py", f"a=1;b=2;import os;{tail}\n".encode()),),
+        AnalysisConfig(clone_min_sloc=1),
+    )
+    assert isinstance(result.clone_analyses[0], AnalyzedClones)
+    assert len(result.clone_candidates) == count
