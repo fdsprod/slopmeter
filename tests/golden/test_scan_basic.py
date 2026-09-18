@@ -90,6 +90,10 @@ def test_basic_scan_matches_hand_counted_manifest_and_never_executes_source(
                 for item in payload["coverage"]
             ]
         ),
+        "excluded_directories": [
+            [item["source"], item["detail"]["path"], item["detail"]["reason"]]
+            for item in payload["excluded_directories"]
+        ],
         "cohort_metric_results": {
             cohort["cohort"]: [
                 item["reason"]

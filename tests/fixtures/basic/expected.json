@@ -5,11 +5,11 @@
     ["test", "tests/test_app.py", 2, [2, 3], "parsed"]
   ],
   "coverage": [
-    ["excluded", "production", "python", 1, 0, "configured exclusion"],
     ["scored", "production", "python", 2, 4, null],
     ["scored", "test", "python", 1, 2, null],
     ["unsupported", "production", "md", 1, 0, "no language adapter"]
   ],
+  "excluded_directories": [["current", "build", "configured exclusion"]],
   "cohort_metric_results": {
     "production": ["no-baseline", "parse-failed", "parse-failed", "parse-failed", "parse-failed"],
     "test": ["no-baseline", {"value": 0}, {"value": 0}, {"value": 0}, {"value": 0}]

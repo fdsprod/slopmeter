@@ -4,8 +4,8 @@ Score unavailable | analysis partial
 Coverage
   Production Python: 2 files, 4 SLOC | partial
   Tests Python: 1 file, 2 SLOC | analyzed
-  Excluded Production Python: 1 file | configured exclusion
   Unsupported Production md: 1 file | no language adapter
+  1 excluded directory (contents not scanned)
 
 Production | Python | 2 files | 4 SLOC
   Score unavailable | required metric unavailable
