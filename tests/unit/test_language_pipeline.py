@@ -9,7 +9,13 @@ from pydantic import ValidationError
 from slop_measure.application.comparison import assemble_comparison
 from slop_measure.application.service import AnalysisService
 from slop_measure.config import AnalysisConfig
-from slop_measure.domain.evidence import EvidenceCapability, ExcludedDirectory, LanguageEvidence
+from slop_measure.domain.evidence import (
+    EvidenceCapability,
+    ExcludedDirectory,
+    FileEvidence,
+    LanguageEvidence,
+    ParseState,
+)
 from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.reports import AnalysisReport, ReportExcludedDirectory
 from slop_measure.domain.requests import SnapshotRequest
@@ -17,6 +23,7 @@ from slop_measure.domain.source import (
     DirectorySourceIdentity,
     DirectorySourceReference,
     ProjectPath,
+    SourceDocument,
 )
 from slop_measure.languages.registry import LanguageRegistry
 from slop_measure.metrics.aggregate import aggregate_snapshot
@@ -127,7 +134,7 @@ def test_language_filter_skips_unselected_analysis_and_configuration_hooks(
         def analyze(self, documents, config):
             calls.append(f"analyze:{self.language_id}")
             assert documents == ()
-            return LanguageEvidence(language=self.language_id, capabilities=frozenset())
+            return LanguageEvidence(language=self.language_id, capabilities=frozenset(), files=())
 
     service = AnalysisService(
         LanguageRegistry(
@@ -143,3 +150,55 @@ def test_language_filter_skips_unselected_analysis_and_configuration_hooks(
     assert calls == ["validate:python", "analyze:python"]
     assert [item.language for item in snapshot.provenance.analyzers] == ["python"]
     assert snapshot.provenance.config.languages == frozenset({"python"})
+
+
+def test_service_preserves_registered_extension_routes_after_adapter_mutation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    (tmp_path / "registered.old").write_text("value = 1\n", encoding="utf-8")
+    (tmp_path / "unregistered.new").write_text("value = 2\n", encoding="utf-8")
+    analyzed: list[str] = []
+
+    @dataclass
+    class Adapter:
+        language_id: str = "fixture"
+        extensions: frozenset[str] = frozenset({".old"})
+        capabilities: frozenset[EvidenceCapability] = frozenset({EvidenceCapability.FILES})
+        adapter_version: str = "fixture-1"
+
+        def analyze(
+            self, documents: tuple[SourceDocument, ...], config: AnalysisConfig
+        ) -> LanguageEvidence:
+            analyzed.extend(document.path.root for document in documents)
+            return LanguageEvidence(
+                language=self.language_id,
+                capabilities=self.capabilities,
+                files=tuple(
+                    FileEvidence(
+                        path=document.path,
+                        language=self.language_id,
+                        cohort=document.cohort,
+                        sloc=1,
+                        sloc_lines=(1,),
+                        parse_state=ParseState.PARSED,
+                    )
+                    for document in documents
+                ),
+            )
+
+    adapter = Adapter()
+    service = AnalysisService(LanguageRegistry((adapter,)))
+    adapter.extensions = frozenset({".new"})
+    snapshot = service.scan(
+        SnapshotRequest(
+            target=DirectorySourceReference(root=tmp_path),
+            config=AnalysisConfig(
+                languages=frozenset({"fixture"}),
+                calibration_profile="__raw__",
+                production_patterns=("**/*.old", "**/*.new"),
+            ),
+        )
+    )
+    assert analyzed == ["registered.old"]
+    assert snapshot.provenance.config.languages == frozenset({"fixture"})
