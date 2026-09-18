@@ -1,20 +1,20 @@
-slop.measure
-PROJECT
-snapshot - higher is worse
+slop.measure  PROJECT
+Score unavailable | raw measurements available
 
-source coverage
-  production python: 2 files, 4 SLOC
-    scored
-  test python: 0 files, 0 SLOC
-    scored
+Coverage
+  Production Python: 2 files, 4 SLOC | analyzed
+  Tests Python: 0 files, 0 SLOC | analyzed
 
-production python
-  snapshot slop unavailable: required-metric-unavailable
-  m1.loc-delta: unavailable (no-baseline)
-  m2.pattern-verbosity: 0.25 ratio
-  pattern SLOC: 1 / 4; findings: 2
-  pattern findings
-    overlap.py:1-1 py.boolean-conditional: Replace the boolean conditional with a boolean conversion.
-    overlap.py:1-1 py.literal-fstring: Remove the unused f-string prefix.
-  m3.clone-verbosity: unavailable (unsupported-capability)
-  m4.erosion: unavailable (no-functions)
+Production | Python | 2 files | 4 SLOC
+  Pattern verbosity  25.0% [#####---------------]  1 / 4 SLOC
+
+Files (path order)
+  File | Patterns | Erosion
+  clean.py | 0.0% | -
+  overlap.py | 100.0% | -
+
+Not measured
+  Clone verbosity: - | not supported yet
+  Erosion: - | no callables
+
+2 findings | use explain for source evidence

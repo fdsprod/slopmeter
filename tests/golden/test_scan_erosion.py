@@ -67,7 +67,7 @@ def test_erosion_terminal_matches_hand_written_evidence_golden(erosion_project: 
     normalized = report.model_copy(
         update={"analysis": SnapshotAnalysis(current=DirectorySourceIdentity(root=Path("PROJECT")))}
     )
-    assert render_snapshot(normalized, width=80, color=False) == (
+    assert render_snapshot(normalized, width=80, color=False, ascii=True) == (
         Path(__file__).parent / "scan_erosion.txt"
     ).read_text(encoding="utf-8")
 
@@ -91,7 +91,9 @@ def test_configured_threshold_changes_end_to_end_erosion(erosion_project: Path) 
     assert boundary_raw["value"] == boundary_raw["numerator"] == 0
     assert boundary_raw["denominator"] == default_raw["denominator"]
     assert boundary.provenance.config.complexity_threshold == 11
-    assert "callables: 2; eroded: 0; CC threshold: > 11" in render_snapshot(boundary, color=False)
+    assert "callables: 2; eroded: 0; CC threshold: > 11" in render_snapshot(
+        boundary, color=False, verbose=True
+    )
 
 
 def write_callable(root: Path, relative_path: str, complexity: int) -> None:
@@ -112,7 +114,7 @@ def test_hotspots_obey_top_n_and_sort_by_mass_then_path(
         target=DirectorySourceReference(root=tmp_path),
         config=AnalysisConfig(default_hotspot_count=2),
     )
-    rendered = render_snapshot(scan(request), width=80, color=False)
+    rendered = render_snapshot(scan(request), width=80, color=False, verbose=True)
     hotspots = [line for line in rendered.splitlines() if ": CC " in line]
 
     assert hotspots == [
@@ -120,7 +122,7 @@ def test_hotspots_obey_top_n_and_sort_by_mass_then_path(
         "    a.py:1-2 f: CC 11, SLOC 2, mass 15.5563",
     ]
     assert "callables: 3; eroded: 3; CC threshold: > 10" in rendered
-    assert render_snapshot(scan(request), width=80, color=False) == rendered
+    assert render_snapshot(scan(request), width=80, color=False, verbose=True) == rendered
 
 
 def test_production_and_test_erosion_have_independent_mass_totals(

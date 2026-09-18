@@ -64,7 +64,7 @@ def test_pattern_terminal_matches_handwritten_golden(pattern_project: Path) -> N
     normalized = report.model_copy(
         update={"analysis": SnapshotAnalysis(current=DirectorySourceIdentity(root=Path("PROJECT")))}
     )
-    assert render_snapshot(normalized, width=140, color=False) == (
+    assert render_snapshot(normalized, width=80, color=False, ascii=True) == (
         Path(__file__).parent / "scan_patterns.txt"
     ).read_text(encoding="utf-8")
 

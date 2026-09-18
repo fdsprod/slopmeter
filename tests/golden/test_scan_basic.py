@@ -182,7 +182,6 @@ def test_scope_changes_terminal_selection_but_json_keeps_all_cohorts(basic_proje
     report = scan(request(basic_project))
     for width in (40, 80):
         rendered = render_snapshot(report, scope="test", width=width, color=False)
-        assert "higher is worse" in rendered.lower()
         assert "unavailable" in rendered.lower()
         assert "production" in rendered.lower() and "test" in rendered.lower()
         assert "\x1b[" not in rendered
@@ -238,7 +237,7 @@ def test_plain_terminal_snapshot_matches_approved_golden(basic_project: Path) ->
     normalized = report.model_copy(
         update={"analysis": SnapshotAnalysis(current=DirectorySourceIdentity(root=Path("PROJECT")))}
     )
-    rendered = render_snapshot(normalized, width=80, color=False)
+    rendered = render_snapshot(normalized, width=80, color=False, ascii=True)
     expected = (Path(__file__).parent / "scan_basic.txt").read_text(encoding="utf-8")
 
     assert rendered == expected

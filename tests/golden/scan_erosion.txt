@@ -1,21 +1,19 @@
-slop.measure
-PROJECT
-snapshot - higher is worse
+slop.measure  PROJECT
+Score unavailable | raw measurements available
 
-source coverage
-  production python: 3 files, 5 SLOC
-    scored
-  test python: 1 file, 2 SLOC
-    scored
+Coverage
+  Production Python: 3 files, 5 SLOC | analyzed
+  Tests Python: 1 file, 2 SLOC | analyzed
 
-production python
-  snapshot slop unavailable: required-metric-unavailable
-  m1.loc-delta: unavailable (no-baseline)
-  m2.pattern-verbosity: 0 ratio
-  pattern SLOC: 0 / 5; findings: 0
-  m3.clone-verbosity: unavailable (unsupported-capability)
-  m4.erosion: 0.916667 ratio
-  mass: 15.5563 / 16.9706
-  callables: 2; eroded: 1; CC threshold: > 10
-  eroded callables
-    high.py:1-2 high: CC 11, SLOC 2, mass 15.5563
+Production | Python | 3 files | 5 SLOC
+  Pattern verbosity  0.0% [--------------------]  0 / 5 SLOC
+  Erosion  91.7% [##################--]
+
+Files (path order)
+  File | Patterns | Erosion
+  constant.py | 0.0% | -
+  high.py | 0.0% | 100.0%
+  low.py | 0.0% | 0.0%
+
+Not measured
+  Clone verbosity: - | not supported yet
