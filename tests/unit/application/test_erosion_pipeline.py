@@ -72,15 +72,15 @@ def test_supported_erosion_projects_callables_and_combines_mass_across_files(
     values = production.model_dump(mode="json")
     metric = next(item for item in values["metrics"] if item["metric_id"] == "m4.erosion")
     assert metric["state"] == "measured"
-    assert metric["raw"]["value"] == pytest.approx(11 / 12)
-    assert metric["raw"]["numerator"] == pytest.approx(11 * 2**0.5)
+    assert metric["raw"]["value"] == pytest.approx(1 / 12)
+    assert metric["raw"]["numerator"] == pytest.approx(2**0.5)
     assert metric["raw"]["denominator"] == pytest.approx(12 * 2**0.5)
     by_path = {item["evidence"]["path"]: item for item in values["files"]}
     assert erosion(by_path["constant.py"])["reason"] == "no-functions"
     assert by_path["high.py"]["functions"][0]["cyclomatic_complexity"] == 11
     assert erosion(by_path["low.py"])["raw"]["value"] == 0
     assert [(item.metric_id, item.version) for item in report.provenance.metrics] == [
-        ("m4.erosion", "1")
+        ("m4.erosion", "2")
     ]
 
 

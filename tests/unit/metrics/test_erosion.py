@@ -35,9 +35,9 @@ def test_erosion_sums_sqrt_line_mass_and_excludes_exact_threshold_from_numerator
     assert isinstance(result, MeasuredMetric)
     assert result.metric_id == "m4.erosion"
     assert result.scope == scope
-    assert result.raw.numerator == 33
+    assert result.raw.numerator == 3
     assert result.raw.denominator == pytest.approx(20 + 33 + math.sqrt(2))
-    assert result.raw.value == pytest.approx(33 / (53 + math.sqrt(2)))
+    assert result.raw.value == pytest.approx(3 / (53 + math.sqrt(2)))
     assert result.score is None
 
 
@@ -58,10 +58,10 @@ def test_project_erosion_uses_mass_totals_instead_of_averaging_file_ratios() -> 
     functions = (function("high", 11, 1, "small.py"), function("low", 1, 100, "large.py"))
     result = measure_erosion(functions, ProjectMetricScope(cohort=Cohort.PRODUCTION), 10)
     assert isinstance(result, MeasuredMetric)
-    assert result.raw.numerator == 11
+    assert result.raw.numerator == 1
     assert result.raw.denominator == 21
-    assert result.raw.value == pytest.approx(11 / 21)
-    assert result.raw.value != 0.5
+    assert result.raw.value == pytest.approx(1 / 21)
+    assert result.raw.value != pytest.approx((1 / 11) / 2)
 
 
 @pytest.mark.parametrize("threshold", [True, False, 0, -1, 1.5])
@@ -81,4 +81,40 @@ def test_file_scope_preserves_cohort_and_path() -> None:
     result = measure_erosion((function("f", 11, 1),), scope, 10)
     assert isinstance(result, MeasuredMetric)
     assert result.scope == scope
-    assert result.raw.value == 1
+    assert result.raw.value == pytest.approx(1 / 11)
+
+
+@pytest.mark.parametrize(
+    "complexity,expected",
+    [
+        (1, 0),
+        (5, 0),
+        (9, 0),
+        (10, 0),
+        (11, 1 / 11),
+        (12, 1 / 6),
+        (15, 1 / 3),
+        (20, 1 / 2),
+        (30, 2 / 3),
+    ],
+)
+def test_erosion_counts_only_complexity_above_threshold_gradually(
+    complexity: int, expected: float
+) -> None:
+    result = measure_erosion(
+        (function("candidate", complexity, 9),), ProjectMetricScope(cohort=Cohort.PRODUCTION), 10
+    )
+    assert isinstance(result, MeasuredMetric)
+    assert result.raw.numerator == max(0, complexity - 10) * 3
+    assert result.raw.denominator == complexity * 3
+    assert result.raw.value == pytest.approx(expected)
+
+
+def test_gradual_erosion_uses_effective_threshold_without_changing_total_mass() -> None:
+    functions = (function("high", 15, 4, "first.py"), function("low", 5, 9, "second.py"))
+    first = measure_erosion(functions, ProjectMetricScope(cohort=Cohort.PRODUCTION), 10)
+    second = measure_erosion(functions, ProjectMetricScope(cohort=Cohort.PRODUCTION), 12)
+    assert isinstance(first, MeasuredMetric) and isinstance(second, MeasuredMetric)
+    assert first.raw.denominator == second.raw.denominator == 45
+    assert first.raw.numerator == 10
+    assert second.raw.numerator == 6

@@ -57,9 +57,9 @@ def test_erosion_scan_matches_exact_callables_and_mass_totals(erosion_project: P
     )["raw"]
     assert raw == pytest.approx(
         {
-            "numerator": 11 * math.sqrt(2),
+            "numerator": math.sqrt(2),
             "denominator": 12 * math.sqrt(2),
-            "value": 11 / 12,
+            "value": 1 / 12,
             "unit": "ratio",
         }
     )
@@ -110,7 +110,7 @@ def test_configured_threshold_changes_end_to_end_erosion(erosion_project: Path) 
         if item["metric_id"] == "m4.erosion"
     )["raw"]
 
-    assert default_raw["value"] == pytest.approx(11 / 12)
+    assert default_raw["value"] == pytest.approx(1 / 12)
     assert boundary_raw["value"] == boundary_raw["numerator"] == 0
     assert boundary_raw["denominator"] == default_raw["denominator"]
     assert boundary.provenance.config.complexity_threshold == 11
@@ -168,8 +168,9 @@ def test_production_and_test_erosion_have_independent_mass_totals(
         "raw"
     ]
 
-    assert production["value"] == 1
-    assert production["numerator"] == production["denominator"] == pytest.approx(11 * math.sqrt(2))
+    assert production["value"] == pytest.approx(1 / 11)
+    assert production["numerator"] == pytest.approx(math.sqrt(2))
+    assert production["denominator"] == pytest.approx(11 * math.sqrt(2))
     assert tests["value"] == tests["numerator"] == 0
     assert tests["denominator"] == pytest.approx(math.sqrt(2))
     assert [item["evidence"]["path"] for item in cohorts["production"]["files"]] == [

@@ -92,7 +92,7 @@ def test_pattern_aggregation_projects_stable_ids_and_metric_versions(tmp_path: P
     assert m2["raw"]["value"] == 0.5
     assert {(item.metric_id, item.version) for item in forward.provenance.metrics} == {
         ("m2.pattern-verbosity", "1"),
-        ("m4.erosion", "1"),
+        ("m4.erosion", "2"),
     }
 
 
