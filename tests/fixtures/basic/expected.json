@@ -1,0 +1,19 @@
+{
+  "files": [
+    ["production", "app.py", 4, [2, 3, 4, 6], "parsed"],
+    ["production", "bad.py", 0, [], "failed"],
+    ["test", "tests/test_app.py", 2, [2, 3], "parsed"]
+  ],
+  "coverage": [
+    ["excluded", "production", "python", 1, 0, "configured exclusion"],
+    ["scored", "production", "python", 2, 4, null],
+    ["scored", "test", "python", 1, 2, null],
+    ["unsupported", "production", "md", 1, 0, "no language adapter"]
+  ],
+  "cohort_metric_reasons": {
+    "production": ["no-baseline", "parse-failed", "parse-failed", "parse-failed"],
+    "test": ["no-baseline", "unsupported-capability", "unsupported-capability", "unsupported-capability"]
+  },
+  "score_reasons": {"production": "required-metric-unavailable", "test": "required-metric-unavailable"},
+  "diagnostics": [["diagnostic-0001", "current", "python.parse-error", "bad.py", "error"]]
+}
