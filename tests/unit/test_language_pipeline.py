@@ -20,6 +20,7 @@ from slop_measure.domain.source import (
 )
 from slop_measure.languages.registry import LanguageRegistry
 from slop_measure.metrics.aggregate import aggregate_snapshot
+from slop_measure.reporting.comparison import render_comparison
 from slop_measure.reporting.terminal import render_snapshot
 
 
@@ -62,6 +63,34 @@ def test_comparison_preserves_both_sides_directory_exclusions(tmp_path: Path) ->
         (item.source.value, item.detail.path.root) for item in compared.excluded_directories
     } == {("baseline", "vendor"), ("current", "vendor")}
     assert compared.coverage == ()
+
+
+def test_duplicate_same_source_excluded_directory_is_rejected(tmp_path: Path) -> None:
+    entry = ExcludedDirectory(path=ProjectPath("vendor"), reason="configured directory exclusion")
+    payload = report(tmp_path, (entry,)).model_dump(mode="json")
+    payload["excluded_directories"].append(payload["excluded_directories"][0])
+    with pytest.raises(ValidationError):
+        AnalysisReport.model_validate(payload)
+
+
+def test_comparison_terminal_reports_excluded_directories_on_both_sides(tmp_path: Path) -> None:
+    before_entry = ExcludedDirectory(path=ProjectPath("vendor"), reason="baseline exclusion")
+    after_entry = ExcludedDirectory(path=ProjectPath("vendor"), reason="current exclusion")
+    before = report(tmp_path / "before", (before_entry,))
+    after = report(tmp_path / "after", (after_entry,))
+    compared = assemble_comparison(
+        before,
+        after,
+        SourceInventory(excluded_directories=(before_entry,)),
+        SourceInventory(excluded_directories=(after_entry,)),
+    )
+    compact = render_comparison(compared, ascii=True, color=False)
+    assert "2 excluded directories (contents not scanned)" in compact
+    assert "vendor" not in compact
+    detailed = render_comparison(compared, ascii=True, color=False, verbose=True)
+    assert "baseline" in detailed.lower() and "current" in detailed.lower()
+    assert detailed.count("vendor") == 2
+    assert "baseline exclusion" in detailed and "current exclusion" in detailed
 
 
 def test_terminal_directory_exclusions_are_compact_until_verbose(tmp_path: Path) -> None:
