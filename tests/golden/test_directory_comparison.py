@@ -145,3 +145,72 @@ def test_cli_comparison_missing_input_and_strict_failure_exit_codes(directories)
     (after / "bad.py").write_text("x = (\n", encoding="utf-8")
     strict = CliRunner().invoke(app, ["compare", str(before), str(after), "--strict"])
     assert strict.exit_code == 3
+
+
+def test_production_to_test_move_is_two_owned_changes_with_reconciled_totals(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    before, after = tmp_path / "before", tmp_path / "after"
+    before.mkdir()
+    (after / "tests").mkdir(parents=True)
+    source = "def f(flag):\n    return True if flag else False\n"
+    (before / "a.py").write_text(source, encoding="utf-8")
+    (after / "tests" / "a.py").write_text(source, encoding="utf-8")
+    report = compare(request(before, after))
+    for cohort in report.cohorts:
+        assert cohort.kind == "comparison"
+        assert cohort.line_delta.state == "measured"
+        assert len(cohort.changes) == 1
+        if cohort.cohort.value == "production":
+            assert cohort.changes[0].pair.kind == "deleted"
+            assert cohort.line_delta.net == -2
+            assert not cohort.current.files
+        else:
+            assert cohort.changes[0].pair.kind == "added"
+            assert cohort.line_delta.net == 2
+            assert not cohort.baseline.files
+    assert {(item.source.value, item.detail.path.root) for item in report.findings} == {
+        ("baseline", "a.py"),
+        ("current", "tests/a.py"),
+    }
+
+
+def test_empty_baseline_has_measured_m1_but_unavailable_growth_and_ratio_delta(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    before, after = tmp_path / "before", tmp_path / "after"
+    before.mkdir()
+    after.mkdir()
+    (after / "a.py").write_text("x = 1\n", encoding="utf-8")
+    report = compare(request(before, after))
+    cohort = next(item for item in report.cohorts if item.cohort.value == "production")
+    assert cohort.kind == "comparison"
+    assert cohort.line_delta.state == "measured"
+    assert cohort.line_delta.net == 1
+    assert cohort.line_delta.growth.state == "unavailable"
+    assert cohort.line_delta.growth.reason == "no-baseline-sloc"
+    assert all(item.state == "unavailable" for item in cohort.changes[0].deltas)
+    assert all(item.state == "unavailable" for item in cohort.deltas)
+
+
+def test_clone_failure_does_not_invalidate_comparison_sloc(
+    directories,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail(*args, **kwargs):
+        raise RuntimeError("fixture clone failure")
+
+    monkeypatch.setattr("slop_measure.languages.python.adapter.extract_clone_candidates", fail)
+    report = compare(request(*directories))
+    cohort = next(item for item in report.cohorts if item.cohort.value == "production")
+    assert cohort.kind == "comparison"
+    assert cohort.line_delta.state == "measured"
+    assert cohort.line_delta.net == 2
+    deltas = {item.metric_id: item for item in cohort.deltas}
+    assert deltas["m3.clone-verbosity"].state == "unavailable"
+    assert deltas["verbosity.combined"].state == "unavailable"
+    assert deltas["m2.pattern-verbosity"].state == "measured"

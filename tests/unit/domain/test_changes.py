@@ -128,7 +128,7 @@ def test_project_totals_use_same_net_and_growth_contract() -> None:
 
 
 def test_unavailable_and_metric_delta_states_remain_explicit() -> None:
-    failed = UnavailableLineDelta(reason="parse-failed")
+    failed = UnavailableLineDelta.model_validate({"reason": "parse-failed"})
     assert failed.state == "unavailable"
     assert "net" not in failed.model_dump()
     for reason in (
@@ -137,7 +137,12 @@ def test_unavailable_and_metric_delta_states_remain_explicit() -> None:
         "unavailable-input",
         "incompatible-definitions",
     ):
-        assert UnavailableMetricDelta(metric_id="m4.erosion", reason=reason).state == "unavailable"
+        assert (
+            UnavailableMetricDelta.model_validate(
+                {"metric_id": "m4.erosion", "reason": reason}
+            ).state
+            == "unavailable"
+        )
     assert MeasuredMetricDelta(metric_id="m4.erosion", value=-0.5, unit="ratio").value == -0.5
     with pytest.raises(ValidationError):
         MeasuredMetricDelta(metric_id="m4.erosion", value=float("nan"), unit="ratio")
@@ -146,8 +151,10 @@ def test_unavailable_and_metric_delta_states_remain_explicit() -> None:
 def test_file_change_rejects_duplicate_metric_delta_ids() -> None:
     delta = {"metric_id": "m4.erosion", "value": 0.1, "unit": "ratio"}
     with pytest.raises(ValidationError):
-        FileChange(
-            pair={"kind": "modified", "baseline_path": "a.py", "current_path": "a.py"},
-            lines=lines(),
-            deltas=(delta, delta),
+        FileChange.model_validate(
+            {
+                "pair": {"kind": "modified", "baseline_path": "a.py", "current_path": "a.py"},
+                "lines": lines(),
+                "deltas": (delta, delta),
+            }
         )
