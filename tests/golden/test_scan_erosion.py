@@ -141,8 +141,8 @@ def test_hotspots_obey_top_n_and_sort_by_mass_then_path(
     hotspots = [line for line in rendered.splitlines() if ": CC " in line]
 
     assert hotspots == [
-        "    z.py:1-2 f: CC 12, SLOC 2, mass 16.9706",
-        "    a.py:1-2 f: CC 11, SLOC 2, mass 15.5563",
+        "    z.py:1-2 f: CC 12, SLOC 2, mass 16.9706, assertions 0, control-flow CC 12",
+        "    a.py:1-2 f: CC 11, SLOC 2, mass 15.5563, assertions 0, control-flow CC 11",
     ]
     assert "callables: 3; eroded: 3; CC threshold: > 10" in rendered
     assert render_snapshot(scan(request), width=80, color=False, verbose=True) == rendered

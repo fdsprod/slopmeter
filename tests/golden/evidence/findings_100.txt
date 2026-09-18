@@ -13,7 +13,7 @@ Pattern findings
 
 Eroded callables (CC > 10)
   current | python | production
-  b.py:1-2 high: CC 11, SLOC 2, mass 15.5563
+  b.py:1-2 high: CC 11, SLOC 2, mass 15.5563, assertions 0, control-flow CC 11
 
 How to read this report
 Use this report to prioritize source review. A high score means inspect; it does not require a 

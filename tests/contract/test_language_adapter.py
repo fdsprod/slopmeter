@@ -118,6 +118,9 @@ def synthetic_profile() -> CalibrationProfile:
         rule_set_version="invented-rules-1",
         clone_normalization_version="invented-clones-1",
     )
+    for metric in payload["metric_versions"]:
+        if metric["metric_id"] == "m4.erosion":
+            metric["version"] = "3"
     return CalibrationProfile.model_validate(payload)
 
 

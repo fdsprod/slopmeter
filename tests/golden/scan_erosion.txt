@@ -9,7 +9,7 @@ Production | Python | 3 files | 5 SLOC
   Score unavailable | calibration missing
   Pattern verbosity  0.0% [--------------------]  0 / 5 SLOC
   Clone verbosity  0.0% [--------------------]  0 / 5 SLOC
-  Erosion  8.3% [##------------------]
+  Erosion  8.3% [##------------------]  1.41421 / 16.9706 mass
   Combined verbosity  0.0% [--------------------]  0 / 5 SLOC
 
 Files (path order)

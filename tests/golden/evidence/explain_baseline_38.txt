@@ -8,6 +8,7 @@ missing
   Clone verbosity  0.0% 
 [--------------------]  0 / 4 SLOC
   Erosion  0.0% [--------------------]
+0 / 4.24264 mass
   mass: 0 / 4.24264; CC threshold: > 
 10
   Combined verbosity  50.0% 
@@ -15,9 +16,11 @@ missing
 
 Callables
   a.py:1-2 f: CC 2, SLOC 2, mass 
-2.82843
+2.82843, assertions 0, control-flow CC
+2
   a.py:4-5 g: CC 1, SLOC 2, mass 
-1.41421
+1.41421, assertions 0, control-flow CC
+1
 
 Findings (2)
   a.py:2-2 py.boolean-conditional: 

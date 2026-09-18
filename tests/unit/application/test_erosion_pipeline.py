@@ -80,7 +80,7 @@ def test_supported_erosion_projects_callables_and_combines_mass_across_files(
     assert by_path["high.py"]["functions"][0]["cyclomatic_complexity"] == 11
     assert erosion(by_path["low.py"])["raw"]["value"] == 0
     assert [(item.metric_id, item.version) for item in report.provenance.metrics] == [
-        ("m4.erosion", "2")
+        ("m4.erosion", "3")
     ]
 
 

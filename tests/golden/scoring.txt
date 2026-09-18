@@ -7,8 +7,10 @@ Coverage
 Production | Python | 2 files | 20 SLOC
   Score 33.3/100 [#######-------------]; lower is better
   low | profile synthetic-1 | model snapshot
+  Reference: 3 project observations
+  Nominal percentile step: 33.3 percentile points | domain match: not assessed
   Combined verbosity  30.0% [######--------------]  6 / 20 SLOC
-  Erosion  20.0% [####----------------]
+  Erosion  20.0% [####----------------]  40 / 200 mass
 
 Files (score order)
   File | Score | Patterns | Erosion

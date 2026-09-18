@@ -52,7 +52,7 @@ def test_summary_labels_raw_percentages_and_keeps_missing_scores_distinct(
     assert "scored" not in output.lower()
     assert "m1.loc-delta" not in output
     assert "LOC delta" not in output
-    assert "mass" not in output.lower()
+    assert "mass" in output.lower()
     assert "CC threshold" not in output
     assert "\x1b[" not in output
 
