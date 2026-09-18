@@ -11,9 +11,9 @@
     ["unsupported", "production", "md", 1, 0, "no language adapter"]
   ],
   "cohort_metric_results": {
-    "production": ["no-baseline", "parse-failed", "parse-failed", "parse-failed"],
-    "test": ["no-baseline", {"value": 0}, "unsupported-capability", {"value": 0}]
+    "production": ["no-baseline", "parse-failed", "parse-failed", "parse-failed", "parse-failed"],
+    "test": ["no-baseline", {"value": 0}, {"value": 0}, {"value": 0}, {"value": 0}]
   },
-  "score_reasons": {"production": "required-metric-unavailable", "test": "required-metric-unavailable"},
+  "score_reasons": {"production": "required-metric-unavailable", "test": "calibration-missing"},
   "diagnostics": [["diagnostic-0001", "current", "python.parse-error", "bad.py", "error"]]
 }

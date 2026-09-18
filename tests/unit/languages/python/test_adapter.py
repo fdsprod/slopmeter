@@ -32,9 +32,14 @@ def test_python_adapter_declares_its_exact_capabilities() -> None:
     assert adapter.language_id == "python"
     assert adapter.extensions == frozenset({".py", ".pyi"})
     assert adapter.capabilities == frozenset(
-        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS, EvidenceCapability.PATTERNS}
+        {
+            EvidenceCapability.FILES,
+            EvidenceCapability.FUNCTIONS,
+            EvidenceCapability.PATTERNS,
+            EvidenceCapability.CLONES,
+        }
     )
-    assert PythonAdapter().adapter_version == "python-patterns-1"
+    assert PythonAdapter().adapter_version == "python-clones-1"
     assert PythonAdapter().rule_set_version == "py-patterns-1"
 
 
@@ -56,7 +61,12 @@ def test_valid_sources_produce_exact_owned_file_evidence(
     result = PythonAdapter().analyze((document(content),), AnalysisConfig())
     assert result.language == "python"
     assert result.capabilities == frozenset(
-        {EvidenceCapability.FILES, EvidenceCapability.FUNCTIONS, EvidenceCapability.PATTERNS}
+        {
+            EvidenceCapability.FILES,
+            EvidenceCapability.FUNCTIONS,
+            EvidenceCapability.PATTERNS,
+            EvidenceCapability.CLONES,
+        }
     )
     assert result.diagnostics == ()
     assert result.patterns == result.clone_candidates == ()

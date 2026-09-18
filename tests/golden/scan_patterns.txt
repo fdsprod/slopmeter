@@ -7,6 +7,8 @@ Coverage
 
 Production | Python | 2 files | 4 SLOC
   Pattern verbosity  25.0% [#####---------------]  1 / 4 SLOC
+  Clone verbosity  0.0% [--------------------]  0 / 4 SLOC
+  Combined verbosity  25.0% [#####---------------]  1 / 4 SLOC
 
 Files (path order)
   File | Patterns | Erosion
@@ -14,7 +16,6 @@ Files (path order)
   overlap.py | 100.0% | -
 
 Not measured
-  Clone verbosity: - | not supported yet
   Erosion: - | no callables
 
 2 findings | use explain for source evidence

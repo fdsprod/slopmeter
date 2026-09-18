@@ -7,13 +7,12 @@ Coverage
 
 Production | Python | 3 files | 5 SLOC
   Pattern verbosity  0.0% [--------------------]  0 / 5 SLOC
+  Clone verbosity  0.0% [--------------------]  0 / 5 SLOC
   Erosion  91.7% [##################--]
+  Combined verbosity  0.0% [--------------------]  0 / 5 SLOC
 
 Files (path order)
   File | Patterns | Erosion
   constant.py | 0.0% | -
   high.py | 0.0% | 100.0%
   low.py | 0.0% | 0.0%
-
-Not measured
-  Clone verbosity: - | not supported yet

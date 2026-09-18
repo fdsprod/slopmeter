@@ -22,7 +22,13 @@ from slop_measure.reporting.json import serialize_report
 from slop_measure.reporting.terminal import render_snapshot
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "basic"
-METRIC_IDS = ["m1.loc-delta", "m2.pattern-verbosity", "m3.clone-verbosity", "m4.erosion"]
+METRIC_IDS = [
+    "m1.loc-delta",
+    "m2.pattern-verbosity",
+    "m3.clone-verbosity",
+    "m4.erosion",
+    "verbosity.combined",
+]
 
 
 @pytest.fixture(autouse=True)
@@ -106,7 +112,7 @@ def test_basic_scan_matches_hand_counted_manifest_and_never_executes_source(
     assert report.provenance.tool_version == __version__
     assert report.provenance.config == AnalysisConfig()
     assert [(item.language, item.adapter_version) for item in report.provenance.analyzers] == [
-        ("python", "python-patterns-1")
+        ("python", "python-clones-1")
     ]
     for cohort in payload["cohorts"]:
         assert [item["metric_id"] for item in cohort["current"]["metrics"]] == METRIC_IDS

@@ -18,5 +18,6 @@ Not measured
   Pattern verbosity: - | source error
   Clone verbosity: - | source error
   Erosion: - | source error
+  Combined verbosity: - | source error
 
 1 diagnostic | use explain for source evidence

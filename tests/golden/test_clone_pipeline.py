@@ -8,6 +8,7 @@ from slop_measure.api import AnalysisConfig, DirectorySourceReference, SnapshotR
 from slop_measure.domain.source import ProjectPath
 from slop_measure.errors import AnalysisFailure
 from slop_measure.reporting.json import serialize_report
+from slop_measure.reporting.terminal import render_explanation, render_snapshot
 
 SOURCE = "def work(source):\n    value = source + 1\n    return value\n"
 
@@ -92,3 +93,22 @@ def test_clone_failure_invalidates_m3_and_combined_but_not_m2_or_m4(
     assert metrics(production.files[1])["m3.clone-verbosity"]["state"] == "measured"
     with pytest.raises(AnalysisFailure):
         scan(request(clone_project, strict=True))
+
+
+def test_clone_summary_and_explanation_expose_owned_group_members(clone_project: Path) -> None:
+    report = scan(request(clone_project))
+    summary = render_snapshot(report, ascii=True, color=False, width=100)
+    assert "Clone verbosity  66.7%" in summary
+    assert "Combined verbosity  66.7%" in summary
+    assert "4 / 6 SLOC" in summary
+    assert "Clone groups" in summary
+    assert report.clone_groups[0].id in summary
+    detail = render_explanation(report, "a.py", ascii=True, color=False, width=100)
+    assert "Clone groups" in detail
+    assert report.clone_groups[0].id in detail
+    assert "a.py:2-3" in detail
+    assert "b.py:2-3" in detail
+    assert "tests/test_one.py" not in detail
+    selected = render_explanation(report, "a.py", symbol="work", ascii=True, color=False, width=100)
+    assert report.clone_groups[0].id in selected
+    assert "b.py:2-3" in selected
