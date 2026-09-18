@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 from slop_measure import __version__
 from slop_measure.api import compare, scan
 from slop_measure.cli import app
-from slop_measure.config import AnalysisConfig
+from slop_measure.config import AnalysisConfig, load_analysis_config
 from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
 from slop_measure.domain.source import DirectorySourceReference, GitSourceReference
 from slop_measure.errors import AnalysisFailure
@@ -20,10 +20,17 @@ FIXTURE = Path(__file__).parents[1] / "fixtures" / "basic"
 METRIC_IDS = ["m1.loc-delta", "m2.pattern-verbosity", "m3.clone-verbosity", "m4.erosion"]
 
 
+@pytest.fixture(autouse=True)
+def isolate_parent_repository(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+
+
 @pytest.fixture
 def basic_project(tmp_path: Path) -> Path:
-    for source in FIXTURE.rglob("*.source"):
-        destination = tmp_path / source.relative_to(FIXTURE).with_suffix("")
+    for source in FIXTURE.rglob("*"):
+        if not source.is_file() or source.name == "expected.json":
+            continue
+        destination = tmp_path / source.relative_to(FIXTURE)
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(source.read_bytes())
     return tmp_path
@@ -105,6 +112,23 @@ def test_json_is_stable_sorted_indented_and_cli_equivalent(basic_project: Path) 
     result = CliRunner().invoke(app, ["scan", str(basic_project), "--json"])
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout) == json.loads(serialized)
+
+
+def test_cli_defaults_to_current_directory_and_loads_root_config(
+    basic_project: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (basic_project / "slop.toml").write_text("complexity_threshold = 12\n", encoding="utf-8")
+    monkeypatch.chdir(basic_project)
+    result = CliRunner().invoke(app, ["scan", "--json"])
+    assert result.exit_code == 0, result.output
+    expected = scan(
+        SnapshotRequest(
+            target=DirectorySourceReference(root=basic_project),
+            config=load_analysis_config(basic_project),
+        )
+    )
+    assert json.loads(result.stdout) == expected.model_dump(mode="json")
+    assert json.loads(result.stdout)["provenance"]["config"]["complexity_threshold"] == 12
 
 
 def test_strict_parse_failure_raises_and_cli_returns_three(basic_project: Path) -> None:

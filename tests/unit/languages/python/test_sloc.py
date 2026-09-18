@@ -61,3 +61,8 @@ def test_classifier_reuses_the_supplied_tree(monkeypatch: pytest.MonkeyPatch) ->
 
     monkeypatch.setattr(ast, "parse", reject_parse)
     assert classify_sloc(source, tree) == (1,)
+
+
+def test_multiline_fstring_semicolon_content_is_a_source_line() -> None:
+    source = 'value = f"""first\n;\nlast\n"""\n'
+    assert classify_sloc(source, ast.parse(source)) == (1, 2, 3, 4)

@@ -15,6 +15,7 @@ from slop_measure.domain.evidence import (
     CoverageState,
     DiagnosticSeverity,
     EvidenceCapability,
+    FileEvidence,
     LanguageEvidence,
     ParseState,
 )
@@ -22,6 +23,11 @@ from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.source import Cohort, DirectorySourceIdentity, SourceDocument
 from slop_measure.languages.registry import LanguageRegistry
 from slop_measure.sources.filesystem import FilesystemSourceProvider
+
+
+@pytest.fixture(autouse=True)
+def isolate_parent_repository(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
 
 
 @dataclass(frozen=True)
@@ -263,6 +269,73 @@ def test_source_inventory_rejects_scored_coverage() -> None:
                         "language": "python",
                         "file_count": 1,
                         "sloc": 1,
+                    }
+                ]
+            }
+        )
+
+
+def test_directory_walk_errors_are_diagnostics_not_silent_omissions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    write(tmp_path, "healthy.py")
+
+    def walk(root, topdown=True, onerror=None, followlinks=False):
+        yield str(root), ["blocked"], ["healthy.py"]
+        if onerror is not None:
+            onerror(PermissionError(13, "fixture directory denied", str(tmp_path / "blocked")))
+
+    monkeypatch.setattr(os, "walk", walk)
+    inventory = provider(tmp_path).inventory()
+    assert [item.path.root for item in inventory.documents] == ["healthy.py"]
+    assert len(inventory.diagnostics) == 1
+    assert inventory.diagnostics[0].code == "source.read-error"
+    assert inventory.diagnostics[0].severity is DiagnosticSeverity.ERROR
+    assert inventory.diagnostics[0].path is not None
+    assert inventory.diagnostics[0].path.root == "blocked"
+
+
+@pytest.mark.parametrize("conflict", ["duplicate-documents", "duplicate-failures", "overlap"])
+def test_inventory_paths_have_one_discovery_outcome(conflict: str) -> None:
+    document = SourceDocument.model_validate(
+        {"path": "app.py", "content": b"x = 1\n", "language": "python", "cohort": "production"}
+    )
+    failed = FileEvidence.model_validate(
+        {
+            "path": "app.py",
+            "language": "python",
+            "cohort": "production",
+            "sloc": 0,
+            "sloc_lines": (),
+            "parse_state": "failed",
+        }
+    )
+    values = (
+        {"documents": (document, document)}
+        if conflict == "duplicate-documents"
+        else {"failed_files": (failed, failed)}
+        if conflict == "duplicate-failures"
+        else {"documents": (document,), "failed_files": (failed,)}
+    )
+    with pytest.raises(ValidationError):
+        SourceInventory.model_validate(values)
+
+
+@pytest.mark.parametrize("state,lines", [("parsed", ()), ("failed", (1,))])
+def test_inventory_failure_evidence_requires_failed_state_and_no_source_lines(
+    state: str, lines: tuple[int, ...]
+) -> None:
+    with pytest.raises(ValidationError):
+        SourceInventory.model_validate(
+            {
+                "failed_files": [
+                    {
+                        "path": "app.py",
+                        "language": "python",
+                        "cohort": "production",
+                        "sloc": len(lines),
+                        "sloc_lines": lines,
+                        "parse_state": state,
                     }
                 ]
             }
