@@ -1,0 +1,83 @@
+schema_version = "1.0"
+profile_id = "py-2026.1"
+language = "python"
+min_samples = 5
+
+[settings]
+clone_min_statements = 2
+clone_min_sloc = 6
+complexity_threshold = 10
+enabled_rules = []
+disabled_rules = []
+
+[[projects]]
+name = "flask"
+repository = "https://github.com/pallets/flask.git"
+revision = "ffc68840f821fb0a4c41a7b2b4eaad6d71f539b7"
+tag = "1.1.1"
+release_date = "2019-07-08"
+license = "BSD-3-Clause"
+license_file = "LICENSE.rst"
+production_patterns = ["src/flask/**/*.py"]
+test_patterns = ["tests/**/*.py"]
+exclusions = [".git/**", "tests/test_apps/**"]
+
+[[projects]]
+name = "requests"
+repository = "https://github.com/psf/requests.git"
+revision = "aeda65bbe57ac5edbcc2d80db85d010befb7d419"
+tag = "v2.22.0"
+release_date = "2019-05-15"
+license = "Apache-2.0"
+license_file = "LICENSE"
+production_patterns = ["requests/**/*.py"]
+test_patterns = ["tests/**/*.py"]
+exclusions = [".git/**", "tests/testserver/**"]
+
+[[projects]]
+name = "pytest"
+repository = "https://github.com/pytest-dev/pytest.git"
+revision = "068ef90b92a9e9205af31cb3d82e7d2a433ff969"
+tag = "5.2.0"
+release_date = "2019-09-28"
+license = "MIT"
+license_file = "LICENSE"
+production_patterns = ["src/_pytest/**/*.py", "src/pytest.py"]
+test_patterns = ["testing/**/*.py"]
+exclusions = [".git/**", "testing/example_scripts/**", "testing/freeze/**"]
+
+[[projects]]
+name = "sphinx"
+repository = "https://github.com/sphinx-doc/sphinx.git"
+revision = "bea7b5d4777d6b1216213b6c58eee0c3d133ca94"
+tag = "v2.2.0"
+release_date = "2019-08-19"
+license = "BSD-2-Clause"
+license_file = "LICENSE"
+production_patterns = ["sphinx/**/*.py"]
+test_patterns = ["tests/**/*.py", "sphinx/**/tests/**/*.py"]
+exclusions = [".git/**", "tests/roots/**", "sphinx/util/smartypants.py"]
+
+[[projects]]
+name = "attrs"
+repository = "https://github.com/python-attrs/attrs.git"
+revision = "7fcd616aabb4067b07a5bded22bc578d35f9e14d"
+tag = "19.2.0"
+release_date = "2019-10-01"
+license = "MIT"
+license_file = "LICENSE"
+production_patterns = ["src/attr/**/*.py"]
+test_patterns = ["tests/**/*.py", "conftest.py"]
+exclusions = [".git/**"]
+
+[[projects]]
+name = "networkx"
+repository = "https://github.com/networkx/networkx.git"
+revision = "fd0ecd22723cb30a365511d324841a85caad589c"
+tag = "networkx-2.4"
+release_date = "2019-10-16"
+license = "BSD-3-Clause"
+license_file = "LICENSE.txt"
+production_patterns = ["networkx/**/*.py"]
+test_patterns = ["networkx/**/tests/**/*.py"]
+exclusions = [".git/**"]
