@@ -4,10 +4,11 @@ These tests interrogate Radon directly. They are executable research notes, not 
 of slop.measure production code.
 """
 
+import ast
 from textwrap import dedent
 
 import pytest
-from radon.complexity import cc_visit
+from radon.complexity import cc_visit, cc_visit_ast
 from radon.raw import analyze
 from radon.visitors import Class, Function
 
@@ -161,3 +162,98 @@ def test_syntax_errors_propagate_with_source_location() -> None:
         cc_visit("def broken(:\n    pass\n")
 
     assert caught.value.lineno == 1
+
+
+@pytest.mark.parametrize(
+    ("body", "with_assertions", "without_assertions"),
+    [
+        ("assert value\nassert value\nassert value", 4, 1),
+        ("assert value and other or third", 2, 1),
+        ("assert value, (other if third else value)", 2, 1),
+        ("if value:\n    assert other\nfor item in values:\n    assert item", 5, 3),
+        ("self.assertEqual(value, other)\nself.assertTrue(value)", 1, 1),
+        ("self.assertTrue(value and other or third)", 3, 3),
+    ],
+)
+def test_no_assert_removes_assert_statements_but_not_call_argument_decisions(
+    body: str, with_assertions: int, without_assertions: int
+) -> None:
+    tree = ast.parse("def example():\n" + "\n".join("    " + line for line in body.splitlines()))
+    full = cc_visit_ast(tree, no_assert=False)[0]
+    reduced = cc_visit_ast(tree, no_assert=True)[0]
+    assert (full.complexity, reduced.complexity) == (with_assertions, without_assertions)
+    # Radon counts one per Assert and never traverses its test/message expressions.
+    # Ordinary calls add no point, but their boolean arguments are still visited.
+    assert full.complexity - reduced.complexity == sum(
+        isinstance(node, ast.Assert) for node in ast.walk(tree)
+    )
+
+
+def test_no_assert_propagates_to_async_closures_and_class_methods_without_parent_leakage() -> None:
+    tree = ast.parse(
+        dedent(
+            """\
+            def outer(flag):
+                assert flag
+                async def inner(values):
+                    assert values
+                    if values:
+                        assert values[0]
+                    return values
+                return inner
+
+            class Checks:
+                assert True
+                def check(self, flag):
+                    assert flag
+                    def nested():
+                        assert flag
+                        assert flag
+                    return nested
+            """
+        )
+    )
+    observed = []
+    for no_assert in (False, True):
+        blocks = cc_visit_ast(tree, no_assert=no_assert)
+        outer = next(
+            block for block in blocks if isinstance(block, Function) and block.name == "outer"
+        )
+        method = next(
+            block for block in blocks if isinstance(block, Function) and block.name == "check"
+        )
+        observed.append(
+            (
+                outer.complexity,
+                outer.closures[0].complexity,
+                method.complexity,
+                method.closures[0].complexity,
+            )
+        )
+    assert observed == [(2, 4, 2, 3), (1, 2, 1, 1)]
+    # Each delta owns only assertions in that callable's lexical scope. Class-body
+    # assertions do not belong to methods; nested assertions do not inflate parents.
+    assert tuple(full - reduced for full, reduced in zip(*observed, strict=True)) == (1, 2, 1, 2)
+    # A naive ast.walk(outer) count would include its inner async function too.
+    assert sum(isinstance(node, ast.Assert) for node in ast.walk(tree.body[0])) == 3
+
+
+def test_nested_class_assertions_do_not_change_enclosing_function_complexity() -> None:
+    tree = ast.parse(
+        "def outer():\n"
+        "    assert True\n"
+        "    class Local:\n"
+        "        assert True\n"
+        "        def method(self):\n"
+        "            assert True\n"
+        "            assert True\n"
+        "    return Local\n"
+    )
+    assert cc_visit_ast(tree, no_assert=False)[0].complexity == 2
+    assert cc_visit_ast(tree, no_assert=True)[0].complexity == 1
+    # The locally declared class requires separate AST-based callable enumeration.
+    local = tree.body[0].body[1]
+    full = cc_visit_ast(local, no_assert=False)
+    reduced = cc_visit_ast(local, no_assert=True)
+    assert next(block for block in full if isinstance(block, Function)).complexity == 3
+    assert next(block for block in reduced if isinstance(block, Function)).complexity == 1
