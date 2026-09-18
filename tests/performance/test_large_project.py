@@ -16,7 +16,7 @@ from slop_measure.config import AnalysisConfig
 _ROOT = Path(__file__).resolve().parents[2]
 
 
-def run_benchmark(work: Path, output: Path, *size: str) -> dict:
+def run_benchmark(work: Path, output: Path, *size: str, timeout: int = 300) -> dict:
     process = subprocess.run(  # noqa: S603
         [
             sys.executable,
@@ -31,7 +31,7 @@ def run_benchmark(work: Path, output: Path, *size: str) -> dict:
         capture_output=True,
         text=True,
         check=False,
-        timeout=300,
+        timeout=timeout,
     )
     assert process.returncode == 0, process.stdout + process.stderr
     return json.loads(output.read_text(encoding="utf-8"))
@@ -72,7 +72,9 @@ def test_tiny_benchmark_counts_owned_sloc_and_repeats_source_hash_without_overwr
     os.environ.get("SLOP_RUN_PERFORMANCE") != "1", reason="Explicit 100k SLOC benchmark"
 )
 def test_default_benchmark_analyzes_one_hundred_thousand_sloc(tmp_path: Path) -> None:
-    result = run_benchmark(tmp_path / "work", tmp_path / "benchmark.json")
+    # The first measured baseline remained CPU-active past 300 seconds. A
+    # performance baseline is not an approved execution-time budget.
+    result = run_benchmark(tmp_path / "work", tmp_path / "benchmark.json", timeout=1800)
     assert result["files"] == 100
     assert result["sloc"] == 100_000
     assert result["diagnostics_count"] == 0
