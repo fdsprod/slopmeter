@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -77,3 +78,30 @@ def test_default_benchmark_analyzes_one_hundred_thousand_sloc(tmp_path: Path) ->
     assert result["diagnostics_count"] == 0
     assert result["elapsed_seconds"] > 0
     assert result["peak_rss_bytes"] > 0
+
+
+def test_benchmark_owns_its_source_even_inside_parent_git_ignored_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    executable = shutil.which("git")
+    assert executable is not None
+    monkeypatch.delenv("GIT_CEILING_DIRECTORIES", raising=False)
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    subprocess.run(  # noqa: S603
+        [executable, "init", "--quiet", str(repository)],
+        check=True,
+        capture_output=True,
+    )
+    (repository / ".gitignore").write_text("cache/**\n", encoding="utf-8")
+    result = run_benchmark(
+        repository / "cache",
+        tmp_path / "ignored-parent-result.json",
+        "--files",
+        "2",
+        "--functions-per-file",
+        "3",
+    )
+    assert result["files"] == 2
+    assert result["sloc"] == 60
+    assert result["diagnostics_count"] == 0
