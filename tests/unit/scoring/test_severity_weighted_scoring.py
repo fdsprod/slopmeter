@@ -110,9 +110,7 @@ def test_corpus_builder_selects_severity_only_for_version_two_erosion(
     )
 
 
-def test_packaged_profiles_preserve_their_versioned_transform_policies() -> (
-    None
-):
+def test_packaged_profiles_preserve_their_versioned_transform_policies() -> None:
     for identifier, expected in (("py-2026.1", "percentile"), ("py-2026.2", "severity-weighted")):
         profile = load_profile(identifier)
         assert profile is not None

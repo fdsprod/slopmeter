@@ -506,6 +506,7 @@
       "Combined verbosity is the union of M2 and M3 lines, not their sum. It avoids counting a line twice.",
       "Check metric versions in provenance. M4 version 2 is gradual excess complexity: sum(max(0, CC - threshold) * sqrt(SLOC)) / sum(CC * sqrt(SLOC)). Size weights the result; a single CC11 callable at threshold 10 measures 1/11. Legacy M4 version 1 is binary: all mass of each above-threshold callable counts.",
       "Project metrics combine their underlying totals, not an average of file scores. The score model and contribution weights are recorded with each scored result.",
+      "A severity-weighted contribution is percentile * raw value * weight. The new py-2026.2 profile uses this for erosion so a small excess does not dominate just because it is uncommon. Individual metric percentiles remain reference ranks; they are not the adjusted contribution or the overall score.",
       "A rules catalog lists enabled checks; it is not evidence that source was scanned."
     ],
     "purpose": "Use this report to prioritize source review. A high score means inspect; it does not require a refactor.",

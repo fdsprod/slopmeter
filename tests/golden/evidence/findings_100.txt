@@ -1,5 +1,6 @@
 slop.measure  findings
 2 pattern findings | 0 clone groups | 1 eroded callables
+No analysis errors reported | 0 diagnostic(s) | 0 excluded directories (contents not scanned)
 
 Pattern findings
   finding-0001 | current
