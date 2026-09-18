@@ -57,10 +57,9 @@ def test_callable_mass_is_derived_and_json_round_trip_validates_projections() ->
     assert FunctionEvidence.model_validate_json(function.model_dump_json()) == function
     with pytest.raises(ValidationError):
         function.cyclomatic_complexity = 1
-    with pytest.raises((ValidationError, AttributeError)):
-        function.sloc = 8
-    with pytest.raises((ValidationError, AttributeError)):
-        function.mass = 8
+    for projection in ("sloc", "mass"):
+        with pytest.raises((ValidationError, AttributeError)):
+            setattr(function, projection, 8)
 
 
 @pytest.mark.parametrize(
@@ -168,12 +167,14 @@ def test_language_function_outcomes_reconcile_with_parsed_file_evidence(change: 
 def test_language_functions_are_a_read_only_flattened_view_of_canonical_outcomes() -> None:
     evidence = LanguageEvidence.model_validate(language_payload())
     assert isinstance(evidence.function_analyses, tuple)
-    assert evidence.functions == evidence.function_analyses[0].functions
+    outcome = evidence.function_analyses[0]
+    assert isinstance(outcome, AnalyzedFunctions)
+    assert evidence.functions == outcome.functions
     assert "functions" not in evidence.model_dump(mode="json")
     assert "function_analyses" in evidence.model_dump(mode="json")
     assert LanguageEvidence.model_validate_json(evidence.model_dump_json()) == evidence
     with pytest.raises((ValidationError, AttributeError)):
-        evidence.functions = ()
+        evidence.functions = ()  # type: ignore[reportAttributeAccessIssue]
 
 
 def test_failed_parse_file_needs_no_function_analysis() -> None:

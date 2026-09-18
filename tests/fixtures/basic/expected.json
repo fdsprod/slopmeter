@@ -10,9 +10,9 @@
     ["scored", "test", "python", 1, 2, null],
     ["unsupported", "production", "md", 1, 0, "no language adapter"]
   ],
-  "cohort_metric_reasons": {
+  "cohort_metric_results": {
     "production": ["no-baseline", "parse-failed", "parse-failed", "parse-failed"],
-    "test": ["no-baseline", "unsupported-capability", "unsupported-capability", "unsupported-capability"]
+    "test": ["no-baseline", "unsupported-capability", "unsupported-capability", {"value": 0}]
   },
   "score_reasons": {"production": "required-metric-unavailable", "test": "required-metric-unavailable"},
   "diagnostics": [["diagnostic-0001", "current", "python.parse-error", "bad.py", "error"]]

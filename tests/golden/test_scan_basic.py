@@ -77,8 +77,13 @@ def test_basic_scan_matches_hand_counted_manifest_and_never_executes_source(
                 for item in payload["coverage"]
             ]
         ),
-        "cohort_metric_reasons": {
-            cohort["cohort"]: [item["reason"] for item in cohort["current"]["metrics"]]
+        "cohort_metric_results": {
+            cohort["cohort"]: [
+                item["reason"]
+                if item["state"] == "unavailable"
+                else {"value": item["raw"]["value"]}
+                for item in cohort["current"]["metrics"]
+            ]
             for cohort in payload["cohorts"]
         },
         "score_reasons": {
@@ -101,7 +106,7 @@ def test_basic_scan_matches_hand_counted_manifest_and_never_executes_source(
     assert report.provenance.tool_version == __version__
     assert report.provenance.config == AnalysisConfig()
     assert [(item.language, item.adapter_version) for item in report.provenance.analyzers] == [
-        ("python", "python-files-1")
+        ("python", "python-functions-1")
     ]
     for cohort in payload["cohorts"]:
         assert [item["metric_id"] for item in cohort["current"]["metrics"]] == METRIC_IDS
@@ -198,7 +203,7 @@ def test_empty_scan_retains_both_python_cohorts(tmp_path: Path) -> None:
             "no-baseline",
             "no-source-lines",
             "no-source-lines",
-            "no-source-lines",
+            "no-functions",
         ]
 
 
