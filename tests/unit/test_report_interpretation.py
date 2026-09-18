@@ -303,3 +303,31 @@ def test_compact_metrics_keep_absolute_impact_in_the_measurement_section() -> No
         assert f"{numerator} / {denominator} mass" in erosion
         assert f"{affected} / {sloc} SLOC" in verbosity
         assert "excess" not in erosion.lower()  # Historical v1 has a different numerator.
+
+
+def test_verbose_test_erosion_shows_assertion_and_control_flow_evidence(project: Path) -> None:
+    tests = project / "tests"
+    tests.mkdir()
+    source = "def test_flow(value):\n    assert value\n    assert value is not None\n"
+    source += "    if value:\n        value -= 1\n" * 11
+    source += "    return value\n"
+    (tests / "test_flow.py").write_text(source, encoding="utf-8")
+    report = scan(
+        SnapshotRequest(
+            target=DirectorySourceReference(root=project),
+            config=AnalysisConfig(calibration_profile="__raw__"),
+        )
+    )
+    for output in (
+        render_snapshot(report, scope="all", width=240, ascii=True, color=False, verbose=True),
+        render_explanation(
+            report, "tests/test_flow.py", width=240, ascii=True, color=False, verbose=True
+        ),
+    ):
+        section = output.split("How to read this report", 1)[0].lower()
+        function_row = next(
+            line for line in section.splitlines() if "test_flow:" in line and "cc" in line
+        )
+        assert "assertions 2" in function_row
+        assert "control-flow cc 12" in function_row
+        assert "cc 14" in function_row
