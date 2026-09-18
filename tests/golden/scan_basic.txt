@@ -11,9 +11,9 @@ Production | Python | 2 files | 4 SLOC
   Score unavailable | required metric unavailable
 
 Files (path order)
-  File | Patterns | Erosion
-  app.py | 0.0% | 0.0%
-  bad.py | - | -
+  File | Patterns | Clones | Erosion
+  app.py | 0.0% | 0.0% | 0.0%
+  bad.py | - | - | -
 
 Not measured
   Pattern verbosity: - | source error

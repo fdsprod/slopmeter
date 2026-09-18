@@ -15,14 +15,20 @@ missing
 [##########----------]  2 / 4 SLOC
 
 Callables
-  a.py:1-2 f: CC 2, SLOC 2, mass 
-2.82843, assertions 0, control-flow CC
-2
-  a.py:4-5 g: CC 1, SLOC 2, mass 
-1.41421, assertions 0, control-flow CC
-1
+  a.py:1-2 f: CC 2, SLOC 2, full-CC 
+mass 2.82843, assertions 0, 
+control-flow CC 2
+    M4 basis: full-cc; effective CC 2;
+effective mass 2.82843; excess mass 0;
+threshold > 10
+  a.py:4-5 g: CC 1, SLOC 2, full-CC 
+mass 1.41421, assertions 0, 
+control-flow CC 1
+    M4 basis: full-cc; effective CC 1;
+effective mass 1.41421; excess mass 0;
+threshold > 10
 
-Findings (2)
+Pattern findings (2)
   a.py:2-2 py.boolean-conditional: 
 Replace the boolean conditional with a
 boolean conversion.

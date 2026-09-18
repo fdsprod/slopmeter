@@ -102,7 +102,8 @@
             "score": {
               "reason": "required-metric-unavailable",
               "state": "unavailable"
-            }
+            },
+            "source_sha256": "39b5f16063bb25e4400ae41cb4332c9dfd35ab98f30811771b7aba5e89dcdb1c"
           },
           {
             "evidence": {
@@ -191,7 +192,8 @@
             "score": {
               "reason": "required-metric-unavailable",
               "state": "unavailable"
-            }
+            },
+            "source_sha256": "85c2d70f5d83a430d30c40ff0c41d06a377559a85a7e1a4e7abae6580f1d008a"
           },
           {
             "evidence": {
@@ -280,7 +282,8 @@
             "score": {
               "reason": "required-metric-unavailable",
               "state": "unavailable"
-            }
+            },
+            "source_sha256": "5149923659f6e9950869963733df011cfec4c017feeaea1d15794727366475a9"
           },
           {
             "evidence": {
@@ -369,7 +372,8 @@
             "score": {
               "reason": "required-metric-unavailable",
               "state": "unavailable"
-            }
+            },
+            "source_sha256": "eccc39336aa8fb60a3dd2e3eb2c56a0f2759b67df27ac8a27a48f22dd691fb34"
           }
         ],
         "metrics": [
@@ -790,7 +794,8 @@
             "score": {
               "reason": "required-metric-unavailable",
               "state": "unavailable"
-            }
+            },
+            "source_sha256": "07ed779b7ff1df84c6e24655ab531f9e73434e122d9b84440633e991fbe4a1a9"
           },
           {
             "evidence": {
@@ -881,7 +886,8 @@
             "score": {
               "reason": "required-metric-unavailable",
               "state": "unavailable"
-            }
+            },
+            "source_sha256": "c56878563d75d5caf5215ae4bf3e02b41f86dc8e117d370d52e3bf6448731a91"
           },
           {
             "evidence": {
@@ -970,7 +976,8 @@
             "score": {
               "reason": "required-metric-unavailable",
               "state": "unavailable"
-            }
+            },
+            "source_sha256": "5149923659f6e9950869963733df011cfec4c017feeaea1d15794727366475a9"
           },
           {
             "evidence": {
@@ -1059,7 +1066,8 @@
             "score": {
               "reason": "required-metric-unavailable",
               "state": "unavailable"
-            }
+            },
+            "source_sha256": "eccc39336aa8fb60a3dd2e3eb2c56a0f2759b67df27ac8a27a48f22dd691fb34"
           }
         ],
         "metrics": [

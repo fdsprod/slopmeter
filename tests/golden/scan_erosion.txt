@@ -13,10 +13,10 @@ Production | Python | 3 files | 5 SLOC
   Combined verbosity  0.0% [--------------------]  0 / 5 SLOC
 
 Files (path order)
-  File | Patterns | Erosion
-  constant.py | 0.0% | -
-  high.py | 0.0% | 9.1%
-  low.py | 0.0% | 0.0%
+  File | Patterns | Clones | Erosion
+  constant.py | 0.0% | 0.0% | -
+  high.py | 0.0% | 0.0% | 9.1%
+  low.py | 0.0% | 0.0% | 0.0%
 
 How to read this report
 Use this report to prioritize source review. A high score means inspect; it does

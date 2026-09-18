@@ -13,9 +13,9 @@ Production | Python | 2 files | 20 SLOC
   Erosion  20.0% [####----------------]  40 / 200 mass
 
 Files (score order)
-  File | Score | Patterns | Erosion
-  a.py | 75.0/100 | - | 30.0%
-  b.py | 25.0/100 | - | 10.0%
+  File | Score | Patterns | Clones | Erosion
+  a.py | 75.0/100 | - | - | 30.0%
+  b.py | 25.0/100 | - | - | 10.0%
 
 How to read this report
 Use this report to prioritize source review. A high score means inspect; it does
