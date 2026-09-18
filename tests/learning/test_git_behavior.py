@@ -177,3 +177,70 @@ def test_diff_reports_an_exact_rename_between_revisions(git_repository: Path) ->
 
     # Observed: comparing committed revisions does not alter the current checkout.
     assert run_git(git_repository, "status", "--porcelain=v1").stdout == b""
+
+
+def test_modified_rename_metadata_has_three_nul_fields(git_repository: Path) -> None:
+    original = b"".join(f"VALUE_{index} = {index}\n".encode() for index in range(30))
+    (git_repository / "before name.py").write_bytes(original)
+    baseline = commit_all(git_repository, "Before edited rename")
+    run_git(git_repository, "mv", "before name.py", "after name.py")
+    (git_repository / "after name.py").write_bytes(original + b"ADDED = 1\n")
+    current = commit_all(git_repository, "Edited rename")
+    fields = nul_fields(
+        run_git(
+            git_repository,
+            "diff",
+            "--name-status",
+            "-z",
+            "-M",
+            baseline.decode(),
+            current.decode(),
+            "--",
+        ).stdout
+    )
+    # Observed: edited renames carry a similarity score below100 and preserve
+    # spaces in separately NUL-delimited source and destination names.
+    assert len(fields) == 3
+    assert fields[0].startswith(b"R")
+    assert 50 <= int(fields[0][1:]) < 100
+    assert fields[1:] == [b"before name.py", b"after name.py"]
+
+
+def test_ls_tree_modes_distinguish_regular_symlink_and_gitlink_without_checkout(
+    git_repository: Path,
+) -> None:
+    (git_repository / "regular.py").write_bytes(b"VALUE = 1\n")
+    parent = commit_all(git_repository, "Regular source")
+    blob = run_git(git_repository, "rev-parse", "HEAD:regular.py").stdout.strip().decode()
+    run_git(git_repository, "update-index", "--add", "--cacheinfo", f"120000,{blob},linked.py")
+    run_git(
+        git_repository, "update-index", "--add", "--cacheinfo", f"160000,{parent.decode()},nested"
+    )
+    run_git(git_repository, "commit", "--quiet", "--message", "Special tree entries")
+    fields = nul_fields(run_git(git_repository, "ls-tree", "-r", "-z", "HEAD").stdout)
+    records = {}
+    for field in fields:
+        metadata, path = field.split(b"\t", 1)
+        mode, object_type, object_id = metadata.split(b" ")
+        records[path] = (mode, object_type, object_id)
+    # Observed: index-created modes expose symlinks and submodules without OS
+    # symlink privileges or fetching a nested repository. gitlinks are commits.
+    assert records[b"regular.py"] == (b"100644", b"blob", blob.encode())
+    assert records[b"linked.py"] == (b"120000", b"blob", blob.encode())
+    assert records[b"nested"] == (b"160000", b"commit", parent)
+
+
+def test_revision_resolution_uses_end_of_options_and_requires_a_commit(
+    git_repository: Path,
+) -> None:
+    (git_repository / "app.py").write_bytes(b"VALUE = 1\n")
+    revision = commit_all(git_repository, "Resolve source")
+    resolved = run_git(git_repository, "rev-parse", "--verify", "--end-of-options", "HEAD^{commit}")
+    assert resolved.stdout.strip() == revision
+    # Observed: optionlike revisions remain operands and fail; they do not
+    # change rev-parse behavior. A blob object also fails the commit peel.
+    for invalid in ("missing^{commit}", "--help^{commit}", "HEAD:app.py^{commit}"):
+        result = run_git(
+            git_repository, "rev-parse", "--verify", "--end-of-options", invalid, check=False
+        )
+        assert result.returncode != 0
