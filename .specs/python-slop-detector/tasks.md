@@ -10,14 +10,33 @@ runnable end-to-end capability through the API, core pipeline, report model, JSO
 and terminal interface. A bullet must pass its validation gate before work begins on
 the next bullet.
 
-> [!IMPORTANT]
-> The repository is initialized but has no commits. Create the first commit after the
-> project scaffold and dependency characterization so later metric changes have a
-> stable baseline.
+Current checkpoint: Q01-Q05, T01-T08, and T10 are complete. Q06 waits for the
+architecture packages, and Q07 waits for the first end-to-end scan. The retained
+learning tests record the external behavior that production adapters may rely on.
 
-Current checkpoint: Q01-Q05 and T01-T04 are complete. Q06 waits for the architecture
-packages, and Q07 waits for the first end-to-end scan. The retained learning tests
-record the external behavior that production adapters may rely on.
+The recovered contract batch has passed its focused checks. TB-1 remains incomplete
+until the CLI and API can scan a fixture end to end:
+
+- [x] T06: Immutable snapshot and comparison request unions.
+- [x] T07: Diagnostics, coverage, exact file SLOC evidence, and language evidence.
+- [x] T08: Measured and unavailable metrics with validated ratio arithmetic.
+- [x] T10: Immutable configuration with tested file and CLI precedence.
+- [x] Validate 200 tests, Ruff format/lint, and Pyright. Coverage reports 99 percent.
+- [ ] T09: Report envelope, provenance, cohorts, and analysis variants.
+- [ ] T11-T22: Adapter boundary and the first complete scan.
+
+Language evidence currently accepts only empty pattern, function, and clone
+collections. T23, T28, and the clone slice add their owned element contracts before adapters
+emit those facts. File SLOC counts are checked immutable projections of exact line
+identities. Metric values are immutable calculation projections with ratio inputs
+checked at construction.
+
+The report work must resolve these remaining contract decisions before aggregation:
+
+- [ ] Define how report-owned diagnostic IDs resolve to diagnostic records.
+- [ ] Represent missing calibration as an explicit score-unavailable report state.
+- [ ] Represent unsupported evidence capabilities during TB-1 without false zeros
+  or claiming an analyzer failed when it did not run.
 
 The dependency graph keeps M1 work independent from M2-M4 after the first working
 scan. The quality gate is established before dependency characterization. Calibration
@@ -304,7 +323,7 @@ tests [new]
 | ID | Deliverable | Location | Depends on | Done when |
 |---|---|---|---|---|
 | T05 | Define project paths, source identities, source references, documents, and cohorts | `src/slop_measure/domain/source.py` | T01 | Invalid absolute report paths and unknown cohorts fail validation |
-| T06 | Define snapshot and comparison request tagged unions | `src/slop_measure/domain/requests.py` | T05 | A snapshot cannot contain a baseline and a comparison requires two references |
+| T06 | Define snapshot and comparison request tagged unions | `src/slop_measure/domain/requests.py` | T05, T10 | A snapshot cannot contain a baseline and a comparison requires two references |
 | T07 | Define diagnostics, coverage, file evidence, and language evidence | `src/slop_measure/domain/evidence.py` | T05 | Adapter output validates without third-party parser objects |
 | T08 | Define measured and unavailable metric variants | `src/slop_measure/domain/metrics.py` | T05 | Zero and unavailable remain distinct valid states |
 | T09 | Define provenance, cohort report, snapshot analysis, comparison analysis, and report envelope | `src/slop_measure/domain/reports.py` | T06-T08 | JSON schema contains explicit discriminators |

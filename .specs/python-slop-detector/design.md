@@ -719,6 +719,19 @@ Configuration loads from `[tool.slop]` in `pyproject.toml` or from `slop.toml`. 
 arguments override file configuration. The resolved immutable configuration appears
 in report provenance.
 
+The loader receives the resolved target root and reads only that directory. Settings
+merge by field in this order, with later values taking precedence:
+
+| Priority | Source |
+|---|---|
+| 1 | Built-in defaults |
+| 2 | `[tool.slop]` in `pyproject.toml` |
+| 3 | Top-level settings in `slop.toml` |
+| 4 | Explicit CLI overrides |
+
+Collections replace the earlier collection as a whole. Unknown settings, malformed
+TOML, and rule identifiers present in both enabled and disabled sets fail validation.
+
 The MVP exposes:
 
 - Production and test path patterns
@@ -730,8 +743,9 @@ The MVP exposes:
 - Default hotspot count
 - Strict parse and analyzer failure behavior
 
-Configuration lookup stops at the target Git root or filesystem root. It does not
-read unrelated user-global configuration in the first release.
+The source-discovery caller resolves the target Git root or filesystem root before
+calling the loader. Root discovery belongs to the source-provider slice. The loader
+does not search parent directories or read user-global configuration.
 
 ## Error Handling
 
