@@ -6,10 +6,10 @@ import pytest
 from test_filesystem import InventoryAdapter, coverage_rows, git, write
 
 from slop_measure.config import AnalysisConfig
-from slop_measure.domain.source import GitSourceIdentity
+from slop_measure.domain.source import DirectorySourceIdentity, GitSourceIdentity
 from slop_measure.errors import InvalidSource
 from slop_measure.languages.registry import LanguageRegistry
-from slop_measure.sources.git import GitSourceProvider
+from slop_measure.sources.git import GitSourceProvider, rename_pairs
 
 
 def test_invalid_source_is_a_value_error() -> None:
@@ -140,3 +140,56 @@ def test_nonrepository_nested_root_and_missing_git_raise_invalid_source(
     monkeypatch.setenv("PATH", "")
     with pytest.raises(InvalidSource):
         provider(repository).inventory()
+
+
+@pytest.mark.parametrize("variable", ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"])
+def test_requested_repository_wins_over_ambient_git_locations(
+    repository: Path, monkeypatch: pytest.MonkeyPatch, variable: str
+) -> None:
+    write(repository, "requested.py", b"REQUESTED = 1\n")
+    revision = commit(repository)
+    other = repository.parent / f"{repository.name}-foreign"
+    other.mkdir()
+    git(other, "init", "--quiet")
+    git(other, "config", "user.name", "Foreign Repo")
+    git(other, "config", "user.email", "foreign@example.invalid")
+    write(other, "foreign.py", b"FOREIGN = 1\n")
+    commit(other)
+    indexes = {root: (root / ".git/index").read_bytes() for root in (repository, other)}
+    targets = {
+        "GIT_DIR": other / ".git",
+        "GIT_WORK_TREE": other,
+        "GIT_INDEX_FILE": other / ".git/index",
+    }
+    monkeypatch.setenv(variable, str(targets[variable]))
+    source = provider(repository)
+    assert source.identity().root == repository.resolve()
+    assert source.identity().revision == revision
+    assert [item.path.root for item in source.inventory().documents] == ["requested.py"]
+    assert source.inventory().documents[0].content == b"REQUESTED = 1\n"
+    assert all((root / ".git/index").read_bytes() == content for root, content in indexes.items())
+
+
+def test_git_rename_pairs_are_normalized_sorted_and_confined_to_one_repository(
+    repository: Path,
+) -> None:
+    for name in ("old_z.py", "old_a.py"):
+        write(
+            repository, name, b"".join(f"VALUE_{index} = {index}\n".encode() for index in range(30))
+        )
+    before = commit(repository)
+    for old, new in (("old_z.py", "new_z.py"), ("old_a.py", "new_a.py")):
+        git(repository, "mv", old, new)
+        with (repository / new).open("ab") as stream:
+            stream.write(b"ADDED = 1\n")
+    after = commit(repository)
+    baseline = GitSourceIdentity(root=repository.resolve(), revision=before)
+    current = GitSourceIdentity(root=repository.resolve(), revision=after)
+    result = rename_pairs(baseline, current)
+    assert [(old.root, new.root) for old, new in result] == [
+        ("old_a.py", "new_a.py"),
+        ("old_z.py", "new_z.py"),
+    ]
+    outside = repository.parent / "different-root"
+    assert rename_pairs(baseline, GitSourceIdentity(root=outside, revision=after)) == ()
+    assert rename_pairs(baseline, DirectorySourceIdentity(root=outside)) == ()
