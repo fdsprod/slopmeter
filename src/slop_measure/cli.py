@@ -15,6 +15,7 @@ from slop_measure.api import compare, scan
 from slop_measure.application.catalog import rule_catalog
 from slop_measure.application.models import inspect_models
 from slop_measure.application.reviews import apply_reviews, load_review_store, write_clone_review
+from slop_measure.application.variants import inspect_variants
 from slop_measure.config import load_analysis_config
 from slop_measure.domain.evidence import DiagnosticSeverity
 from slop_measure.domain.reports import AnalysisReport, SourceSide
@@ -28,6 +29,7 @@ from slop_measure.reporting.evidence import render_findings, render_rules
 from slop_measure.reporting.json import serialize_report
 from slop_measure.reporting.models import render_models
 from slop_measure.reporting.queries import query_findings, select_callable, select_file
+from slop_measure.reporting.variants import render_variants
 
 _DESCRIPTION = "Measure redundant and structurally eroded source code."
 app = typer.Typer(name="slop", help=f"slop.measure - {_DESCRIPTION}", no_args_is_help=True)
@@ -591,6 +593,32 @@ def models_command(
         _fail(error)
     typer.echo(
         report.model_dump_json(indent=2) if json_output else render_models(report), nl=json_output
+    )
+
+
+@app.command("variants")
+def variants_command(
+    *,
+    root_path: _Root = Path("."),
+    config_path: _Config = None,
+    languages: _Languages = None,
+    strict: _Strict = None,
+    json_output: _Json = False,
+) -> None:
+    """Review experimental missing-variant evidence without changing scores."""
+    try:
+        config = load_analysis_config(
+            root_path, config_path=config_path, cli_overrides=_overrides(strict, languages)
+        )
+        report = inspect_variants(
+            SnapshotRequest(target=DirectorySourceReference(root=root_path), config=config)
+        )
+    except (ValueError, OSError) as error:
+        _fail(InputError(str(error)))
+    except Exception as error:
+        _fail(error)
+    typer.echo(
+        report.model_dump_json(indent=2) if json_output else render_variants(report), nl=json_output
     )
 
 
