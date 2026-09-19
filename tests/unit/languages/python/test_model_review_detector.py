@@ -290,3 +290,14 @@ def test_post_init_guard_without_automatic_constructor_call_is_unresolved(
 def test_variadic_annotated_parameter_is_not_a_model_instance(annotation: str) -> None:
     source = SOURCE.replace("def second(record: State):", f"def second({annotation}):")
     assert findings(wire(source)) == []
+
+
+def test_function_default_expression_rebinding_model_name_is_unresolved() -> None:
+    source = SOURCE.replace(
+        "def first(item: State):",
+        "def configure(value=(State := replacement)):\n    pass\n\ndef first(item: State):",
+    )
+    payload = wire(source)
+    assert findings(payload) == []
+    model = next(model for model in payload["models"] if model["name"] == "State")
+    assert model["state"] == "unresolved" and model["reason"]
