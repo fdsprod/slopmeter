@@ -1,6 +1,7 @@
 """Explicit config files replace discovery without changing the analyzed root."""
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -197,3 +198,130 @@ def test_review_commands_use_external_config_without_installing_target_config(se
     assert store.read_bytes() == stored and external.read_bytes() == config_before
     assert {path: path.read_bytes() for path in root.rglob("*") if path.is_file()} == source_before
     assert not (root / "slop.toml").exists()
+
+
+@pytest.mark.parametrize("command", ["explain", "findings"])
+def test_comparison_views_apply_external_config_to_both_sources(setup, command: str) -> None:
+    root, external = setup
+    baseline = root.parent / "baseline"
+    shutil.copytree(root, baseline)
+    for side in (root, baseline):
+        (side / "slop.toml").write_text("[invalid", encoding="utf-8")
+    args = [command, "pkg/a.py"] if command == "explain" else [command]
+    result = CliRunner().invoke(
+        app,
+        [
+            *args,
+            "--root",
+            str(root),
+            "--baseline-root",
+            str(baseline),
+            "--source",
+            "baseline",
+            "--config",
+            str(external),
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["analysis"]["kind"] == "comparison"
+    assert payload["provenance"]["config"] == expected().model_dump(mode="json")
+    groups = (
+        payload["selection"]["clone_groups"] if command == "findings" else payload["clone_groups"]
+    )
+    assert groups
+    assert {group["source"] for group in groups} == (
+        {"baseline"} if command == "findings" else {"baseline", "current"}
+    )
+    assert all(
+        member["boundary"] == "external"
+        for group in groups
+        for member in group["boundary_context"]["members"]
+    )
+
+
+def test_relative_config_resolves_from_invocation_but_prefixes_from_target(
+    setup,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root, external = setup
+    monkeypatch.chdir(root.parent)
+    # A different file with the same relative spelling under the target must not win.
+    decoy = root / "settings" / "analysis.toml"
+    decoy.parent.mkdir()
+    decoy.write_text("[invalid", encoding="utf-8")
+    result = CliRunner().invoke(
+        app,
+        [
+            "scan",
+            "target",
+            "--config",
+            "settings/analysis.toml",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["provenance"]["config"] == expected().model_dump(mode="json")
+    assert len(payload["clone_groups"]) == 1
+    assert {item["path"] for item in payload["clone_groups"][0]["boundary_context"]["members"]} == {
+        "pkg/a.py",
+        "pkg/b.py",
+    }
+    assert load_analysis_config(root, config_path=Path("settings/analysis.toml")) == expected()
+    assert external.read_bytes() != decoy.read_bytes()
+
+
+def test_moving_identical_external_config_keeps_review_current(setup) -> None:
+    root, external = setup
+    runner = CliRunner()
+    scanned = runner.invoke(app, ["scan", str(root), "--config", str(external), "--json"])
+    assert scanned.exit_code == 0, scanned.output
+    group = json.loads(scanned.stdout)["clone_groups"][0]["id"]
+    store = root.parent / "review.json"
+    saved = runner.invoke(
+        app,
+        [
+            "review",
+            "set",
+            group,
+            "--root",
+            str(root),
+            "--config",
+            str(external),
+            "--store",
+            str(store),
+            "--disposition",
+            "defer",
+            "--reason",
+            "Contract migration pending.",
+            "--next-step",
+            "Inspect after migration.",
+        ],
+    )
+    assert saved.exit_code == 0, saved.output
+    stored = store.read_bytes()
+    relocated = root.parent / "relocated" / "same-policy.toml"
+    relocated.parent.mkdir()
+    external.rename(relocated)
+    shown = runner.invoke(
+        app,
+        [
+            "review",
+            "show",
+            "--root",
+            str(root),
+            "--config",
+            str(relocated),
+            "--store",
+            str(store),
+            "--json",
+        ],
+    )
+    assert shown.exit_code == 0, shown.output
+    payload = json.loads(shown.stdout)
+    assert payload["review_results"][0]["state"] == "current"
+    assert payload["review_results"][0]["group_id"] == group
+    assert payload["provenance"]["config"] == expected().model_dump(mode="json")
+    assert store.read_bytes() == stored
