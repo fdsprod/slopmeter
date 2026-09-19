@@ -109,6 +109,8 @@ def test_directory_inspection_reports_failed_files_and_coverage_without_calibrat
 
 
 def test_git_model_inspection_is_explicitly_outside_experiment(tmp_path: Path) -> None:
-    request = SnapshotRequest(target=GitSourceReference(root=tmp_path, revision="HEAD"))
+    request = SnapshotRequest(
+        target=GitSourceReference(root=tmp_path, revision="HEAD"), config=AnalysisConfig()
+    )
     with pytest.raises(InputError):
         inspect_models(request)

@@ -182,3 +182,81 @@ def test_parse_failure_is_failed_with_owned_diagnostic_and_no_successful_models(
 def test_target_module_and_validator_are_never_executed() -> None:
     payload = wire(SOURCE + '\nraise RuntimeError("target must not execute")\n')
     assert payload["state"] == "analyzed" and len(findings(payload)) == 1
+
+
+def test_or_not_predicate_groups_three_distinct_consumers_into_one_finding() -> None:
+    source = SOURCE.replace(".active and ", ".active or ").replace(
+        ".value is None", ".value is not None"
+    )
+    for receiver in ("self", "item", "record"):
+        source = source.replace(f"if {receiver}.active", f"if not {receiver}.active")
+    source += (
+        "\ndef third(other: State):\n"
+        "    if not other.active or other.value is not None:\n"
+        "        return None\n    return other.value\n"
+    )
+    detected = findings(wire(source))
+    assert len(detected) == 1
+    assert detected[0]["predicate"] == "not model.active or model.value is not None"
+    assert [location["symbol"] for location in detected[0]["consumers"]] == [
+        "first",
+        "second",
+        "third",
+    ]
+
+
+@pytest.mark.parametrize("uncertainty", ["walrus-rebind", "nested-lambda", "mutating-call"])
+def test_uncertain_receiver_or_nested_predicate_cannot_supply_second_consumer(
+    uncertainty: str,
+) -> None:
+    if uncertainty == "walrus-rebind":
+        source = SOURCE.replace(
+            "if record.active and record.value is None:",
+            "if (record := replacement).active and record.value is None:",
+        )
+    elif uncertainty == "nested-lambda":
+        source = SOURCE.split("def second", 1)[0]
+        source += (
+            "def second(record: State):\n"
+            "    check = lambda record: record.active and record.value is None\n"
+            "    return check(record)\n"
+        )
+    else:
+        source = SOURCE.replace(
+            "def second(record: State):\n", "def second(record: State):\n    mutate(record)\n"
+        )
+    assert findings(wire(source)) == []
+
+
+def test_rebinding_self_before_validator_guard_does_not_prove_model_invariant() -> None:
+    source = SOURCE.replace(
+        "def __post_init__(self):\n", "def __post_init__(self):\n        self = replacement\n"
+    )
+    assert findings(wire(source)) == []
+
+
+def test_duplicate_top_level_function_names_do_not_count_as_distinct_consumers() -> None:
+    source = SOURCE.replace("def second(record: State):", "def first(record: State):")
+    assert findings(wire(source)) == []
+
+
+def test_other_import_shadowing_dataclass_is_explicitly_unresolved() -> None:
+    source = SOURCE.replace(
+        "from dataclasses import dataclass\n",
+        "from dataclasses import dataclass\nfrom foreign import dataclass\n",
+    )
+    payload = wire(source)
+    assert findings(payload) == []
+    model = next(model for model in payload["models"] if model["name"] == "State")
+    assert model["state"] == "unresolved" and model["reason"]
+
+
+def test_property_replacing_annotated_field_is_not_supported_dataclass_evidence() -> None:
+    source = SOURCE.replace(
+        "    def __post_init__(self):",
+        "    @property\n    def value(self):\n        return None\n    def __post_init__(self):",
+    )
+    payload = wire(source)
+    assert findings(payload) == []
+    model = next(model for model in payload["models"] if model["name"] == "State")
+    assert model["state"] == "unresolved" and model["reason"]
