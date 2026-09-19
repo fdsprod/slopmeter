@@ -171,3 +171,66 @@ def test_non_python_selection_and_git_source_fail_explicitly(project) -> None:
     assert cli.exit_code == 2 and "Invalid analysis input:" in cli.stderr
     with pytest.raises(ValueError):
         inspect_models(SnapshotRequest(target=GitSourceReference(root=root, revision="HEAD")))
+
+
+def test_models_terminal_connects_declarations_validator_and_distinct_consumers(project) -> None:
+    root, _ = project
+    result = CliRunner().invoke(app, ["models", "--root", str(root)])
+    assert result.exit_code == 0, result.output
+    text = result.stdout
+    assert "py-coupled-state-1" in text and "Item" in text
+    assert "model.enabled" in text and "model.value" in text
+    assert "enabled" in text and "value" in text
+    # Field declarations are lines5/6; validator predicate9 and consumer predicates13/18.
+    for line in (5, 6, 9, 13, 18):
+        assert f":{line}" in text or f"line {line}" in text.lower()
+    for symbol in ("__post_init__", "first", "second"):
+        assert symbol in text
+    assert "score" in text.lower() and "m2" in text.lower()
+    assert "no score" in text.lower() or "not scored" in text.lower()
+    assert "/100" not in text
+
+
+def test_models_empty_terminal_describes_narrow_scope_without_claiming_clean(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    result = CliRunner().invoke(app, ["models", "--root", str(tmp_path)])
+    assert result.exit_code == 0, result.output
+    text = result.stdout.lower()
+    assert "no qualifying" in text
+    assert "experiment" in text
+    assert "clean" not in text and "no defects" not in text
+
+
+def test_models_terminal_keeps_unresolved_and_failed_files_visible(project) -> None:
+    root, _ = project
+    (root / "ordinary.py").write_text("class Ordinary:\n    pass\n", encoding="utf-8")
+    (root / "bad.py").write_text("def broken(:\n", encoding="utf-8")
+    result = CliRunner().invoke(app, ["models", "--root", str(root)])
+    assert result.exit_code == 0, result.output
+    text = result.stdout.lower()
+    assert "ordinary.py" in text and "ordinary" in text
+    assert "unresolved" in text and ("unsupported" in text or "dataclass" in text)
+    assert "bad.py" in text and ("failed" in text or "syntax" in text)
+
+
+def test_model_detector_failure_becomes_owned_failure_and_strict_exit_three(
+    project, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, _ = project
+
+    def fail(document):
+        raise RuntimeError("detector fixture failure")
+
+    monkeypatch.setattr("slop_measure.application.models.analyze_models", fail)
+    result = inspect_models(request(root)).model_dump(mode="json")
+    assert len(result["files"]) == 2
+    for file in result["files"]:
+        assert file["state"] == "failed" and "models" not in file
+        diagnostic = file["diagnostic"]
+        assert diagnostic["path"] == file["path"]
+        assert diagnostic["severity"] == "error"
+        assert diagnostic["code"] == "python.model-review-error"
+    strict = CliRunner().invoke(app, ["models", "--root", str(root), "--strict", "--json"])
+    assert strict.exit_code == 3 and strict.stderr
