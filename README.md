@@ -7,7 +7,7 @@ revisions. It does not execute target code or apply fixes.
 
 The command is **`slop`**, the Python package is **`slop-measure`**, and the import
 name is **`slop_measure`**. Terminal reports use the internal name `slop.measure`.
-Only Python analysis is currently implemented. This is an early 0.2.0 project;
+Only Python analysis is currently implemented. This is an early 0.3.0 project;
 scores are review signals, not defect probabilities or proof of AI authorship.
 
 ## Quick start
@@ -473,14 +473,14 @@ fixture generation and terminal rendering are outside the measurement.
 
 See the [release validation record](.specs/python-slop-detector/release-validation.md)
 for the original release gates. The
-[scoring and interpretation validation](.specs/python-slop-detector/scoring-interpretation-design.md)
-records the latest change: 1,178 deterministic tests, 42 learning tests, four
-package checks, and 96.81 percent branch coverage on Windows Python 3.12, with
-focused checks on Python 3.13 and 3.14. These are local results; the
+[review-context validation](.specs/python-slop-detector/review-context.md)
+records 1,290 deterministic tests, 50 learning tests, four package checks, and
+96.98 percent branch-inclusive coverage on Windows Python 3.12. The 73 new workflow
+and integrity checks also pass on Python 3.13 and 3.14. These are local results; the
 [GitHub Actions workflow](.github/workflows/ci.yml) defines the full nine-cell
 Windows, macOS, and Linux matrix.
 
-## Ownership and clone review (unreleased)
+## Ownership and clone review
 
 Declare boundaries explicitly in `slop.toml` (or `[[tool.slop.boundaries]]` in
 `pyproject.toml`):
@@ -494,6 +494,27 @@ prefix = "src/services/a"
 name = "service-b"
 prefix = "src/services/b"
 ```
+
+For `pyproject.toml`, use the same fields under the namespaced tables:
+
+```toml
+[[tool.slop.boundaries]]
+name = "provider-a"
+prefix = "src/providers/a"
+
+[[tool.slop.boundaries]]
+name = "provider-b"
+prefix = "src/providers/b"
+```
+
+Put the configuration in the directory you pass as the scan root. A subdirectory
+scan does not inherit boundary declarations from its parent. Rebase the prefixes
+when using a different scan root. If both configuration files declare boundaries,
+the `slop.toml` list replaces the `pyproject.toml` list.
+
+Names and normalized prefixes must each be unique. Absolute paths, `..`, and glob
+patterns are rejected. For nested boundaries, a declaration for `src/providers/a`
+takes precedence over one for `src/providers`.
 
 Prefixes are paths relative to the scan root, not globs. The longest matching path
 prefix wins. A clone group is `within-boundary` or `cross-boundary` only when every
