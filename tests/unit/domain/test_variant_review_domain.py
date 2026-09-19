@@ -30,7 +30,7 @@ def payload() -> dict:
 @pytest.mark.parametrize(
     "mode,expected", [("plain", "missing"), ("fallback", "fallback"), ("complete", "exhaustive")]
 )
-def test_coverage_and_unhandled_names_are_derived_frozen_and_roundtrip(
+def test_coverage_and_not_explicitly_covered_names_are_derived_frozen_and_roundtrip(
     mode: str, expected: str
 ) -> None:
     data = payload()
@@ -41,7 +41,7 @@ def test_coverage_and_unhandled_names_are_derived_frozen_and_roundtrip(
     handler = AnalyzedVariantHandler.model_validate(data)
     wire = handler.model_dump(mode="json")
     assert wire["coverage"] == expected
-    assert wire["unhandled_cases"] == ([] if mode == "complete" else ["Color.BLUE"])
+    assert wire["not_explicitly_covered"] == ([] if mode == "complete" else ["Color.BLUE"])
     assert AnalyzedVariantHandler.model_validate(wire) == handler
     with pytest.raises(ValidationError):
         handler.subject = "other"
@@ -55,7 +55,7 @@ def test_coverage_and_unhandled_names_are_derived_frozen_and_roundtrip(
         "outside-span",
         "empty-explicit",
         "forged-coverage",
-        "forged-unhandled",
+        "forged-not-explicitly-covered",
     ],
 )
 def test_invalid_or_forged_variant_evidence_is_rejected(invalid: str) -> None:
@@ -71,6 +71,6 @@ def test_invalid_or_forged_variant_evidence_is_rejected(invalid: str) -> None:
     elif invalid == "forged-coverage":
         data["coverage"] = "exhaustive"
     else:
-        data["unhandled_cases"] = []
+        data["not_explicitly_covered"] = []
     with pytest.raises(ValidationError):
         AnalyzedVariantHandler.model_validate(data)

@@ -63,7 +63,7 @@ def test_coverage_distinguishes_explicit_conditional_and_fallback_branches(
     (result,) = outcome["handlers"]
     assert result["state"] == "analyzed" and result["symbol"] == "render"
     assert result["subject"] == "value" and result["span"]["start_line"] == 6
-    assert result["coverage"] == coverage and result["unhandled_cases"] == unhandled
+    assert result["coverage"] == coverage and result["not_explicitly_covered"] == unhandled
     assert result["declaration"] == {
         "name": "Color",
         "kind": "enum",
@@ -91,7 +91,7 @@ def test_direct_import_alias_and_auto_values_preserve_local_case_names(base: str
             "        case Color.RED:\n            return 1\n", prefix=prefix, annotation='"Color"'
         )
     )["handlers"][0]
-    assert result["state"] == "analyzed" and result["unhandled_cases"] == ["Color.BLUE"]
+    assert result["state"] == "analyzed" and result["not_explicitly_covered"] == ["Color.BLUE"]
 
 
 @pytest.mark.parametrize(
@@ -111,7 +111,7 @@ def test_named_literal_forms_use_repr_names_and_track_omitted_values(declaration
     assert result["state"] == "analyzed" and result["coverage"] == "missing"
     assert result["declaration"]["kind"] == "literal"
     assert [case["name"] for case in result["declaration"]["cases"]] == ["'open'", "'closed'"]
-    assert result["unhandled_cases"] == ["'closed'"]
+    assert result["not_explicitly_covered"] == ["'closed'"]
 
 
 @pytest.mark.parametrize(
@@ -159,7 +159,7 @@ def test_uncertain_match_bindings_are_unresolved_instead_of_silently_omitted(
     assert outcome["state"] == "analyzed" and len(outcome["handlers"]) == 1
     result = outcome["handlers"][0]
     assert result["state"] == "unresolved" and result["reason"].strip()
-    assert "coverage" not in result and "unhandled_cases" not in result
+    assert "coverage" not in result and "not_explicitly_covered" not in result
 
 
 @pytest.mark.parametrize("invalid", ["enum-alias", "enum-dynamic", "literal-duplicate"])
