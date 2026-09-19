@@ -456,6 +456,42 @@ experiment version, related locations, skipped coverage, and diagnostics. There
 is no score, M2 contribution, or automatic fix. Clone review stores do not cover
 these experimental findings yet.
 
+## Experimental variant review
+
+Use the source checkout to inspect explicitly typed `match` handlers:
+
+```powershell
+slop variants --root . --lang py
+slop variants --root . --config C:/reviews/slop.toml --json
+```
+
+The report connects a same-file `Enum`, `IntEnum`, `StrEnum`, or named `Literal`
+declaration to its handled and unhandled cases. It separates three outcomes:
+
+- **Missing:** some declared cases have no unconditional branch or catch-all.
+- **Fallback:** an unconditional catch-all covers cases without explicit branches.
+  Review whether that fallback is intentional and appropriate.
+- **Exhaustive:** every declared case has an unconditional explicit branch. This
+  does not establish that the branch bodies are correct.
+
+Guarded branches do not prove full coverage. An intentional partial handler can
+receive a missing-case note; the tool cannot infer its contract. Type checkers
+remain the broader check for exhaustiveness. This experiment uses local syntax
+and does not resolve project imports or run a type checker.
+
+The first version supports direct imports (including aliases), simple unique
+string/integer enum values or all-`auto()` members, and string/integer `Literal`
+aliases. It checks the first statement after a docstring in an undecorated top-level
+function, with a fixed parameter typed as a local declaration. OR patterns and
+capture/wildcard fallbacks are supported. Unsupported patterns, enum aliases,
+custom enum behavior, nested or later matches, reassignment, and ambiguous bindings
+are reported as unresolved. No finding means no qualifying evidence in this scope.
+
+Like `models`, this command keeps source hashes, locations, discovery coverage and
+failures visible. It supports external config and `--strict`, never executes source,
+and has no score or M2 contribution. These commands are not yet part of the
+published v0.3.0 release.
+
 ## Development checks
 
 Use uv 0.11.14, the version pinned in `pyproject.toml`. Create or update the locked
