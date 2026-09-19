@@ -80,6 +80,11 @@ def test_missing_current_hash_explains_unavailable_source_without_inventing_a_ha
     result = annotated.model_dump(mode="json")["review_results"][0]
     assert result["state"] == "stale"
     assert result["changes"][0]["causes"] == [{"kind": "source-unavailable", "path": "a.py"}]
+    output = render_snapshot(annotated, width=180, ascii=True, color=False).lower()
+    assert any(
+        "source" in line and "unavailable" in line and "a.py" in line
+        for line in output.splitlines()
+    )
 
 
 @pytest.mark.parametrize("kind", ["boundary-policy-changed", "analysis-definition-changed"])
@@ -121,11 +126,14 @@ def test_moved_clone_spans_name_changed_members_alongside_source_change(clone_ro
     target.write_bytes(b"# leading comment\n" + target.read_bytes())
     changed = analyze(clone_root)
     assert changed.clone_groups[0].detail.fingerprint == report.clone_groups[0].detail.fingerprint
-    result = apply_reviews(changed, store).model_dump(mode="json")["review_results"][0]
+    annotated = apply_reviews(changed, store)
+    result = annotated.model_dump(mode="json")["review_results"][0]
     causes = result["changes"][0]["causes"]
     clone_cause = next(cause for cause in causes if cause["kind"] == "clone-evidence-changed")
     assert clone_cause == {"kind": "clone-evidence-changed", "fields": ["members"]}
     assert {cause["kind"] for cause in causes} == {"source-changed", "clone-evidence-changed"}
+    output = render_snapshot(annotated, width=180, ascii=True, color=False).lower()
+    assert "clone evidence changed" in output and "members" in output
 
 
 def test_unavailable_analysis_definition_has_explicit_cause(clone_root: Path) -> None:
@@ -141,6 +149,8 @@ def test_unavailable_analysis_definition_has_explicit_cause(clone_root: Path) ->
     result = annotated.model_dump(mode="json")["review_results"][0]
     assert result["state"] == "stale"
     assert result["changes"][0]["causes"] == [{"kind": "analysis-unavailable"}]
+    output = render_snapshot(annotated, width=180, ascii=True, color=False).lower()
+    assert any("analysis" in line and "unavailable" in line for line in output.splitlines())
 
 
 def test_legacy_stale_report_without_explanations_loads_and_omits_empty_projection(
@@ -151,6 +161,8 @@ def test_legacy_stale_report_without_explanations_loads_and_omits_empty_projecti
     restored = AnalysisReport.model_validate(payload)
     assert restored.review_results[0].changes == ()
     assert "changes" not in restored.model_dump(mode="json")["review_results"][0]
+    output = render_snapshot(restored, width=180, ascii=True, color=False)
+    assert "Change details were not recorded in this report." in output
 
 
 @pytest.mark.parametrize(
