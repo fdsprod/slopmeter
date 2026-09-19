@@ -65,7 +65,12 @@ def _resolve(report: AnalysisReport, decision: CloneReviewDecision) -> CloneRevi
             return CurrentCloneReview(decision=decision, group_id=group.id)
     if candidates:
         return StaleCloneReview(
-            decision=decision, candidate_group_ids=tuple(sorted(group.id for group in candidates))
+            decision=decision,
+            candidate_group_ids=tuple(sorted(group.id for group in candidates)),
+            changes=tuple(
+                report.clone_review_change(decision, group)
+                for group in sorted(candidates, key=lambda item: item.id)
+            ),
         )
     return MissingCloneReview(decision=decision)
 

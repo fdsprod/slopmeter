@@ -33,9 +33,12 @@ from slop_measure.domain.metrics import (
 )
 from slop_measure.domain.reviews import (
     CloneReviewAnchor,
+    CloneReviewChange,
+    CloneReviewDecision,
     CloneReviewResult,
     SourceHash,
     clone_analysis_fingerprint,
+    clone_review_causes,
 )
 from slop_measure.domain.scoring import ReferenceSupport, ScoreContribution, UnknownReferenceSupport
 from slop_measure.domain.source import Cohort, SourceIdentity
@@ -374,6 +377,44 @@ class AnalysisReport(_ReportModel):
             ),
         )
 
+    def clone_review_change(
+        self, decision: CloneReviewDecision, group: ReportCloneGroup
+    ) -> CloneReviewChange:
+        """Derive a stale explanation from this report, including unavailable inputs."""
+        if group.source is not SourceSide.CURRENT or group not in self.clone_groups:
+            raise ValueError("clone review requires an owned current group")
+        hashes = {
+            file.evidence.path.root: file.source_sha256
+            for cohort in self.cohorts
+            for file in cohort.current.files
+        }
+        config = self.provenance.config
+        version = next(
+            (
+                item.version
+                for item in self.provenance.metrics
+                if item.metric_id == "m3.clone-verbosity"
+            ),
+            None,
+        )
+        analysis = (
+            None
+            if version is None
+            else clone_analysis_fingerprint(
+                version,
+                group.detail.normalization_version,
+                config.clone_min_statements,
+                config.clone_min_sloc,
+            )
+        )
+        policy = clone_boundary_context(
+            tuple(member.path for member in group.detail.members), config.boundaries
+        ).policy_fingerprint
+        return CloneReviewChange(
+            group_id=group.id,
+            causes=clone_review_causes(decision.anchor, group.detail, hashes, policy, analysis),
+        )
+
     @model_validator(mode="after")
     def validate_reviews(self) -> Self:
         _require_unique((result.decision.id for result in self.review_results), "review decision")
@@ -389,6 +430,10 @@ class AnalysisReport(_ReportModel):
                 key not in groups for key in result.candidate_group_ids
             ):
                 raise ValueError("stale review candidates must refer to current clone groups")
+            if result.state == "stale" and result.changes:
+                for change in result.changes:
+                    if change != self.clone_review_change(result.decision, groups[change.group_id]):
+                        raise ValueError("stale review changes must match current evidence")
         return self
 
     @model_validator(mode="after")
