@@ -13,6 +13,7 @@ import typer
 
 from slop_measure.api import compare, scan
 from slop_measure.application.catalog import rule_catalog
+from slop_measure.application.models import inspect_models
 from slop_measure.application.reviews import apply_reviews, load_review_store, write_clone_review
 from slop_measure.config import load_analysis_config
 from slop_measure.domain.evidence import DiagnosticSeverity
@@ -25,6 +26,7 @@ from slop_measure.reporting import terminal
 from slop_measure.reporting.comparison import render_comparison
 from slop_measure.reporting.evidence import render_findings, render_rules
 from slop_measure.reporting.json import serialize_report
+from slop_measure.reporting.models import render_models
 from slop_measure.reporting.queries import query_findings, select_callable, select_file
 
 _DESCRIPTION = "Measure redundant and structurally eroded source code."
@@ -564,6 +566,32 @@ def review_show(  # noqa: PLR0913 - report source and independent presentation o
         )
     )
     typer.echo(output, nl=False, color=display.color)
+
+
+@app.command("models")
+def models_command(
+    *,
+    root_path: _Root = Path("."),
+    config_path: _Config = None,
+    languages: _Languages = None,
+    strict: _Strict = None,
+    json_output: _Json = False,
+) -> None:
+    """Review experimental coupled-state evidence without changing scores."""
+    try:
+        config = load_analysis_config(
+            root_path, config_path=config_path, cli_overrides=_overrides(strict, languages)
+        )
+        report = inspect_models(
+            SnapshotRequest(target=DirectorySourceReference(root=root_path), config=config)
+        )
+    except (ValueError, OSError) as error:
+        _fail(InputError(str(error)))
+    except Exception as error:
+        _fail(error)
+    typer.echo(
+        report.model_dump_json(indent=2) if json_output else render_models(report), nl=json_output
+    )
 
 
 def main() -> None:
