@@ -507,10 +507,34 @@ name = "provider-b"
 prefix = "src/providers/b"
 ```
 
-Put the configuration in the directory you pass as the scan root. A subdirectory
+By default, put the configuration in the directory you pass as the scan root. A subdirectory
 scan does not inherit boundary declarations from its parent. Rebase the prefixes
 when using a different scan root. If both configuration files declare boundaries,
 the `slop.toml` list replaces the `pyproject.toml` list.
+
+The following external-config option and detailed stale explanations are available
+in the source checkout and are not part of the published v0.3.0 release.
+
+To keep configuration outside the repository, select a file explicitly:
+
+```powershell
+slop score . --config C:/review-config/service.toml --lang py --top 10
+slop findings --root . --config C:/review-config/service.toml --metric m3
+slop review show --root . --config C:/review-config/service.toml --store C:/review-config/reviews.json
+```
+
+`--config` works on `score`, `scan`, `tree`, `compare`, `explain`, `findings`,
+`rules`, `review set`, and `review show`. Put it after the command name. An explicit
+file replaces both local config files. Settings come from defaults, then that file,
+then CLI overrides such as `--lang` and `--strict`. A missing or invalid explicit
+file is an error. The CLI does not fall back to local settings.
+
+Use standalone Slop TOML for external files. A file named exactly `pyproject.toml`
+uses its `[tool.slop]` table instead. Relative `--config` paths start at the shell's
+working directory. Boundary prefixes and source patterns still start at the scan
+root, not the config directory. Comparisons use the selected settings for both
+source states. Reports retain effective settings, not the external config path.
+Moving an identical config file does not invalidate reviews.
 
 Names and normalized prefixes must each be unique. Absolute paths, `..`, and glob
 patterns are rejected. For nested boundaries, a declaration for `src/providers/a`
@@ -539,11 +563,25 @@ create one automatically.
 
 A decision is `current` only when the clone evidence, exact member-file bytes,
 configured boundary policy, and clone measurement definition still match. A source
-edit can make it `stale` even if normalized clone tokens stay the same. This first
-version hashes whole member files, so an unrelated edit in one can also require
-review. If the group is absent or unavailable, its decision is `missing`, not fixed.
+edit can make it `stale` even if normalized clone tokens stay the same. The tool
+hashes whole member files, so a comment or unrelated edit can also require review.
+The policy fingerprint covers every boundary declaration. Adding an unrelated
+declaration still requires review. If the group is absent or unavailable, its decision is `missing`, not fixed.
 Review the source again before using `review set` to replace a decision. Historical
 reports without source hashes cannot create or confirm a current decision.
+
+Stale results explain changes for each candidate group. JSON includes structured
+causes for changed source hashes, changed clone evidence, changed boundary policy,
+changed clone analysis definition, or unavailable identity evidence. Terminal output
+names changed member files and the affected components. These explanations do not
+approve the old decision or change scores.
+
+The tool cannot infer that an edit was harmless from a changed hash. Saved policy
+and analysis fingerprints cannot identify an old declaration or threshold, so those
+causes stay at the component level. Older reports without explanations remain
+readable. Existing review stores need no migration. Use version control for review
+history if needed; the store still replaces the decision for a given group ID and
+does not record reviewer identity or timestamps.
 
 Stores contain relative locations and hashes, not source text. They can still
 contain sensitive paths and reviewer notes; choose where to keep them. Persistence
