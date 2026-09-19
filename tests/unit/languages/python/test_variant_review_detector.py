@@ -236,3 +236,35 @@ def test_variadic_keyword_subject_is_a_container_not_the_annotated_variant() -> 
     )
     result = inspect(source)["handlers"][0]
     assert result["state"] == "unresolved" and result["reason"]
+
+
+def test_annotation_expression_rebinding_variant_name_is_unresolved() -> None:
+    prefix = PREFIX + "def configure(value: (Color := replacement)):\n    pass\n"
+    result = inspect(handler("        case Color.RED:\n            return 1\n", prefix=prefix))[
+        "handlers"
+    ][0]
+    assert result["state"] == "unresolved" and result["reason"]
+
+
+def test_function_inside_module_conditional_has_one_unresolved_match() -> None:
+    source = handler("        case Color.RED:\n            return 1\n")
+    prefix, function = source.split("def render", 1)
+    source = (
+        prefix
+        + "if enabled:\n"
+        + "\n".join("    " + line for line in ("def render" + function).splitlines())
+        + "\n"
+    )
+    outcome = inspect(source)
+    assert outcome["state"] == "analyzed" and len(outcome["handlers"]) == 1
+    result = outcome["handlers"][0]
+    assert result["state"] == "unresolved" and result["reason"]
+
+
+@pytest.mark.parametrize("variadic", ["*Color", "**Color"])
+def test_variadic_parameter_name_shadows_variant_qualifier(variadic: str) -> None:
+    source = handler("        case Color.RED:\n            return 1\n").replace(
+        "def render(value: Color):", f"def render(value: Color, {variadic}):"
+    )
+    result = inspect(source)["handlers"][0]
+    assert result["state"] == "unresolved" and result["reason"]
