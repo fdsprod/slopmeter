@@ -188,3 +188,51 @@ def test_parse_failure_is_failed_not_an_empty_clean_handler_list() -> None:
     assert outcome["diagnostic"]["path"] == "variants.py"
     assert outcome["diagnostic"]["severity"] == "error"
     assert "handlers" not in outcome
+
+
+@pytest.mark.parametrize("invalid", ["str-auto-collision", "int-enum-string", "str-enum-integer"])
+def test_enum_runtime_invalid_or_aliasing_values_are_not_finite_evidence(invalid: str) -> None:
+    if invalid == "str-auto-collision":
+        prefix = (
+            "from enum import StrEnum, auto\n"
+            "class Color(StrEnum):\n    A = auto()\n    a = auto()\n"
+        )
+        pattern = "Color.A"
+    elif invalid == "int-enum-string":
+        prefix = (
+            "from enum import IntEnum\nclass Color(IntEnum):\n    RED = 'red'\n    BLUE = 'blue'\n"
+        )
+        pattern = "Color.RED"
+    else:
+        prefix = "from enum import StrEnum\nclass Color(StrEnum):\n    RED = 1\n    BLUE = 2\n"
+        pattern = "Color.RED"
+    result = inspect(handler(f"        case {pattern}:\n            return 1\n", prefix=prefix))[
+        "handlers"
+    ][0]
+    assert result["state"] == "unresolved" and result["reason"]
+
+
+def test_unconditional_catch_all_before_later_case_is_unresolved_not_exhaustive() -> None:
+    source = handler(
+        "        case _:\n            return 0\n        case Color.RED:\n            return 1\n"
+    )
+    result = inspect(source)["handlers"][0]
+    assert result["state"] == "unresolved" and result["reason"]
+    assert "coverage" not in result
+
+
+def test_literal_alias_rebound_by_function_default_is_unresolved() -> None:
+    prefix = "from typing import Literal\nChoice = Literal['open', 'closed']\n"
+    prefix += "def configure(value=(Choice := replacement)):\n    pass\n"
+    result = inspect(
+        handler("        case 'open':\n            return 1\n", prefix=prefix, annotation="Choice")
+    )["handlers"][0]
+    assert result["state"] == "unresolved" and result["reason"]
+
+
+def test_variadic_keyword_subject_is_a_container_not_the_annotated_variant() -> None:
+    source = handler("        case Color.RED:\n            return 1\n").replace(
+        "value: Color", "**value: Color"
+    )
+    result = inspect(source)["handlers"][0]
+    assert result["state"] == "unresolved" and result["reason"]
