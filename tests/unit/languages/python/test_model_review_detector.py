@@ -260,3 +260,33 @@ def test_property_replacing_annotated_field_is_not_supported_dataclass_evidence(
     assert findings(payload) == []
     model = next(model for model in payload["models"] if model["name"] == "State")
     assert model["state"] == "unresolved" and model["reason"]
+
+
+@pytest.mark.parametrize(
+    "construction", ["init-disabled", "explicit-init", "overwritten-post-init"]
+)
+def test_post_init_guard_without_automatic_constructor_call_is_unresolved(
+    construction: str,
+) -> None:
+    if construction == "init-disabled":
+        source = SOURCE.replace("@dataclass", "@dataclass(init=False)")
+    elif construction == "explicit-init":
+        source = SOURCE.replace(
+            "    def __post_init__(self):",
+            "    def __init__(self):\n        pass\n    def __post_init__(self):",
+        )
+    else:
+        source = SOURCE.replace(
+            "\ndef first(item: State):",
+            "    __post_init__ = replacement\n\ndef first(item: State):",
+        )
+    payload = wire(source)
+    assert findings(payload) == []
+    model = next(model for model in payload["models"] if model["name"] == "State")
+    assert model["state"] == "unresolved" and model["reason"]
+
+
+@pytest.mark.parametrize("annotation", ["*record: State", "**record: State"])
+def test_variadic_annotated_parameter_is_not_a_model_instance(annotation: str) -> None:
+    source = SOURCE.replace("def second(record: State):", f"def second({annotation}):")
+    assert findings(wire(source)) == []
