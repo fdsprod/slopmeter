@@ -1,4 +1,4 @@
-"""Immutable analysis settings and target-local TOML loading."""
+"""Immutable analysis settings and TOML configuration loading."""
 
 import tomllib
 from collections.abc import Mapping
@@ -73,11 +73,13 @@ class AnalysisConfig(BaseModel):
         return sorted(values)
 
 
-def _read_toml(path: Path) -> dict[str, object]:
+def _read_toml(path: Path, *, required: bool = False) -> dict[str, object]:
     try:
         with path.open("rb") as stream:
             return tomllib.load(stream)
     except FileNotFoundError:
+        if required:
+            raise
         return {}
 
 
@@ -90,13 +92,21 @@ def _table(value: object, name: str) -> dict[str, object]:
 def load_analysis_config(
     target_root: Path,
     *,
+    config_path: Path | None = None,
     cli_overrides: Mapping[str, object] | None = None,
 ) -> AnalysisConfig:
-    """Merge defaults, pyproject, slop.toml, then explicit CLI settings."""
-    project = _read_toml(target_root / "pyproject.toml")
-    tool = _table(project.get("tool", {}), "tool")
-    settings = dict(_table(tool.get("slop", {}), "tool.slop"))
-    settings.update(_read_toml(target_root / "slop.toml"))
+    """Use an explicit file or local discovery, then apply CLI overrides."""
+    if config_path is not None and config_path.name != "pyproject.toml":
+        settings = _read_toml(config_path, required=True)
+    else:
+        project = _read_toml(
+            config_path if config_path is not None else target_root / "pyproject.toml",
+            required=config_path is not None,
+        )
+        tool = _table(project.get("tool", {}), "tool")
+        settings = dict(_table(tool.get("slop", {}), "tool.slop"))
+        if config_path is None:
+            settings.update(_read_toml(target_root / "slop.toml"))
     if cli_overrides is not None:
         settings.update(cli_overrides)
     return AnalysisConfig.model_validate(settings)

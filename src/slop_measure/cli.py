@@ -90,9 +90,12 @@ def _scan_report(
     strict: bool | None,
     revision: str | None = None,
     languages: list[str] | None = None,
+    config_path: Path | None = None,
 ) -> AnalysisReport:
     try:
-        config = load_analysis_config(path, cli_overrides=_overrides(strict, languages))
+        config = load_analysis_config(
+            path, config_path=config_path, cli_overrides=_overrides(strict, languages)
+        )
         target = (
             DirectorySourceReference(root=path)
             if revision is None
@@ -133,6 +136,10 @@ _Ascii = Annotated[bool, typer.Option("--ascii", help="Use plain bars and tree c
 _Verbose = Annotated[bool, typer.Option("--verbose", help="Show counts, evidence, and provenance.")]
 _Top = Annotated[int | None, typer.Option("--top", min=1, help="Limit terminal file rows.")]
 _Root = Annotated[Path, typer.Option("--root", exists=True, file_okay=False, resolve_path=True)]
+_Config = Annotated[
+    Path | None,
+    typer.Option("--config", help="Use this config file instead of root-local configuration."),
+]
 _Reviews = Annotated[
     Path | None,
     typer.Option("--reviews", help="Read a clone review store without changing scores."),
@@ -157,13 +164,16 @@ def _evidence_report(  # noqa: PLR0913 - source selection and configuration are 
     baseline_revision: str | None,
     *,
     languages: list[str] | None = None,
+    config_path: Path | None = None,
 ) -> AnalysisReport:
     if baseline_root is not None and baseline_revision is not None:
         raise SelectionError("Use only one of --baseline-root and --baseline-rev.")
     if baseline_root is None and baseline_revision is None:
-        return _scan_report(root, strict, revision, languages)
+        return _scan_report(root, strict, revision, languages, config_path)
     try:
-        config = load_analysis_config(root, cli_overrides=_overrides(strict, languages))
+        config = load_analysis_config(
+            root, config_path=config_path, cli_overrides=_overrides(strict, languages)
+        )
         current = (
             DirectorySourceReference(root=root)
             if revision is None
@@ -180,12 +190,14 @@ def _evidence_report(  # noqa: PLR0913 - source selection and configuration are 
     return _analyze(request)
 
 
-def _compare_report(
+def _compare_report(  # noqa: PLR0913 - source selection and configuration are independent
     baseline: str,
     current: str,
     strict: bool | None,
     repo: Path | None = None,
     languages: list[str] | None = None,
+    *,
+    config_path: Path | None = None,
 ) -> AnalysisReport:
     try:
         if repo is None:
@@ -201,7 +213,9 @@ def _compare_report(
                 if current == "WORKTREE"
                 else GitSourceReference(root=repo, revision=current)
             )
-        config = load_analysis_config(after.root, cli_overrides=_overrides(strict, languages))
+        config = load_analysis_config(
+            after.root, config_path=config_path, cli_overrides=_overrides(strict, languages)
+        )
         request = ComparisonRequest(
             baseline=before,
             current=after,
@@ -224,6 +238,7 @@ def compare_command(  # noqa: PLR0913
     json_output: _Json = False,
     strict: _Strict = None,
     languages: _Languages = None,
+    config_path: _Config = None,
     scope: Annotated[
         _Scope, typer.Option(help="Select terminal results; JSON stays complete.")
     ] = _Scope.PRODUCTION,
@@ -235,7 +250,7 @@ def compare_command(  # noqa: PLR0913
 ) -> None:
     """Compare directories, or Git revisions with --repo."""
     display = _display(color, no_color, ascii, verbose, top)
-    report = _compare_report(baseline, current, strict, repo, languages)
+    report = _compare_report(baseline, current, strict, repo, languages, config_path=config_path)
     output = (
         serialize_report(report)
         if json_output
@@ -265,6 +280,7 @@ def scan_command(  # noqa: PLR0913
     json_output: _Json = False,
     strict: _Strict = None,
     languages: _Languages = None,
+    config_path: _Config = None,
     scope: Annotated[
         _Scope, typer.Option(help="Select terminal results; JSON stays complete.")
     ] = _Scope.PRODUCTION,
@@ -276,7 +292,7 @@ def scan_command(  # noqa: PLR0913
 ) -> None:
     """Inspect snapshot measurements and file evidence."""
     display = _display(color, no_color, ascii, verbose, top)
-    report = _review_report(_scan_report(path, strict, revision, languages), reviews)
+    report = _review_report(_scan_report(path, strict, revision, languages, config_path), reviews)
     if json_output:
         typer.echo(serialize_report(report), nl=False)
         return
@@ -324,6 +340,7 @@ def explain_command(  # noqa: PLR0913
     json_output: _Json = False,
     strict: _Strict = None,
     languages: _Languages = None,
+    config_path: _Config = None,
     color: _ColorOption = _Color.AUTO,
     no_color: _NoColor = False,
     ascii: _Ascii = False,
@@ -339,7 +356,13 @@ def explain_command(  # noqa: PLR0913
         )
         path = _relative_selector(selector_root, file)
         report = _evidence_report(
-            root_path, strict, revision, baseline_root, baseline_revision, languages=languages
+            root_path,
+            strict,
+            revision,
+            baseline_root,
+            baseline_revision,
+            languages=languages,
+            config_path=config_path,
         )
         selected = select_file(report, path, source=source)
         if symbol is not None:
@@ -381,6 +404,7 @@ def findings_command(  # noqa: PLR0913
     json_output: _Json = False,
     strict: _Strict = None,
     languages: _Languages = None,
+    config_path: _Config = None,
     color: _ColorOption = _Color.AUTO,
     no_color: _NoColor = False,
     ascii: _Ascii = False,
@@ -391,7 +415,13 @@ def findings_command(  # noqa: PLR0913
     display = _display(color, no_color, ascii, verbose, top)
     try:
         report = _evidence_report(
-            root_path, strict, revision, baseline_root, baseline_revision, languages=languages
+            root_path,
+            strict,
+            revision,
+            baseline_root,
+            baseline_revision,
+            languages=languages,
+            config_path=config_path,
         )
         report = _review_report(report, reviews)
         selection = query_findings(
@@ -434,6 +464,7 @@ def findings_command(  # noqa: PLR0913
 def rules_command(  # noqa: PLR0913 - independent catalog display options
     *,
     root_path: _Root = Path("."),
+    config_path: _Config = None,
     json_output: _Json = False,
     color: _ColorOption = _Color.AUTO,
     no_color: _NoColor = False,
@@ -443,7 +474,7 @@ def rules_command(  # noqa: PLR0913 - independent catalog display options
     """List versioned rule metadata and the configured enabled state."""
     display = _display(color, no_color, ascii, verbose, None)
     try:
-        catalog = rule_catalog(load_analysis_config(root_path))
+        catalog = rule_catalog(load_analysis_config(root_path, config_path=config_path))
     except (ValueError, OSError) as error:
         _fail(InputError(str(error)))
     if json_output:
@@ -487,9 +518,10 @@ def review_set(  # noqa: PLR0913 - explicit review identity, decision, and sourc
     root_path: _Root = Path("."),
     next_step: Annotated[str, typer.Option("--next-step")] = "",
     languages: _Languages = None,
+    config_path: _Config = None,
 ) -> None:
     """Save one clone decision after source review; never modify analyzed code."""
-    report = _scan_report(root_path, None, languages=languages)
+    report = _scan_report(root_path, None, languages=languages, config_path=config_path)
     try:
         write_clone_review(
             store, report, group_id, disposition=disposition, reason=reason, next_step=next_step
@@ -507,6 +539,7 @@ def review_show(  # noqa: PLR0913 - report source and independent presentation o
     store: Annotated[Path, typer.Option("--store")],
     root_path: _Root = Path("."),
     languages: _Languages = None,
+    config_path: _Config = None,
     json_output: _Json = False,
     color: _ColorOption = _Color.AUTO,
     no_color: _NoColor = False,
@@ -514,7 +547,9 @@ def review_show(  # noqa: PLR0913 - report source and independent presentation o
     verbose: _Verbose = False,
 ) -> None:
     """Recheck saved clone decisions against a fresh read-only snapshot."""
-    report = _review_report(_scan_report(root_path, None, languages=languages), store)
+    report = _review_report(
+        _scan_report(root_path, None, languages=languages, config_path=config_path), store
+    )
     display = _display(color, no_color, ascii, verbose, None)
     output = (
         serialize_report(report)
