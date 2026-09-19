@@ -18,6 +18,7 @@ from slop_measure.api import (
 )
 from slop_measure.application.models import inspect_models
 from slop_measure.cli import app
+from slop_measure.errors import InputError
 
 SOURCE = """from dataclasses import dataclass
 
@@ -169,8 +170,12 @@ def test_non_python_selection_and_git_source_fail_explicitly(project) -> None:
     root, _ = project
     cli = CliRunner().invoke(app, ["models", "--root", str(root), "--lang", "ts", "--json"])
     assert cli.exit_code == 2 and "Invalid analysis input:" in cli.stderr
-    with pytest.raises(ValueError):
-        inspect_models(SnapshotRequest(target=GitSourceReference(root=root, revision="HEAD")))
+    with pytest.raises(InputError):
+        inspect_models(
+            SnapshotRequest(
+                target=GitSourceReference(root=root, revision="HEAD"), config=AnalysisConfig()
+            )
+        )
 
 
 def test_models_terminal_connects_declarations_validator_and_distinct_consumers(project) -> None:
