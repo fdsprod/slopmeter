@@ -38,14 +38,14 @@ def directories(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         "gone.py": "z = 3\n",
         "edit.py": '"doc"\nx = 1\n',
     }.items():
-        (before / name).write_text(text, encoding="utf-8")
+        (before / name).write_text(text, encoding="utf-8", newline="\n")
     for name, text in {
         "same.py": "x = 1\n",
         "new.py": "y = 2\n",
         "added.py": "q = 4\n",
         "edit.py": 'x = 0\n"doc"\nx = 1\n',
     }.items():
-        (after / name).write_text(text, encoding="utf-8")
+        (after / name).write_text(text, encoding="utf-8", newline="\n")
     return before, after
 
 
