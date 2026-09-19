@@ -99,7 +99,7 @@ def test_variant_api_owns_exact_case_coverage_locations_and_keeps_other_reports_
     ):
         handler = handlers[name]
         assert handler["state"] == "analyzed"
-        assert handler["coverage"] == coverage and handler["unhandled_cases"] == missing
+        assert handler["coverage"] == coverage and handler["not_explicitly_covered"] == missing
         assert handler["span"]["start_line"] == line
         assert handler["declaration"]["span"]["start_line"] == (25 if name == "literal" else 4)
         for branch in handler["branches"]:
