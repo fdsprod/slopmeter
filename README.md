@@ -416,6 +416,46 @@ evidence and its whole-file change. Callable views show raw facts, not a callabl
 score or callable-level LOC delta. `--baseline-root` and `--baseline-rev` cannot be
 combined. A baseline revision uses the repository given by `--root`.
 
+## Experimental data-model review
+
+The source checkout includes an experimental coupled-state check. It is separate
+from the published v0.3.0 release and from calibrated scores:
+
+```powershell
+slop models --root . --lang py
+slop models --root . --config C:/reviews/slop.toml --json
+```
+
+The check looks for a same-file dataclass with a boolean field and a nullable
+`T | None` field. Its `__post_init__` must explicitly reject a combination, and at
+least two distinct functions typed with that model must repeat the same guard.
+The report shows the field declarations, rejecting predicate, and consumer
+locations. Field shape alone never creates a finding. This version checks only the
+first statement after a docstring in each validator or consumer. All directly
+annotated fields must use the supported boolean or nullable forms. Custom
+constructors, disabled dataclass initialization, and replaced fields are unresolved.
+
+A finding means **review repeated validation**, not remove it. Separate trust
+boundaries can require the same check. Consider a tagged union only when it fits
+the domain and preserves public or stored data contracts. Do not split a model or
+remove checks merely to reduce duplication.
+
+This first experiment resolves direct dataclass imports, including import aliases,
+and local bare model annotations, including quoted names. Predicate matching
+normalizes only the receiver name. It does not prove logical equivalence or follow
+cross-file consumers. Pydantic, TypedDict, inheritance, nested models, `Optional`
+aliases, and uncertain bindings remain unresolved. Reports list unresolved model
+classes separately from analyzed models with no findings. No findings means only
+that this narrow check found no qualifying evidence, not that a model is sound.
+
+The command uses the normal source inventory, Git ignores, exclusions, generated
+markers, and production/test classification. It reads source without importing or
+executing it. Parse/read failures remain visible; `--strict` exits with code 3 on
+analysis errors. The JSON report includes exact source hashes, effective config,
+experiment version, related locations, skipped coverage, and diagnostics. There
+is no score, M2 contribution, or automatic fix. Clone review stores do not cover
+these experimental findings yet.
+
 ## Development checks
 
 Use uv 0.11.14, the version pinned in `pyproject.toml`. Create or update the locked
