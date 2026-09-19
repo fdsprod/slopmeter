@@ -82,6 +82,7 @@ def test_directory_inspection_reports_failed_files_and_coverage_without_calibrat
     monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
     (tmp_path / "good.py").write_text('raise RuntimeError("must not execute")\n', encoding="utf-8")
     (tmp_path / "bad.py").write_text("class Broken(:\n", encoding="utf-8")
+    (tmp_path / "skip.py").write_text("class Broken(:\n", encoding="utf-8")
     (tmp_path / "vendor").mkdir()
     (tmp_path / "vendor" / "skip.py").write_text("class Broken(:\n", encoding="utf-8")
 
@@ -91,7 +92,7 @@ def test_directory_inspection_reports_failed_files_and_coverage_without_calibrat
     monkeypatch.setattr("slop_measure.application.service.AnalysisService.scan", forbidden_scan)
     request = SnapshotRequest(
         target=DirectorySourceReference(root=tmp_path),
-        config=AnalysisConfig(exclusions=("vendor/**",)),
+        config=AnalysisConfig(exclusions=("vendor/**", "skip.py")),
     )
     report = inspect_models(request)
     payload = report.model_dump(mode="json")
