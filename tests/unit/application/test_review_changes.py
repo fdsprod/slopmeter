@@ -11,10 +11,7 @@ from slop_measure.application.reviews import apply_reviews
 from slop_measure.domain.reports import AnalysisReport
 from slop_measure.reporting.terminal import render_snapshot
 
-
-@pytest.fixture
-def clone_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    return shared_clone_root.__wrapped__(tmp_path, monkeypatch)
+clone_root = shared_clone_root
 
 
 def stale_payload(root: Path) -> tuple[dict, dict]:
@@ -159,7 +156,9 @@ def test_legacy_stale_report_without_explanations_loads_and_omits_empty_projecti
     payload, result = stale_payload(clone_root)
     result.pop("changes", None)
     restored = AnalysisReport.model_validate(payload)
-    assert restored.review_results[0].changes == ()
+    review = restored.review_results[0]
+    assert review.state == "stale"
+    assert review.changes == ()
     assert "changes" not in restored.model_dump(mode="json")["review_results"][0]
     output = render_snapshot(restored, width=180, ascii=True, color=False)
     assert "Change details were not recorded in this report." in output
