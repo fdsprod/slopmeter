@@ -16,6 +16,7 @@ from typer.testing import CliRunner
 from slop_measure.api import AnalysisConfig, DirectorySourceReference, SnapshotRequest
 from slop_measure.application.derived import inspect_derived
 from slop_measure.application.models import inspect_models
+from slop_measure.application.review_workflow import load_review_report, review_targets
 from slop_measure.application.variants import inspect_variants
 from slop_measure.cli import app
 
@@ -202,6 +203,27 @@ def test_supplied_summary_cannot_override_evidence(
         wire["summary"][field] += 1
     with pytest.raises(ValidationError):
         type(report).model_validate(wire)
+
+
+@pytest.mark.parametrize("command,inspect,items,unit,source,counts", CASES)
+def test_saved_legacy_and_summary_reports_preserve_review_target_identity(
+    project, command, inspect, items, unit, source, counts
+) -> None:
+    populate(project, source)
+    report = inspect(request(project))
+    current_wire = report.model_dump(mode="json")
+    assert "summary" in current_wire
+    legacy_wire = copy.deepcopy(current_wire)
+    del legacy_wire["summary"]
+    catalogs = []
+    for version, wire in (("legacy", legacy_wire), ("current", current_wire)):
+        saved = project / f"{version}.json"
+        saved.write_text(json.dumps(wire), encoding="utf-8")
+        loaded = load_review_report(saved)
+        catalogs.append(review_targets(loaded))
+        assert loaded.model_dump(mode="json")["files"] == current_wire["files"]
+    assert catalogs[0] == catalogs[1] == review_targets(report)
+    assert any(item.state == "reviewable" for item in catalogs[0])
 
 
 def assert_count(text: str, label: str, count: int) -> None:
