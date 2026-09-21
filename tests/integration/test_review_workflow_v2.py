@@ -410,3 +410,89 @@ def test_cli_set_records_explicit_actor_reason_and_followup(root: Path) -> None:
     assert shown.exit_code == 0
     for text in ("Ada", "Wait for interface change.", "Review next release.", "a.py", "b.py"):
         assert text in shown.stdout
+
+
+def test_foreign_lock_is_not_removed_and_existing_store_is_preserved(root: Path) -> None:
+    report = scan(request(root))
+    store = root.parent / "reviews.json"
+    record(store, report)
+    before = store.read_bytes()
+    lock = store.with_name(store.name + ".lock")
+    lock.write_bytes(b"another writer")
+    with pytest.raises((InputError, OSError)):
+        record(store, report)
+    assert store.read_bytes() == before and lock.read_bytes() == b"another writer"
+
+
+def test_symlink_store_cannot_redirect_review_writes(root: Path) -> None:
+    report = scan(request(root))
+    destination = root.parent / "actual.json"
+    record(destination, report)
+    before = destination.read_bytes()
+    link = root.parent / "linked.json"
+    try:
+        link.symlink_to(destination)
+    except OSError:
+        pytest.skip("Symlink privileges unavailable")
+    with pytest.raises((InputError, OSError)):
+        record(link, report)
+    assert link.is_symlink() and destination.read_bytes() == before
+
+
+def test_cli_invalid_write_keeps_store_and_stale_show_includes_exact_changes(root: Path) -> None:
+    report = scan(request(root, boundaries=[{"name": "before-policy", "prefix": "a.py"}]))
+    store, saved = root.parent / "reviews.json", root.parent / "report.json"
+    ledger = record(store, report)
+    before = store.read_bytes()
+    path = root / "a.py"
+    path.write_text(path.read_text().replace("# note", "# different bytes"), encoding="utf-8")
+    changed = scan(request(root, boundaries=[{"name": "after-policy", "prefix": "a.py"}]))
+    saved.write_text(changed.model_dump_json(), encoding="utf-8")
+    runner = CliRunner()
+    rejected = runner.invoke(
+        app,
+        [
+            "review-report",
+            "set",
+            "unknown",
+            "--report",
+            str(saved),
+            "--store",
+            str(store),
+            "--actor",
+            "reviewer",
+            "--disposition",
+            "defer",
+            "--reason",
+            "Reason",
+        ],
+    )
+    assert rejected.exit_code == 2 and store.read_bytes() == before
+    shown = runner.invoke(
+        app, ["review-report", "show", "--report", str(saved), "--store", str(store)]
+    )
+    assert shown.exit_code == 0, shown.output
+    for text in (
+        "source-changed",
+        "boundary-policy-changed",
+        "before-policy",
+        "after-policy",
+        "a.py",
+    ):
+        assert text in shown.stdout
+    old_hash = next(
+        item.sha256
+        for item in ledger.events[0].decision.anchor.source_hashes
+        if item.path.root == "a.py"
+    )
+    new_hash = next(
+        item.sha256
+        for item in target(changed, "clone").anchor.source_hashes
+        if item.path.root == "a.py"
+    )
+    assert old_hash != new_hash
+    assert old_hash in shown.stdout and new_hash in shown.stdout
+    resolution = resolve_reviews(changed, ledger)
+    restored = type(resolution).model_validate_json(resolution.model_dump_json())
+    assert restored.results[0].changes[0].candidate == target(changed, "clone")
+    assert store.read_bytes() == before
