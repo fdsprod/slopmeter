@@ -17,6 +17,7 @@ from slop_measure.application.derived import inspect_derived
 from slop_measure.application.models import inspect_models
 from slop_measure.application.reviews import apply_reviews, load_review_store, write_clone_review
 from slop_measure.application.variants import inspect_variants
+from slop_measure.cli_reviews import app as review_report_app
 from slop_measure.config import load_analysis_config
 from slop_measure.domain.evidence import DiagnosticSeverity
 from slop_measure.domain.reports import AnalysisReport, SourceSide
@@ -35,6 +36,7 @@ from slop_measure.reporting.variants import render_variants
 
 _DESCRIPTION = "Measure redundant and structurally eroded source code."
 app = typer.Typer(name="slop", help=f"slop.measure - {_DESCRIPTION}", no_args_is_help=True)
+app.add_typer(review_report_app, name="review-report")
 
 
 @app.callback()
