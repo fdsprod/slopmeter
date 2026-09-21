@@ -16,6 +16,7 @@ from slop_measure.domain.reports import (
 )
 from slop_measure.domain.source import Cohort, ProjectPath
 from slop_measure.errors import SelectionError
+from slop_measure.reporting.callables import effective_complexity
 from slop_measure.reporting.selections import ErosionFinding, FindingSelection
 
 
@@ -128,13 +129,18 @@ def _metric_families(metric: str | None) -> frozenset[str]:
 def _eroded(
     report: AnalysisReport, source: SourceSide, path: ProjectPath | None
 ) -> tuple[ErosionFinding, ...]:
+    version = next(
+        (item.version for item in report.provenance.metrics if item.metric_id == "m4.erosion"),
+        None,
+    )
     findings = (
         ErosionFinding(source=source, language=language, cohort=cohort, function=function)
         for language, cohort, result in _results(report, source)
         for file in result.files
         if path is None or file.evidence.path == path
         for function in file.functions
-        if function.complexity_for(cohort) > report.provenance.config.complexity_threshold
+        if (complexity := effective_complexity(function, cohort, version)) is not None
+        and complexity > report.provenance.config.complexity_threshold
     )
     return tuple(
         sorted(
