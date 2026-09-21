@@ -109,6 +109,22 @@ def test_later_local_binding_of_len_prevents_builtin_proof() -> None:
     assert inspect(source)["functions"][0]["state"] == "unresolved"
 
 
+@pytest.mark.parametrize(
+    "prefix,parameters",
+    [
+        ("try:\n    risky()\nexcept Exception as len:\n    pass\n", ""),
+        ("", "unused=(len := custom_len)"),
+        ("", "unused: (len := custom_len)"),
+    ],
+)
+def test_indirect_module_bindings_prevent_builtin_len_proof(prefix: str, parameters: str) -> None:
+    source = prefix + function(
+        "items = [1]\ncount = len(items)\nitems.append(2)\nreturn count",
+        parameters=parameters,
+    )
+    assert inspect(source)["functions"][0]["state"] == "unresolved"
+
+
 def test_nonlocal_candidate_remains_unresolved() -> None:
     source = (
         "def outer():\n    items = [1]\n    def inner():\n"
