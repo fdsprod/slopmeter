@@ -21,6 +21,7 @@ from slop_measure.reporting.queries import (
 
 def snapshot() -> AnalysisReport:
     payload = report().model_dump(mode="json")
+    payload["provenance"]["metrics"] = [{"metric_id": "m4.erosion", "version": "3"}]
     payload["cohorts"][0]["current"]["files"][0]["functions"][1]["cyclomatic_complexity"] = 11
     for function in payload["cohorts"][0]["current"]["files"][0]["functions"]:
         function.pop("mass")
