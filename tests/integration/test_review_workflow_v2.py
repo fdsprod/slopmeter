@@ -105,7 +105,8 @@ def test_experimental_catalogs_load_from_saved_reports(root: Path, kind: str) ->
         inspector = inspect_models
     elif kind == "variant":
         source = (
-            "from typing import Literal\ndef render(value: Literal['yes', 'no']):\n"
+            "from typing import Literal\nChoice = Literal['yes', 'no']\n"
+            "def render(value: Choice):\n"
             "    match value:\n        case 'yes' | 'no':\n            return 1\n"
         )
         inspector = inspect_variants
@@ -494,5 +495,6 @@ def test_cli_invalid_write_keeps_store_and_stale_show_includes_exact_changes(roo
     assert old_hash in shown.stdout and new_hash in shown.stdout
     resolution = resolve_reviews(changed, ledger)
     restored = type(resolution).model_validate_json(resolution.model_dump_json())
+    assert restored.results[0].state == "stale"
     assert restored.results[0].changes[0].candidate == target(changed, "clone")
     assert store.read_bytes() == before
