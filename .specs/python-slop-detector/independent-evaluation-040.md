@@ -25,8 +25,10 @@ The pinned releases are historical snapshots, not claims about current heads.
 | [Black 25.1.0](https://github.com/psf/black/tree/8a737e727ac5ab2f1d4cf5876720ed276dc8dc4b) | `8a737e727ac5ab2f1d4cf5876720ed276dc8dc4b` | MIT, `LICENSE` |
 
 The runner was Windows, CPython 3.12.14, with an isolated installation of
-`slop-measure==0.4.0`. The release tag resolves to
-`7798bd998a4e5be984a5f03dc2607326d6da3830`. The wheel SHA256 is
+`slop-measure==0.4.0`. The annotated release tag object is
+`7798bd998a4e5be984a5f03dc2607326d6da3830`; `git rev-parse 'v0.4.0^{commit}'`
+resolves its source commit to `a7c79113b22bb18babea0ab136d549745816ff50`.
+The wheel SHA256 is
 `b9ea3d0ce5af7e6299b81dc919bfd316f5a2fd6250c0e285c7a38499883864ed`.
 Each CLI run used a fresh subprocess. Times below include interpreter startup and
 JSON serialization; they are single observations, not benchmark distributions.
