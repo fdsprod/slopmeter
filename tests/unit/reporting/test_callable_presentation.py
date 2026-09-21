@@ -8,6 +8,7 @@ import pytest
 
 from slop_measure.api import AnalysisConfig, DirectorySourceReference, SnapshotRequest, scan
 from slop_measure.domain.reports import AnalysisReport
+from slop_measure.reporting.queries import query_findings
 from slop_measure.reporting.terminal import render_explanation, render_snapshot, render_tree
 
 
@@ -146,6 +147,24 @@ def test_historical_erosion_explanation_uses_full_cc_even_with_assertion_evidenc
         assert "excess mass" not in section
     else:
         assert "excess mass" in section
+
+
+@pytest.mark.parametrize("version,test_selected", [("1", True), ("2", True), ("3", False)])
+def test_erosion_query_uses_report_version_for_test_callable_basis(
+    callable_report: AnalysisReport, version: str, test_selected: bool
+) -> None:
+    payload = callable_report.model_dump(mode="json")
+    for metric in payload["provenance"]["metrics"]:
+        if metric["metric_id"] == "m4.erosion":
+            metric["version"] = version
+    report = AnalysisReport.model_validate(payload)
+    before = report.model_dump_json()
+    selected = query_findings(report, metric="m4")
+    paths = {item.function.path.root for item in selected.functions}
+    assert ("tests/test_checks.py" in paths) is test_selected
+    assert "checks.py" in paths and "branches.py" in paths
+    assert "simple.py" not in paths
+    assert report.model_dump_json() == before
 
 
 def test_unknown_metric_version_does_not_guess_callable_basis(
