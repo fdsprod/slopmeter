@@ -21,6 +21,11 @@ from slop_measure.domain.evidence import (
     ExcludedDirectory,
     SourceSpan,
 )
+from slop_measure.domain.experimental_coverage import (
+    ExperimentalCoverage,
+    ExperimentalReport,
+    summarize_coverage,
+)
 from slop_measure.domain.source import Cohort, DirectorySourceIdentity, ProjectPath
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -177,7 +182,7 @@ class FailedVariantFile(_VariantEvidence):
 VariantFileResult = Annotated[AnalyzedVariantFile | FailedVariantFile, Field(discriminator="state")]
 
 
-class VariantReviewReport(_VariantEvidence):
+class VariantReviewReport(ExperimentalReport):
     schema_version: Literal["1"] = "1"
     experiment: Literal["py-variant-review-1"] = "py-variant-review-1"
     tool_version: _Text
@@ -202,6 +207,25 @@ class VariantReviewReport(_VariantEvidence):
         "Source is parsed, never imported or executed. This is not a full type checker. "
         "Independent holdouts are needed before estimating precision or assigning scores.",
     )
+
+    @computed_field
+    @property
+    def summary(self) -> ExperimentalCoverage:
+        files = [file for file in self.files if file.state == "analyzed"]
+        handlers = [handler for file in files for handler in file.handlers]
+        return summarize_coverage(
+            unit="match-handlers",
+            file_states=(file.state for file in self.files),
+            assessed=sum(handler.state == "analyzed" for handler in handlers),
+            findings=sum(
+                handler.coverage != "exhaustive"
+                for handler in handlers
+                if handler.state == "analyzed"
+            ),
+            unresolved_reasons=(
+                handler.reason for handler in handlers if handler.state == "unresolved"
+            ),
+        )
 
     @model_validator(mode="after")
     def validate_files(self) -> Self:

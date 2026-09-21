@@ -1,6 +1,7 @@
 """Render explicit, conditional, and fallback variant coverage for review."""
 
 from slop_measure.domain.variant_review import AnalyzedVariantHandler, VariantReviewReport
+from slop_measure.reporting.experimental_coverage import coverage_lines
 
 
 def _handler_lines(path: str, handler: AnalyzedVariantHandler) -> list[str]:
@@ -28,6 +29,7 @@ def render_variants(report: VariantReviewReport) -> str:
     lines = [f"Experimental variant review | {report.experiment}", f"Source: {report.source.root}"]
     analyzed = sum(file.state == "analyzed" for file in report.files)
     lines.append(f"Files: {analyzed} analyzed, {len(report.files) - analyzed} failed")
+    lines.extend(coverage_lines(report.summary))
     counts = dict.fromkeys(("missing", "fallback", "exhaustive", "unresolved"), 0)
     for file in report.files:
         if file.state == "failed":

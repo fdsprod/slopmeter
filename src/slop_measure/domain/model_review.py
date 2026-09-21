@@ -2,7 +2,14 @@
 
 from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    computed_field,
+    model_validator,
+)
 
 from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
@@ -11,6 +18,11 @@ from slop_measure.domain.evidence import (
     DiagnosticSeverity,
     ExcludedDirectory,
     SourceSpan,
+)
+from slop_measure.domain.experimental_coverage import (
+    ExperimentalCoverage,
+    ExperimentalReport,
+    summarize_coverage,
 )
 from slop_measure.domain.source import Cohort, DirectorySourceIdentity, ProjectPath
 
@@ -107,7 +119,7 @@ class FailedModelFile(_ReviewEvidence):
 ModelFileResult = Annotated[AnalyzedModelFile | FailedModelFile, Field(discriminator="state")]
 
 
-class ModelReviewReport(_ReviewEvidence):
+class ModelReviewReport(ExperimentalReport):
     schema_version: Literal["1"] = "1"
     experiment: Literal["py-coupled-state-1"] = "py-coupled-state-1"
     tool_version: _Text
@@ -129,6 +141,19 @@ class ModelReviewReport(_ReviewEvidence):
         "Source is parsed, never imported or executed. Independent holdouts are needed "
         "before estimating precision or assigning score weights.",
     )
+
+    @computed_field
+    @property
+    def summary(self) -> ExperimentalCoverage:
+        files = [file for file in self.files if file.state == "analyzed"]
+        models = [model for file in files for model in file.models]
+        return summarize_coverage(
+            unit="class-declarations",
+            file_states=(file.state for file in self.files),
+            assessed=sum(model.state == "analyzed" for model in models),
+            findings=sum(len(model.findings) for model in models if model.state == "analyzed"),
+            unresolved_reasons=(model.reason for model in models if model.state == "unresolved"),
+        )
 
     @model_validator(mode="after")
     def validate_files(self) -> Self:

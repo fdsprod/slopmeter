@@ -1,12 +1,14 @@
 """Show experimental model evidence and unresolved scope without a score."""
 
 from slop_measure.domain.model_review import ModelReviewReport
+from slop_measure.reporting.experimental_coverage import coverage_lines
 
 
 def render_models(report: ModelReviewReport) -> str:
     lines = [f"Experimental model review | {report.experiment}", f"Source: {report.source.root}"]
     analyzed = sum(file.state == "analyzed" for file in report.files)
     lines.append(f"Files: {analyzed} analyzed, {len(report.files) - analyzed} failed")
+    lines.extend(coverage_lines(report.summary))
     findings = 0
     unresolved = 0
     for file in report.files:

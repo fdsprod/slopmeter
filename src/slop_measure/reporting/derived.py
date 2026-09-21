@@ -1,6 +1,7 @@
 """Render the three source locations behind each stored-count review candidate."""
 
 from slop_measure.domain.derived_review import DerivedReviewReport
+from slop_measure.reporting.experimental_coverage import coverage_lines
 
 
 def render_derived(report: DerivedReviewReport) -> str:
@@ -10,6 +11,7 @@ def render_derived(report: DerivedReviewReport) -> str:
     ]
     analyzed = sum(file.state == "analyzed" for file in report.files)
     lines.append(f"Files: {analyzed} analyzed, {len(report.files) - analyzed} failed")
+    lines.extend(coverage_lines(report.summary))
     counts = dict.fromkeys(("analyzed", "unresolved", "candidates"), 0)
     for file in report.files:
         if file.state == "failed":

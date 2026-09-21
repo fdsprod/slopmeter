@@ -2,7 +2,14 @@
 
 from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    computed_field,
+    model_validator,
+)
 
 from slop_measure.config import AnalysisConfig
 from slop_measure.domain.evidence import (
@@ -11,6 +18,11 @@ from slop_measure.domain.evidence import (
     DiagnosticSeverity,
     ExcludedDirectory,
     SourceSpan,
+)
+from slop_measure.domain.experimental_coverage import (
+    ExperimentalCoverage,
+    ExperimentalReport,
+    summarize_coverage,
 )
 from slop_measure.domain.source import Cohort, DirectorySourceIdentity, ProjectPath
 
@@ -104,7 +116,7 @@ class FailedDerivedFile(_DerivedEvidence):
 DerivedFileResult = Annotated[AnalyzedDerivedFile | FailedDerivedFile, Field(discriminator="state")]
 
 
-class DerivedReviewReport(_DerivedEvidence):
+class DerivedReviewReport(ExperimentalReport):
     schema_version: Literal["1"] = "1"
     experiment: Literal["py-derived-state-1"] = "py-derived-state-1"
     tool_version: _Text
@@ -127,6 +139,23 @@ class DerivedReviewReport(_DerivedEvidence):
         "Source is parsed, never imported or executed. No findings means no qualifying "
         "evidence in this narrow experiment. Independent evaluation is required before scoring.",
     )
+
+    @computed_field
+    @property
+    def summary(self) -> ExperimentalCoverage:
+        files = [file for file in self.files if file.state == "analyzed"]
+        functions = [function for file in files for function in file.functions]
+        return summarize_coverage(
+            unit="functions",
+            file_states=(file.state for file in self.files),
+            assessed=sum(function.state == "analyzed" for function in functions),
+            findings=sum(
+                len(function.findings) for function in functions if function.state == "analyzed"
+            ),
+            unresolved_reasons=(
+                function.reason for function in functions if function.state == "unresolved"
+            ),
+        )
 
     @model_validator(mode="after")
     def validate_files(self) -> Self:
