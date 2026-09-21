@@ -418,6 +418,33 @@ combined. A baseline revision uses the repository given by `--root`.
 
 ## Experimental data-model review
 
+### Coverage summaries (source checkout)
+
+This checkout adds a coverage summary before the detailed output of `models`,
+`variants`, and `derived`. The JSON report includes the same computed `summary`:
+
+| Count | Meaning |
+|---|---|
+| Files analyzed / failed | File outcomes; a parsed file may contain no supported subjects |
+| Encountered | Class declarations, match handlers, or functions in parsed files |
+| Assessed / unresolved | Subjects inside / outside the experiment's supported scope |
+| Findings | Model or derived-state candidates; missing/fallback variant handlers |
+| Unresolved reasons | Counts grouped by the stated reason |
+
+`Nothing assessed` means the experiment could not assess any subject. It differs
+from assessed subjects with no findings. Neither result establishes correctness.
+Class counts include ordinary classes and test fakes; they are not counts of
+identified business models or a measure of detector recall. Failed files have no
+inferred class, handler, or function count. Exhaustive variant handlers count as
+assessed, but not as missing/fallback findings.
+
+Summaries are derived from detailed outcomes. The current reader accepts older
+reports without a summary and rejects supplied summaries that contradict the
+evidence. Saved review identities and detector eligibility are unchanged. These
+reporting changes are not included in the published v0.4.0 release.
+
+### Coupled-state evidence
+
 Version 0.4.0 includes an experimental coupled-state check. It is separate
 from calibrated scores:
 
@@ -486,6 +513,13 @@ function, with a fixed parameter typed as a local declaration. OR patterns and
 capture/wildcard fallbacks are supported. Unsupported patterns, enum aliases,
 custom enum behavior, nested or later matches, reassignment, and ambiguous bindings
 are reported as unresolved. No finding means no qualifying evidence in this scope.
+
+The source checkout gives specific reasons for unsupported handler scope or
+signature, match placement, subject shape, annotations, bindings, declarations,
+and patterns. It identifies the first blocking check, not every limitation in a
+handler. These explanations do not expand the accepted syntax. They help decide
+what source needs manual review; they are not instructions to rewrite code into
+the detector's supported shape.
 
 Like `models`, this command keeps source hashes, locations, discovery coverage and
 failures visible. It supports external config and `--strict`, never executes source,
