@@ -98,6 +98,7 @@ def _fields(model: ast.ClassDef) -> tuple[ModelField, ...] | None:
         if (
             not isinstance(statement.target, ast.Name)
             or kind is None
+            or (kind == "boolean" and bindings.names["bool"])
             or bindings.names[statement.target.id] != 1
         ):
             return None
