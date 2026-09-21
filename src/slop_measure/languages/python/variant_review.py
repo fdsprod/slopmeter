@@ -346,64 +346,116 @@ def _annotation_name(node: ast.expr | None) -> str | None:
     return None
 
 
-def _handler_type(owner: _MatchOwner, bindings: _Bindings) -> str | None:
-    function = owner.function
-    if not owner.top_level or function is None or function.decorator_list or function.type_params:
-        return None
-    body = function.body[1:] if function.body and _docstring(function.body[0]) else function.body
-    if not body or body[0] is not owner.match or not isinstance(owner.match.subject, ast.Name):
-        return None
-    if bindings.uncertain or bindings.names[function.name] != 1:
-        return None
-    subject = owner.match.subject.id
+@dataclass(frozen=True)
+class _Unresolved:
+    reason: str
+
+
+def _subject_annotation(function: _Function, subject: str) -> str | _Unresolved:
     args = (*function.args.posonlyargs, *function.args.args, *function.args.kwonlyargs)
     argument = next((arg for arg in args if arg.arg == subject), None)
-    name = _annotation_name(argument.annotation) if argument else None
-    local = _bindings(function.body)
-    if name is None or local.uncertain or local.names[name] or local.names[subject]:
-        return None
-    if any(arg.arg == name for arg in _all_arguments(function)):
-        return None
+    if argument is None:
+        if any(arg.arg == subject for arg in _all_arguments(function)):
+            return _Unresolved(f"Match subject '{subject}' is a variadic parameter.")
+        return _Unresolved(f"Match subject '{subject}' is not a handler parameter.")
+    if argument.annotation is None:
+        return _Unresolved(f"The annotation for match subject '{subject}' is missing.")
+    name = _annotation_name(argument.annotation)
+    if name is None:
+        return _Unresolved(f"Unsupported subject annotation '{ast.unparse(argument.annotation)}'.")
     return name
 
 
-def _pattern_cases(pattern: ast.pattern, declaration: VariantDeclaration) -> tuple[str, ...] | None:
+def _local_handler_type(function: _Function, subject: str) -> str | _Unresolved:
+    name = _subject_annotation(function, subject)
+    if isinstance(name, _Unresolved):
+        return name
+    local = _bindings(function.body)
+    if local.uncertain:
+        return _Unresolved("Local bindings are uncertain.")
+    if local.names[name]:
+        return _Unresolved(f"The local binding for annotation '{name}' is reassigned or shadowed.")
+    if local.names[subject]:
+        return _Unresolved(f"The local binding for match subject '{subject}' is reassigned.")
+    if any(arg.arg == name for arg in _all_arguments(function)):
+        return _Unresolved(f"Parameter '{name}' shadows the annotation binding.")
+    return name
+
+
+def _handler_function(owner: _MatchOwner) -> _Function | _Unresolved:
+    function = owner.function
+    if not owner.top_level or function is None:
+        return _Unresolved("The match is not in a top-level function.")
+    if function.decorator_list:
+        return _Unresolved("Unsupported handler signature: the function has decorators.")
+    if function.type_params:
+        return _Unresolved("Unsupported handler signature: the function has type parameters.")
+    return function
+
+
+def _handler_type(owner: _MatchOwner, bindings: _Bindings) -> str | _Unresolved:
+    function = _handler_function(owner)
+    if isinstance(function, _Unresolved):
+        return function
+    body = function.body[1:] if function.body and _docstring(function.body[0]) else function.body
+    if not body or body[0] is not owner.match:
+        return _Unresolved("The match is not the first statement after the function docstring.")
+    if not isinstance(owner.match.subject, ast.Name):
+        return _Unresolved(
+            f"Match subject '{ast.unparse(owner.match.subject)}' is not a simple name."
+        )
+    if bindings.uncertain:
+        return _Unresolved("Module bindings are uncertain.")
+    if bindings.names[function.name] != 1:
+        return _Unresolved(f"The module binding for handler '{function.name}' is reassigned.")
+    return _local_handler_type(function, owner.match.subject.id)
+
+
+def _pattern_cases(
+    pattern: ast.pattern, declaration: VariantDeclaration
+) -> tuple[str, ...] | _Unresolved:
     if isinstance(pattern, ast.MatchOr):
-        parts = [_pattern_cases(part, declaration) for part in pattern.patterns]
-        if any(part is None for part in parts):
-            return None
-        return tuple(dict.fromkeys(name for part in parts if part is not None for name in part))
+        names: list[str] = []
+        for part in pattern.patterns:
+            cases = _pattern_cases(part, declaration)
+            if isinstance(cases, _Unresolved):
+                return cases
+            names.extend(cases)
+        return tuple(dict.fromkeys(names))
+    unsupported = _Unresolved(
+        f"Unsupported match pattern '{ast.unparse(pattern)}' for declaration '{declaration.name}'."
+    )
     if not isinstance(pattern, ast.MatchValue):
-        return None
+        return unsupported
     value = pattern.value
     if declaration.kind == "enum":
         if not isinstance(value, ast.Attribute) or not isinstance(value.value, ast.Name):
-            return None
+            return unsupported
         name = f"{value.value.id}.{value.attr}"
     else:
         constant = _constant(value)
         if constant is None:
-            return None
+            return unsupported
         name = repr(constant)
-    return (name,) if name in {case.name for case in declaration.cases} else None
+    return (name,) if name in {case.name for case in declaration.cases} else unsupported
 
 
 def _branches(
     match: ast.Match, declaration: VariantDeclaration
-) -> tuple[VariantBranch, ...] | None:
+) -> tuple[VariantBranch, ...] | _Unresolved:
     branches: list[VariantBranch] = []
     for index, case in enumerate(match.cases):
         pattern = case.pattern
         if isinstance(pattern, ast.MatchAs) and pattern.pattern is None:
             if case.guard is None and index != len(match.cases) - 1:
-                return None
+                return _Unresolved("An unconditional catch-all pattern must be the last case.")
             branches.append(
                 FallbackVariantBranch(span=_span(pattern), conditional=case.guard is not None)
             )
         else:
             cases = _pattern_cases(pattern, declaration)
-            if not cases:
-                return None
+            if isinstance(cases, _Unresolved):
+                return cases
             branches.append(
                 ExplicitVariantBranch(
                     span=_span(pattern), cases=cases, conditional=case.guard is not None
@@ -412,24 +464,37 @@ def _branches(
     return tuple(branches)
 
 
+def _missing_declaration(name: str, bindings: _Bindings) -> _Unresolved:
+    if bindings.names[name] > 1:
+        return _Unresolved(f"The module binding for declaration '{name}' is reassigned.")
+    if not bindings.names[name]:
+        return _Unresolved(f"The local declaration for annotation '{name}' is missing.")
+    return _Unresolved(f"No supported local declaration was found for annotation '{name}'.")
+
+
 def _assess(
     owner: _MatchOwner, bindings: _Bindings, declarations: dict[str, VariantDeclaration]
 ) -> VariantHandler:
     name = _handler_type(owner, bindings)
-    declaration = declarations.get(name) if name else None
-    branches = _branches(owner.match, declaration) if declaration is not None else None
     subject = ast.unparse(owner.match.subject)
     span = _span(owner.match)
-    if declaration is None or branches is None:
-        return UnresolvedVariantHandler(
-            symbol=owner.symbol,
-            subject=subject,
-            span=span,
-            reason="The local declaration, subject binding, or match pattern is outside "
-            "the supported finite scope.",
-        )
-    return AnalyzedVariantHandler(
-        symbol=owner.symbol, subject=subject, span=span, declaration=declaration, branches=branches
+    if isinstance(name, _Unresolved):
+        unresolved = name
+    elif (declaration := declarations.get(name)) is None:
+        unresolved = _missing_declaration(name, bindings)
+    else:
+        branches = _branches(owner.match, declaration)
+        if not isinstance(branches, _Unresolved):
+            return AnalyzedVariantHandler(
+                symbol=owner.symbol,
+                subject=subject,
+                span=span,
+                declaration=declaration,
+                branches=branches,
+            )
+        unresolved = branches
+    return UnresolvedVariantHandler(
+        symbol=owner.symbol, subject=subject, span=span, reason=unresolved.reason
     )
 
 
