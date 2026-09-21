@@ -125,6 +125,31 @@ def test_indirect_module_bindings_prevent_builtin_len_proof(prefix: str, paramet
     assert inspect(source)["functions"][0]["state"] == "unresolved"
 
 
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        "match (lambda value: 42):\n    case len:\n        pass\n",
+        "globals()['len'] = lambda value: 42\n",
+        "__builtins__ = {'len': lambda value: 42}\n",
+    ],
+)
+def test_dynamic_or_pattern_builtin_bindings_are_unresolved(prefix: str) -> None:
+    source = prefix + function("items = [1]\ncount = len(items)\nitems.append(2)\nreturn count")
+    assert inspect(source)["functions"][0]["state"] == "unresolved"
+
+
+def test_type_parameter_shadowing_len_is_unresolved() -> None:
+    source = function("items = [1]\ncount = len(items)\nitems.append(2)\nreturn count")
+    source = source.replace("def work():", "def work[len]():")
+    assert inspect(source)["functions"][0]["state"] == "unresolved"
+
+
+def test_repeated_read_on_same_line_has_one_evidence_record() -> None:
+    source = function("items = [1]\ncount = len(items)\nitems.append(2)\nreturn count, count")
+    scope = inspect(source)["functions"][0]
+    assert scope["state"] == "analyzed" and len(scope["findings"]) == 1
+
+
 def test_nonlocal_candidate_remains_unresolved() -> None:
     source = (
         "def outer():\n    items = [1]\n    def inner():\n"
