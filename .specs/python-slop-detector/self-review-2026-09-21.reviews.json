@@ -1,0 +1,3048 @@
+{
+  "schema_version": "2",
+  "legacy_decisions": [],
+  "events": [
+    {
+      "sequence": 1,
+      "review_id": "complexity:4040aa329b9cdd0a429310241ce714de8c246a76d8c4e663c3040c12cf93d46f",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:02.322095Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_analysis",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/_review_targets.py",
+                "span": {
+                  "start_line": 87,
+                  "end_line": 119
+                }
+              }
+            ],
+            "evidence_fingerprint": "420cce124670b88da20b5c6830d48fd641b4fbb0e93e3fa7024e60aae2e050ca"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/_review_targets.py",
+              "sha256": "dd7f4cf3c0df68a2df4d61ee02c60c0de3cf26298069b03a167e808690d89f24"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Dispatch selects distinct version identities for patterns, clones, and complexity. Missing analyzer or metric identity yields an unavailable anchor. Remaining risk: Version constants must change when measurement semantics change; profile selection is intentionally not review evidence.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 2,
+      "review_id": "complexity:3e784fd8eb3f1c4650a79e4dc7b5b5b673d5f8c693bfcb3ef1d0f5915793965f",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:02.393183Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_snapshot_targets",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/_review_targets.py",
+                "span": {
+                  "start_line": 122,
+                  "end_line": 174
+                }
+              }
+            ],
+            "evidence_fingerprint": "87f35e73c5c30de67006c0a7008f4d92b22f2d227f1fc6fffc5e1d643f9f4f97"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/_review_targets.py",
+              "sha256": "dd7f4cf3c0df68a2df4d61ee02c60c0de3cf26298069b03a167e808690d89f24"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Current-side groups, patterns, and callables keep their owned source paths and hashes. Clone anchors use only effective member assignments; baseline evidence is skipped. Remaining risk: Saved-report coverage can be partial, and unavailable source hashes must remain unreviewable.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 3,
+      "review_id": "complexity:371cb003874d1aab9a917e709a25c8c413e200377b757c4f7791036bc071ea6a",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:02.512867Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_changes",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/comparison.py",
+                "span": {
+                  "start_line": 102,
+                  "end_line": 139
+                }
+              }
+            ],
+            "evidence_fingerprint": "836e859220250223a4a794e409dfc9ec46e148afa570b8c8a29b711afaeecd41"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/comparison.py",
+              "sha256": "c5ec48e2783e0561a63a87172f878d01519577214698ef57b2ad22e3e743bb9e"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. File pairing retains unreadable evidence and computes deltas from the two owned document maps. Added, deleted, and renamed paths stay explicit. Remaining risk: Rename ambiguity and unreadable-source behavior need the retained matching and comparison tests.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 4,
+      "review_id": "complexity:5dfdffd39c080ececef9c6f7e95baaf837d863f9aac812d9e0d2e68735191d14",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:02.588106Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "assemble_comparison",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/comparison.py",
+                "span": {
+                  "start_line": 219,
+                  "end_line": 269
+                }
+              }
+            ],
+            "evidence_fingerprint": "4893ea5076ebf96a02cbde4a6e960b018a72aa200a636a47ace3a638c612f321"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/comparison.py",
+              "sha256": "c5ec48e2783e0561a63a87172f878d01519577214698ef57b2ad22e3e743bb9e"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Assembly checks snapshot/provenance compatibility, remaps side-specific IDs and diagnostics, and preserves both source populations. Most decisions are comprehensions over the two sides. Remaining risk: New metadata fields must be assigned to their owning side; avoid bypassing report validation.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 5,
+      "review_id": "complexity:6fa767b7ad7848b324c99b63c094b5486dadb7dd0504bf5ba4d9da4a608ecb45",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:02.662511Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "inspect_derived",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/derived.py",
+                "span": {
+                  "start_line": 36,
+                  "end_line": 69
+                }
+              }
+            ],
+            "evidence_fingerprint": "ca4e3cb2781452ce60dbd1fea261e849b228bfa881018a7c1625deb1c09669f0"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/derived.py",
+              "sha256": "bad5cbd404fecd36864f31d159097c47f43706c2a2bf45bd22ffc7a728585c5d"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Directory inventory, isolated per-file analysis, failed-read outcomes, and strict-mode errors are separate visible phases. The CC counts filters and diagnostic accumulation. Remaining risk: The three experimental entry points repeat orchestration; keep behavior parity tests until a real shared change warrants extraction.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 6,
+      "review_id": "complexity:d98a46702dec68b03f4fabbe8e94e90cf64ee79445789acd48c702373b45d99f",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:02.779914Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "inspect_models",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/models.py",
+                "span": {
+                  "start_line": 32,
+                  "end_line": 65
+                }
+              }
+            ],
+            "evidence_fingerprint": "5ae6968ee49f4e7ada833a185857070ab2090000b8d6702543c49312165e1d9e"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/models.py",
+              "sha256": "bf2a5ac04d5a6b0b4b1fc6a0ed28fbb0eb8b08b4dea613603e59c812f0d10533"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The model experiment uses the same explicit inventory/failure/strict/report sequence. It does not import source or turn failed files into empty findings. Remaining risk: Unsupported model shapes remain unresolved. Low finding counts must not be presented as correctness.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 7,
+      "review_id": "complexity:d8c30a66cbbb003981387a65a2888e432f01608cf51755f573d9e8b8d0466873",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:02.854659Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_resolve",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/reviews.py",
+                "span": {
+                  "start_line": 43,
+                  "end_line": 75
+                }
+              }
+            ],
+            "evidence_fingerprint": "af910524bc4a30742aa2f2bc7f4e756cc83455debf6ffbc256a539794b80360d"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/reviews.py",
+              "sha256": "33be792c334d2179da041a75be4ce7272e452acdbbd60cc18313ec713654087a"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Legacy resolution requires exact anchor equality for current; candidates with changed or missing identity are stale and absent candidates are missing. Remaining risk: Candidate groups can be broad, but none is automatically approved. Legacy whole-policy invalidation is deliberate.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 8,
+      "review_id": "complexity:bc591df74a0d413138898b198a01b74964f529b67999dc7033ddd571c6bb7e18",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:02.930901Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_validate_evidence",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/service.py",
+                "span": {
+                  "start_line": 64,
+                  "end_line": 82
+                }
+              }
+            ],
+            "evidence_fingerprint": "1be7c28326f1722976674f9571c5421b55ab8edda801c01a6ecb5f1e48da4fd2"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/service.py",
+              "sha256": "72cfaa143296ea47fb4985a38d4298e6c86cbb61f148d8aeffcb128e8741e5a5"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Short adapter contract checklist verifies complete path/language/cohort accounting, declared capabilities, and error evidence for failed files. Remaining risk: Removing guards would weaken adapter isolation. Domain validators separately reject duplicate paths.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 9,
+      "review_id": "complexity:866e7f57eba9bb38a24afc1998202471088c132cd1de046d8666e7b741d0147a",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.050082Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "AnalysisService._scan",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/service.py",
+                "span": {
+                  "start_line": 129,
+                  "end_line": 188
+                }
+              }
+            ],
+            "evidence_fingerprint": "751db180b793e1a7b1d6a6141f9fa5abebf63334833650651518210fed77f1c8"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/service.py",
+              "sha256": "72cfaa143296ea47fb4985a38d4298e6c86cbb61f148d8aeffcb128e8741e5a5"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "defer",
+        "reason": "Measured evidence is valid. The scan loop performs config validation, source discovery, adapter isolation, provenance assembly, aggregation and strict-mode enforcement. The full source-review path did not establish a correctness defect. Remaining risk: Consider separating adapter execution from coordination when another adapter needs it; do not extract merely to reduce CC.",
+        "next_step": "Revisit coordination only when adapter requirements change."
+      }
+    },
+    {
+      "sequence": 10,
+      "review_id": "complexity:2a1f542b31774c88cbcb359c138a0ce218c774c7fc1645fa36f5629ad6dd67cd",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.125302Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "inspect_variants",
+            "locations": [
+              {
+                "path": "src/slop_measure/application/variants.py",
+                "span": {
+                  "start_line": 36,
+                  "end_line": 69
+                }
+              }
+            ],
+            "evidence_fingerprint": "176464704c0b91112e55dd095f17d6cb544049010c0d1d3be8e2aced5199b01c"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/application/variants.py",
+              "sha256": "a0b2fc07874c79ffd3d02c1c5157be50250d97cb69a4f02cb8086b01f259aa25"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The variant experiment preserves directory source coverage and failures, then applies strict mode to error diagnostics. The complexity reflects the same explicit application pipeline. Remaining risk: Maintain parity with the other experimental commands without hiding their separate report types.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 11,
+      "review_id": "complexity:192190da1cfa201b8645f5be497b6c1f82b9420ac0baa6bbf95227426695cc3b",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.202893Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "validate_deltas",
+            "locations": [
+              {
+                "path": "src/slop_measure/domain/comparison_validation.py",
+                "span": {
+                  "start_line": 64,
+                  "end_line": 86
+                }
+              }
+            ],
+            "evidence_fingerprint": "b936e49bb940b48e97d7f54cb17742f4ed217a08dd967dba447a1fa36b8f36ea"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/domain/comparison_validation.py",
+              "sha256": "5c87b4b3c0500e9ccb85796424de952355eef9b15ef38d29d08243869a8b26f5"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Delta validation distinguishes missing, unavailable, and incompatible inputs and verifies current-minus-baseline arithmetic with a small tolerance. Remaining risk: These are integrity checks for imported reports, not business branches to remove.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 12,
+      "review_id": "complexity:d778901c784c91c252487f703d45a97c09169298487b9a6bd91624bd1ec3d22b",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.319965Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_validate_totals",
+            "locations": [
+              {
+                "path": "src/slop_measure/domain/comparison_validation.py",
+                "span": {
+                  "start_line": 110,
+                  "end_line": 150
+                }
+              }
+            ],
+            "evidence_fingerprint": "e5b31856b407834cca1098c8ec74c5a4cdb18091cb8eba8f653def0a49980c1a"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/domain/comparison_validation.py",
+              "sha256": "5c87b4b3c0500e9ccb85796424de952355eef9b15ef38d29d08243869a8b26f5"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Line totals reconcile every source file and measured change. M1 availability and raw values must agree with owned totals. Remaining risk: Unavailable values deliberately carry no invented numeric total; retain malformed-import tests.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 13,
+      "review_id": "complexity:a64d5c3da876e7e755830ded77fb42f6fe71e3874aec040b4efe72961ece4077",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.397275Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "LanguageEvidence.validate_clone_analyses",
+            "locations": [
+              {
+                "path": "src/slop_measure/domain/evidence.py",
+                "span": {
+                  "start_line": 489,
+                  "end_line": 504
+                }
+              }
+            ],
+            "evidence_fingerprint": "25548e79b9f269067fd6bdfba75acac2142d002a391ab90eae7bd96be0bc314f"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/domain/evidence.py",
+              "sha256": "026f47ed1473d8dd350aba0128c896bdccd11b3c420b9eab66fbb6f727658fd3"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Capability guard and exact parsed-file coverage checks protect clone evidence. Candidate spans are validated against their own file. Remaining risk: A failure outcome remains different from a successful empty candidate list.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 14,
+      "review_id": "complexity:63bdb75a8ac27966c436ddbee101f69687b0945f4833ad75785089b2e78788b0",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.473367Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "LanguageEvidence.validate_pattern_analyses",
+            "locations": [
+              {
+                "path": "src/slop_measure/domain/evidence.py",
+                "span": {
+                  "start_line": 557,
+                  "end_line": 572
+                }
+              }
+            ],
+            "evidence_fingerprint": "5fa7fa37c9d02364ec8325879bffcaf9c75db389a359cfd82ec9bff0f6bf09a8"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/domain/evidence.py",
+              "sha256": "026f47ed1473d8dd350aba0128c896bdccd11b3c420b9eab66fbb6f727658fd3"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Pattern capability and one-outcome-per-parsed-file checks prevent partial output from looking complete. Finding spans are checked against source lines. Remaining risk: Keep the integrity guards; a high predicate count is expected for this boundary.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 15,
+      "review_id": "complexity:6ddf5d91110c886587dcf872f33dc02753a3dfee91ede937a64c65a4f6e15e6c",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.583721Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "AnalysisReport.clone_review_anchor",
+            "locations": [
+              {
+                "path": "src/slop_measure/domain/reports.py",
+                "span": {
+                  "start_line": 341,
+                  "end_line": 378
+                }
+              }
+            ],
+            "evidence_fingerprint": "5dbb5d648dedde9559ce317666addc3ad641dfe2a6f9ab8752ebbba9305dddc4"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/domain/reports.py",
+              "sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Legacy anchors require owned current groups, hashes for each member, and the clone metric version before storing the exact policy/definition context. Remaining risk: Whole-file hashes and legacy policy fingerprints are intentionally conservative; new ledger rules are separate.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 16,
+      "review_id": "complexity:656851b0cb2da6b03c7f6efec0a27d81d018d1c9260c68bc02b3395eed6e95f4",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.659459Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "AnalysisReport.validate_reviews",
+            "locations": [
+              {
+                "path": "src/slop_measure/domain/reports.py",
+                "span": {
+                  "start_line": 419,
+                  "end_line": 437
+                }
+              }
+            ],
+            "evidence_fingerprint": "e97c8dd5b47acacf2e21953acbf550a9505e8d559ceb7dec4be85972dc4d736f"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/domain/reports.py",
+              "sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Imported current reviews must match their actual anchors; stale candidate IDs and supplied explanations must agree with current groups. Remaining risk: This validates supplied explanation detail; it is not an independent source re-scan or automatic reapproval.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 17,
+      "review_id": "complexity:b5ff2c5f1590258d88bc850e1e900ccaea688595084df065a84c2ffaee6e3c45",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.780853Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "AnalysisReport.validate_clones",
+            "locations": [
+              {
+                "path": "src/slop_measure/domain/reports.py",
+                "span": {
+                  "start_line": 440,
+                  "end_line": 468
+                }
+              }
+            ],
+            "evidence_fingerprint": "580aadf4eb4aa324fcf6f297bae346910c5ffb7300ddc4eae031d642ea9a4d7e"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/domain/reports.py",
+              "sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Clone context is recomputed from declarations; each member must belong to a source file with matching language/cohort and valid spans. Remaining risk: Boundary relation says where duplication occurs, not whether extraction is desirable.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 18,
+      "review_id": "complexity:06e554af327af8494885cfbc58cd400f684a14631da1bb51e2365d46ff162706",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.855055Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "AnalysisReport.validate_metadata",
+            "locations": [
+              {
+                "path": "src/slop_measure/domain/reports.py",
+                "span": {
+                  "start_line": 516,
+                  "end_line": 542
+                }
+              }
+            ],
+            "evidence_fingerprint": "a8484ad10f6dc390eb974e276325563d5a5029e9bcd1d46464a9e7517ea53c8e"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/domain/reports.py",
+              "sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Snapshot metadata cannot claim a baseline. Coverage, diagnostic IDs, exclusions, and metric diagnostic links are checked for unique source ownership. Remaining risk: These import-time consistency predicates are legitimate; new metadata types need the same ownership discipline.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 19,
+      "review_id": "complexity:5efda465d358f34ee19b0a61def6100b4f698337ce3125156f9454bca068b3a0",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:03.930727Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "CalibrationProfile.validate_models",
+            "locations": [
+              {
+                "path": "src/slop_measure/domain/scoring.py",
+                "span": {
+                  "start_line": 298,
+                  "end_line": 315
+                }
+              }
+            ],
+            "evidence_fingerprint": "926800245724a074536324dde5e04d46c634dc594aef7ea9af04bbb754cce14c"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/domain/scoring.py",
+              "sha256": "cd64d80389a40a731b06867725b1ad8e52594443928d01266aca6b7720be8157"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Profile validation checks unique models/eligibility/versions, required metric definitions, distribution inputs, and non-overlapping population ranges. Remaining risk: Validation cannot prove corpus representativeness or repository-lineage independence; those remain evaluation policy.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 20,
+      "review_id": "complexity:b2c483744c17da92a857c6dca02721dfbfb4a80ebcb9c6020495ed5af6991c71",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.062938Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "extract_clone_candidates",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/clones.py",
+                "span": {
+                  "start_line": 148,
+                  "end_line": 181
+                }
+              }
+            ],
+            "evidence_fingerprint": "2aafb3d814a3dc5129b4b585014e16cad8a8c5d7331d54a8addd29823a90f5a4"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/clones.py",
+              "sha256": "aa927e77b013c841b62f41b6d061ed38afb9ec1c8372f0142a89251ae7c18f56"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Complete sibling runs are thresholded by both statement count and exact owned SLOC, then deduplicated by observable identity. Nested suites and token projection account for the branches. Remaining risk: Conservative lexical normalization can miss semantic clones; it must not guess bindings.",
+        "next_step": "Retain current normalization and regression suite; change only for a reproducible token/ownership defect."
+      }
+    },
+    {
+      "sequence": 21,
+      "review_id": "complexity:ba441e85e1644e674536b26488103ea9848d20403fce13b592ada940b429fe11",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.137475Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_mutation_kind",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/derived_review.py",
+                "span": {
+                  "start_line": 138,
+                  "end_line": 159
+                }
+              }
+            ],
+            "evidence_fingerprint": "34b249360b00545c2787bdc3ba2f5e2388947a98204dbb53672eae8d7aad2f48"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/derived_review.py",
+              "sha256": "0601b661035d10f61526d65f86db262369e73ce4365fab55e2ebc15e6958e990"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The explicit append/insert/extend alternatives establish guaranteed length increases. Integer-position and literal-argument guards are evidence preconditions, not redundant defenses. Remaining risk: Only straight-line known local lists qualify; other mutations remain unresolved.",
+        "next_step": "Keep separate guarded cases; extend supported mutations only with independent proof tests."
+      }
+    },
+    {
+      "sequence": 22,
+      "review_id": "complexity:18a4dfd6f64a1e77ba53d6560fa826276a9e9e7970235b84bfa45aaf745f88ea",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.213575Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_field_kind",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 73,
+                  "end_line": 86
+                }
+              }
+            ],
+            "evidence_fingerprint": "b64ac3657dd3ac3b225d30843d20f9ad4cc07b1b4cf7b04a33a1889b496a4c70"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "actionable",
+        "reason": "Measured evidence is valid. CC is valid, but builtin-bool proof is not: class-local bool = int before active: bool still yields kind boolean and a coupled-state finding. This is a general detector binding bug. Remaining risk: Other class-scope annotation aliases must remain unresolved rather than inferred.",
+        "next_step": "Fixed by commit 5084ac1 after independent regression commit bec66ba. Field collection rejects Boolean annotations when class scope binds bool. Detector/service/CLI focused 52 tests pass; Ruff formatting/lint and Pyright pass. Preserve regression; no scoring changes."
+      }
+    },
+    {
+      "sequence": 23,
+      "review_id": "complexity:2a1dd9413228e2972bcf5b8ea385d24165572d3f4bd8a9cc2e2b337982f48c18",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.338797Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_predicate",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 120,
+                  "end_line": 149
+                }
+              }
+            ],
+            "evidence_fingerprint": "64ef0dd7a5514359b4e3b1b51beb27bc90a18b94bf2ce081dd35319087213e55"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The recursive predicate recognizer accepts only declared Boolean attributes, nullable identity comparisons, and explicit Boolean operators. Receiver normalization preserves operand order and structure. Remaining risk: This is syntactic matching, not logical equivalence; alias predicates remain unsupported.",
+        "next_step": "Keep the closed AST grammar and explicit negative cases."
+      }
+    },
+    {
+      "sequence": 24,
+      "review_id": "complexity:1750661b8fafa9709f15ff3d3e1e60711e078b90d1585ea0fb17c5407547af17",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.418081Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_findings",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 263,
+                  "end_line": 289
+                }
+              }
+            ],
+            "evidence_fingerprint": "94afd6a9119a8d08ae0f5131523dcdf70481cefbd7778f6892e2b7162ec350dc"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The finding join requires a rejecting validator, mixed Boolean/nullable fields, and two distinct typed consumers; branches enforce the experiment evidence threshold. Remaining risk: Upstream field classification bug ID22 can contaminate this join, but the join criteria itself are correct.",
+        "next_step": "Fix upstream binding proof; do not weaken consumer evidence requirements or add score impact."
+      }
+    },
+    {
+      "sequence": 25,
+      "review_id": "complexity:0a121ce3e95fb6ed16124eb59a74c5599c47e1624d26d2128d8805a12e02a42b",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.492075Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_model_reason",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 292,
+                  "end_line": 314
+                }
+              }
+            ],
+            "evidence_fingerprint": "616d47823822998b025ac40d92b527da6032e35c6eb57edd8ff9a6cb3e4aa49d"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "actionable",
+        "reason": "Measured evidence is valid. Module-level and decorator identity guards are valid but omit class-local bool resolution. Its caller therefore accepts an unsupported field type. Remaining risk: Conservative rejection may include safe aliases; false negatives are preferable to fabricated type evidence.",
+        "next_step": "Fixed by commit 5084ac1 after independent regression commit bec66ba. Field collection rejects Boolean annotations when class scope binds bool. Detector/service/CLI focused 52 tests pass; Ruff formatting/lint and Pyright pass. Preserve regression; no scoring changes."
+      }
+    },
+    {
+      "sequence": 26,
+      "review_id": "complexity:78bd5148b6896366a565a2ae540e1eb2e661fb1a44a2df5c5478a6bfc92ae49a",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.614754Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_construction_reason",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 317,
+                  "end_line": 333
+                }
+              }
+            ],
+            "evidence_fingerprint": "2a793923bc798031d2603e8cc9a5f1158a0938a665011fb0894e0dc4a6a529c2"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Constructor and post-init replacement checks reject cases where dataclass-generated construction cannot be established; init must be literal True when specified. Remaining risk: The experiment does not prove all runtime decorator behavior or class validity.",
+        "next_step": "Keep the narrow supported decorator contract; no complexity-driven rewrite."
+      }
+    },
+    {
+      "sequence": 27,
+      "review_id": "complexity:ee770ec0fb6ff17cbe4b4733a13be4e0f31fd08bd2bcf7cc745d3d33de9975b8",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.692998Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "bound_names",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/rules/_shared.py",
+                "span": {
+                  "start_line": 58,
+                  "end_line": 80
+                }
+              }
+            ],
+            "evidence_fingerprint": "8841ffe7583ff00b9de49c05da038bd8c046fbd85d688801b23361ebb26a25fd"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/rules/_shared.py",
+              "sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Binding alternatives cover Python name stores, parameters, imports, exception captures, match captures and type parameters. Each alternative is a distinct binding form. Remaining risk: Future Python binding syntax needs an explicit new case and learning test.",
+        "next_step": "Retain centralized binding enumeration and version-bound grammar tests."
+      }
+    },
+    {
+      "sequence": 28,
+      "review_id": "complexity:d82841d79e3294a3815bf70aaf3de17dcdca1f534757a9146b9864effdbbd47e",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.775105Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "ScopeIndex.stable_local",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/rules/_shared.py",
+                "span": {
+                  "start_line": 121,
+                  "end_line": 141
+                }
+              }
+            ],
+            "evidence_fingerprint": "44191b7bb8c4327a45e22b3f99d4a8d52110d4c6ccddf55f7d8b93055124e181"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/rules/_shared.py",
+              "sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. A stable local requires lexical ownership, a real binding, no relevant global/nonlocal, dynamic introspection or nested capture. Flat rejection checks protect rule soundness. Remaining risk: Whole-owner conservative rejection can suppress safe opportunities; it is not evidence of wrong measurement.",
+        "next_step": "Keep proof guards; do not lower recorded CC to reward flat layout."
+      }
+    },
+    {
+      "sequence": 29,
+      "review_id": "complexity:a22cb92a2216d772f785e575cb8a856581a264b5a094abd2738355d4229e2094",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:04.927497Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "header",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/rules/_shared.py",
+                "span": {
+                  "start_line": 183,
+                  "end_line": 211
+                }
+              }
+            ],
+            "evidence_fingerprint": "a5881d22afb2f74f9675fa0b81c7c92d24c59511d0071bf4eb9e170827f2d5b6"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/rules/_shared.py",
+              "sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Token-based header spans track indentation and bracket depth so punctuation inside expressions is not the block boundary. The if caller handles lambda-colon ambiguity. Remaining risk: New grammar/header forms require token cases; malformed source is rejected before rules.",
+        "next_step": "Retain token-span tests and avoid approximating headers by string search."
+      }
+    },
+    {
+      "sequence": 30,
+      "review_id": "complexity:4dbd90063f0b2e0d41a80aff279b72d8652aabe30eecb4863b63188b65f4394f",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:05.037504Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_plain_forwarder",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/rules/abstraction.py",
+                "span": {
+                  "start_line": 72,
+                  "end_line": 101
+                }
+              }
+            ],
+            "evidence_fingerprint": "81609cfb638c5ada9eb7e1a775a82a9aa6c4912c25f462a5d449115ac6788b69"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/rules/abstraction.py",
+              "sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Twenty-two paths largely represent explicit exclusions for API boundaries and forwarding shape. Defaults, annotations, decorators, variadics and keyword calls each invalidate the narrow proof. Remaining risk: An inline rewrite is not performed or proved behavior-preserving under arbitrary reflection.",
+        "next_step": "Keep narrow advisory finding and preserve all boundary guards."
+      }
+    },
+    {
+      "sequence": 31,
+      "review_id": "complexity:94b4ae6972ef5a84dc4cbdd623a57ef9cdc38581207dfcc3ca8db54781454e04",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:05.206550Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_trivial_wrapper",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/rules/abstraction.py",
+                "span": {
+                  "start_line": 104,
+                  "end_line": 124
+                }
+              }
+            ],
+            "evidence_fingerprint": "6a7281933a73f0a7eaa81583f607627d4da1c5647de4d492eb426283bbd8bdaf"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/rules/abstraction.py",
+              "sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The wrapper rule combines private nested ownership, a plain forwarding body, one use and an immediately following direct call. It avoids project-wide reachability claims. Remaining risk: Finding is a review suggestion, not authorization to remove an intentional abstraction.",
+        "next_step": "Retain direct-use contract and manual review wording."
+      }
+    },
+    {
+      "sequence": 32,
+      "review_id": "complexity:5293d40256e3b6f23cee50c3dcd309c00f24ad622a28d6e8d3abb768b517fc1a",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:05.321951Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_return_binding",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/rules/abstraction.py",
+                "span": {
+                  "start_line": 127,
+                  "end_line": 148
+                }
+              }
+            ],
+            "evidence_fingerprint": "decef95ca205f39682feaef3de4bd19db57f7fdb14393c05c208ebf982f46f3b"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/rules/abstraction.py",
+              "sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. A single binding immediately returned qualifies only when local and unique, with no await/yield or type-comment boundary. Its branches prevent cross-scope and typed-binding false positives. Remaining risk: Debugging intent can justify a named temporary even when the syntax qualifies.",
+        "next_step": "Keep advisory evidence; use no-change review disposition when naming aids comprehension."
+      }
+    },
+    {
+      "sequence": 33,
+      "review_id": "complexity:4bdb46cb9c42a484477ece6ab9ea32c12308e0f391d0d3468832291fe04e2247",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:05.436865Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_reraise",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/rules/defensive.py",
+                "span": {
+                  "start_line": 23,
+                  "end_line": 47
+                }
+              }
+            ],
+            "evidence_fingerprint": "20f72a8001f9755b774d683fdfd7cefbee1fe7a6808878bc25e28707cefea651"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/rules/defensive.py",
+              "sha256": "01b0246e78d09820ea36e7f97b5a37811a0aefea4f17c469712aead9c9b23341"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Only one bare except containing a bare raise qualifies; typed handlers, aliases, else and finally are preserved. Exact header-to-raise ownership is explicit. Remaining risk: The syntactic finding does not account for tracing/debugger intent.",
+        "next_step": "Keep narrow recognizer and precise source span."
+      }
+    },
+    {
+      "sequence": 34,
+      "review_id": "complexity:b97e3fb178842e74e91695e831c6a67cec7ae9f7b414f61c367fa1c796d38677",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:05.568232Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_literal_guard",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/rules/defensive.py",
+                "span": {
+                  "start_line": 92,
+                  "end_line": 112
+                }
+              }
+            ],
+            "evidence_fingerprint": "dfd05aee7e9b300c8dd2719d4fe704c37da1fb75e7860ee041356f1a6c06262f"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/rules/defensive.py",
+              "sha256": "01b0246e78d09820ea36e7f97b5a37811a0aefea4f17c469712aead9c9b23341"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Immediate non-None literal assignment plus stable local identity proves the None branch unreachable within the supported shape. Calls and uncertain bindings are kept. Remaining risk: Assignment forms or effects outside the narrow sequence remain unsupported.",
+        "next_step": "Retain immediate adjacency and stable-local proof."
+      }
+    },
+    {
+      "sequence": 35,
+      "review_id": "complexity:b965ae2b0c0f0a41027815ad3362db23ed784c6a43d9313611f89386f72a0fc6",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:05.681143Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_identity_comprehension",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/rules/redundancy.py",
+                "span": {
+                  "start_line": 36,
+                  "end_line": 50
+                }
+              }
+            ],
+            "evidence_fingerprint": "33cc21b829d007d328dd5aa427a8ded0648388e9a2a803dbcc6cc998adb713b6"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/rules/redundancy.py",
+              "sha256": "7f3393f2e230c9efc3d8dd987f3e010949ffdfa322bbf3047ec21683ed1bcd97"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. An identity list comprehension is recognized only over list/tuple literal ASTs with a simple matching target, no filter, async iteration or starred elements. Remaining risk: Literal elements may execute calls, but element evaluation and list construction remain ordered; no arbitrary iterable simplification is claimed.",
+        "next_step": "Keep literal-only boundary and do not generalize to protocol-driven iterables."
+      }
+    },
+    {
+      "sequence": 36,
+      "review_id": "complexity:6fe24a8b5ae7b59a6ff3c26b4d15944c72390d3d5863868c5b50f9897c4f8576",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:05.799903Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "classify_sloc",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/sloc.py",
+                "span": {
+                  "start_line": 50,
+                  "end_line": 70
+                }
+              }
+            ],
+            "evidence_fingerprint": "eaf6c5d5ceaa1eaf85f266d54f92f1f0e16a0167dda9745132991f70b97e18da"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/sloc.py",
+              "sha256": "dc646120b8a757c60118aca27374019748598d0f4ab78d069565ffd48ba1c33a"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Token and physical-line checks distinguish code, true docstrings and multiline literal content while reusing the supplied AST. Multiple branches implement documented SLOC semantics. Remaining risk: Future tokenizer grammar can change token shapes; tests pin supported interpreter behavior.",
+        "next_step": "Retain learning tests and exact physical-line classification."
+      }
+    },
+    {
+      "sequence": 37,
+      "review_id": "complexity:2c00879d1a2806152f00ea34b5e4959994dd1d1257423c3914597cd7124ffd92",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:05.938947Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_enum_members",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/variant_review.py",
+                "span": {
+                  "start_line": 173,
+                  "end_line": 201
+                }
+              }
+            ],
+            "evidence_fingerprint": "84e8ddef2fcab43ec19ac3e7f7f539b5415656e46446dfde021e8f076a5a7277"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/variant_review.py",
+              "sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Each enum member must be a single unique ordinary assignment; mixed auto/literal modes and aliases are rejected. The finite vocabulary is not inferred from dynamic values. Remaining risk: Enum features outside the simple declaration subset are unresolved by design.",
+        "next_step": "Keep finite-set proof; expand only through independent semantic cases."
+      }
+    },
+    {
+      "sequence": 38,
+      "review_id": "complexity:0e175b7657729a67e937c4d84fd85af3e905392616759af9025d53a528763772",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:06.026114Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_enum_value",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/variant_review.py",
+                "span": {
+                  "start_line": 204,
+                  "end_line": 227
+                }
+              }
+            ],
+            "evidence_fingerprint": "1a8cd48b4f9cef4b0533b7efe42b7ae5dc6b52b36e917044a3d832ad50e26af6"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/variant_review.py",
+              "sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Enum values are restricted to proven direct auto calls or supported literals with IntEnum/StrEnum type restrictions. Local auto shadowing is excluded. Remaining risk: Custom enum generation/metaclasses are outside the supported declaration contract.",
+        "next_step": "Retain exact enum origin and value restrictions."
+      }
+    },
+    {
+      "sequence": 39,
+      "review_id": "complexity:65c041474d103d5a91c9d995aa0c3049dc6bd45ec006ecce3523c78754ad19da",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:06.137316Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_alias_parts",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/variant_review.py",
+                "span": {
+                  "start_line": 247,
+                  "end_line": 266
+                }
+              }
+            ],
+            "evidence_fingerprint": "15f71ecdc021a29ac1181c2eb95715770edc4a20579dc68494d8a330ff241a4b"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/variant_review.py",
+              "sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Plain assignment, imported TypeAlias annotation and non-generic type-alias syntax are separate supported forms; other assignment shapes return no declaration. Remaining risk: Generic aliases and indirect alias chains remain unresolved.",
+        "next_step": "Keep explicit syntax alternatives; do not infer alias resolution across modules."
+      }
+    },
+    {
+      "sequence": 40,
+      "review_id": "complexity:097aa765febee5ca915177ee59d2394a0bbe3455af0b0ec9f9f20d65765192c9",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:06.271951Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_literal_declaration",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/variant_review.py",
+                "span": {
+                  "start_line": 269,
+                  "end_line": 294
+                }
+              }
+            ],
+            "evidence_fingerprint": "a43752d3799f81776737d1659c4a959a9bf323766c740657e2ada5fb7f1acfb2"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/variant_review.py",
+              "sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. A Literal declaration requires a known import, supported constant values and a unique finite set; per-element locations are retained. Remaining risk: Only string/integer literal cases are supported; absence of a declaration is not a clean result.",
+        "next_step": "Preserve closed literal domain and unresolved handler output."
+      }
+    },
+    {
+      "sequence": 41,
+      "review_id": "complexity:280639fce8e63554dda6c12a901b1d3ed36abba01bc4e7cee7a65017766acc92",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:06.389259Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_handler_type",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/variant_review.py",
+                "span": {
+                  "start_line": 349,
+                  "end_line": 367
+                }
+              }
+            ],
+            "evidence_fingerprint": "14adb2c83518a02db0f57e1adee45b6ab00e7e734a3da88cfbe3a3c8ece1ac25"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/variant_review.py",
+              "sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The handler must be a top-level undecorated function whose first effective statement matches a fixed typed argument. Binding, rebinding and variadic checks protect subject identity. Remaining risk: The conservative first-match restriction excludes useful later matches.",
+        "next_step": "Keep scope limitations explicit; extend through a separate proof-oriented slice."
+      }
+    },
+    {
+      "sequence": 42,
+      "review_id": "complexity:544ad2be374bc10f8ce19c38bfd9db1d871f432d8970ba0179b83eb01b31cb21",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:06.499988Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_pattern_cases",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/variant_review.py",
+                "span": {
+                  "start_line": 370,
+                  "end_line": 388
+                }
+              }
+            ],
+            "evidence_fingerprint": "1a72b526adc4d3999740653469a48724adec434596fc441fcc312716ef4314ef"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/variant_review.py",
+              "sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. OR patterns recurse only through recognized case values; enum qualifiers and literal values must belong to the exact finite declaration. Unsupported structural patterns return unresolved. Remaining risk: This does not establish runtime type correctness of callers; it describes declared finite vocabulary coverage.",
+        "next_step": "Retain exact declaration membership and separate guarded/fallback semantics."
+      }
+    },
+    {
+      "sequence": 43,
+      "review_id": "complexity:88fd53a2b0ff2be5047e03e722647f75797876e85f986781f397794bd11a38d6",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:06.649918Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_normalized_extensions",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/registry.py",
+                "span": {
+                  "start_line": 20,
+                  "end_line": 43
+                }
+              }
+            ],
+            "evidence_fingerprint": "6100f9a1289fdc4df407641c018e5830f6a87ac3524c571c24dbc6cf96ec8e8a"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/registry.py",
+              "sha256": "b02d17b84cdbb2fd2c678c69872d38bd9cef20aab248c559341d115ce101050d"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Extension validation rejects malformed suffixes and case-normalized duplicates before registration changes state. Branches implement independent registry invariants. Remaining risk: Future compound extensions need a deliberate routing contract; current single-final-suffix semantics are explicit.",
+        "next_step": "Keep fail-fast validation; no extraction solely to reduce CC."
+      }
+    },
+    {
+      "sequence": 44,
+      "review_id": "complexity:4918a4ad60b7d6e16a86f518f338fb646997803eff4b81f9447ab1abb3a5d850",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:06.768140Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "LanguageRegistry.resolve_languages",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/registry.py",
+                "span": {
+                  "start_line": 84,
+                  "end_line": 104
+                }
+              }
+            ],
+            "evidence_fingerprint": "47b0903164f48104854f424cd388a6a02efef167517c99f7c74d347502cfd88e"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/registry.py",
+              "sha256": "b02d17b84cdbb2fd2c678c69872d38bd9cef20aab248c559341d115ce101050d"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Language selection resolves installed IDs then aliases, rejects unknown or ambiguous requests, and returns canonical deduplicated identities. No unavailable adapter is simulated. Remaining risk: Adapters with colliding aliases require explicit IDs; mutation after registration must not alter extension snapshots.",
+        "next_step": "Retain explicit error behavior and canonical provenance."
+      }
+    },
+    {
+      "sequence": 45,
+      "review_id": "complexity:7825705e0bab781a016d913d252af0b93d309fe7ae97d076e022bf0ea1899171",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:06.902727Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_PatternContext.measure",
+            "locations": [
+              {
+                "path": "src/slop_measure/metrics/aggregate.py",
+                "span": {
+                  "start_line": 132,
+                  "end_line": 155
+                }
+              }
+            ],
+            "evidence_fingerprint": "ec33d0748e749e7fbad5db8684250db07da35a97f356228ab2ef8a177dd8082e"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/metrics/aggregate.py",
+              "sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The method isolates pattern failures from function/clone outcomes, preserves parse or analyzer failure precedence, and measures a union of owned source lines. Its branches correspond to real analyzed, unsupported, and failed states; merging those states to reduce CC would weaken the contract. Remaining risk: A future pattern capability must still supply one outcome per parsed file; the method relies on LanguageEvidence validation for completeness.",
+        "next_step": "Keep the failure-isolation and overlapping-line regression tests. Revisit only when another outcome state is introduced."
+      }
+    },
+    {
+      "sequence": 46,
+      "review_id": "complexity:c0412c4ee947dc4ca286aaff6ad3d7cc01d7c296b8b57806505d6758852f7c47",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:07.009683Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_project_errors",
+            "locations": [
+              {
+                "path": "src/slop_measure/metrics/aggregate.py",
+                "span": {
+                  "start_line": 350,
+                  "end_line": 370
+                }
+              }
+            ],
+            "evidence_fingerprint": "59141b3c07fcd0f2ad7d11e70d292f58800caf4c8031adbb5a8ea7dd659987eb"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/metrics/aggregate.py",
+              "sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Project-level errors include unassigned source discovery failures and language-owned pathless analyzer errors. Failed-file diagnostics remain file-scoped. This deliberately prevents an unenumerated directory from producing a false complete cohort result. Remaining risk: A pathless source error cannot be assigned confidently to production versus tests, so both project cohorts can become unavailable. This is conservative scope loss, not an incorrect zero.",
+        "next_step": "Retain source traversal failure tests and diagnostic ownership checks; require additional source location evidence before narrowing error scope."
+      }
+    },
+    {
+      "sequence": 47,
+      "review_id": "complexity:4e08ad835b97581ef24d6fde670867bbc4e9e156bc4b52fedb1f874514b5d0b2",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:07.130890Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_snapshot_metrics",
+            "locations": [
+              {
+                "path": "src/slop_measure/metrics/aggregate.py",
+                "span": {
+                  "start_line": 373,
+                  "end_line": 416
+                }
+              }
+            ],
+            "evidence_fingerprint": "9da274f8e5452dc31e5113b15afa73026a4e929de11cb1bbcbc4c768d1d38c6b"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/metrics/aggregate.py",
+              "sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "defer",
+        "reason": "Measured evidence is valid. The three capability-specific projections repeat filtering, but None means unsupported while an empty tuple means supported with no outcomes. Current code preserves that distinction and keeps M2, M3, and M4 failures independent. The CC count is accurate; repetition is a maintainability concern rather than a demonstrated bad metric. Remaining risk: A new capability could be added to one projection but omitted from another mapping or version declaration.",
+        "next_step": "When adding a fourth measured family, consider one typed capability-to-context construction table with contract tests. Do not refactor only to lower this score."
+      }
+    },
+    {
+      "sequence": 48,
+      "review_id": "complexity:27574d7321268d6e8a80bc0c2cc7d9754bd08c1f1792d36d0f761bc270fee476",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:07.264580Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "aggregate_snapshot",
+            "locations": [
+              {
+                "path": "src/slop_measure/metrics/aggregate.py",
+                "span": {
+                  "start_line": 449,
+                  "end_line": 559
+                }
+              }
+            ],
+            "evidence_fingerprint": "883b854688e12b27309726cd860d00cbe275bb39da6e0686e916699bbb69cd88"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/metrics/aggregate.py",
+              "sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "defer",
+        "reason": "Measured evidence is valid. The 110-SLOC coordinator owns diagnostic collection, file/source hash ownership, population formation, coverage, provenance, findings, and clone annotations. Direct Radon confirms CC31. Existing outcomes and sorted report construction are consistent; the long function is a credible review priority but no source correctness defect was reproduced. Remaining risk: This assembly boundary is broad: future metadata and evidence families must update collection, versions, and cohort construction together.",
+        "next_step": "Split a cohesive report-assembly phase when a real new responsibility is added, preserving deterministic JSON and all failure/population tests. No score-directed rewrite now."
+      }
+    },
+    {
+      "sequence": 49,
+      "review_id": "complexity:d930872d4b47c2090e19bd36608a4dc0aa413f097ce8a593800cae81bf4d51dd",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:07.377430Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_contained",
+            "locations": [
+              {
+                "path": "src/slop_measure/metrics/clones.py",
+                "span": {
+                  "start_line": 28,
+                  "end_line": 59
+                }
+              }
+            ],
+            "evidence_fingerprint": "da8dd1f5c356cfb0f9d96d8f37bcf2f061188d8816e29aeddf1164eede32dbd7"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/metrics/clones.py",
+              "sha256": "df7f6688a7b6596853e1f88b9b247a7977fde318d7e42a8c96b78f80ee63b9a9"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Containment uses an injective matching between inner and outer instances, not a simple any-parent test. This is necessary when repeated spans in one file overlap: two inner instances cannot collapse into one enclosing instance. The recursive augmenting-path helper has a real algorithmic purpose. Remaining risk: Large dense containment graphs can be costly or stress recursion; the inspected repository yields no clone groups, so this review does not establish a large-group performance bound.",
+        "next_step": "Retain the distinct-enclosing-instance and partial-overlap tests. Profile representative large groups before choosing a different matching implementation."
+      }
+    },
+    {
+      "sequence": 50,
+      "review_id": "complexity:540caeca5c8531303540a161a60590e25deb6f7b603c824046770801c96ae908",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:07.496997Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "group_clones",
+            "locations": [
+              {
+                "path": "src/slop_measure/metrics/clones.py",
+                "span": {
+                  "start_line": 72,
+                  "end_line": 118
+                }
+              }
+            ],
+            "evidence_fingerprint": "153f362971badab0dd6b3cf41f97d97bb3ee893755ceac62f11ea5f4f2caf991"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/metrics/clones.py",
+              "sha256": "df7f6688a7b6596853e1f88b9b247a7977fde318d7e42a8c96b78f80ee63b9a9"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Grouping checks owning files and exact SLOC, rejects duplicate identities, and partitions by language, cohort, normalization version, and complete token sequences. Fingerprint equality alone never creates a group. Stable sorting and maximal containment preserve deterministic native evidence. Remaining risk: The detector supplies complete runs and retains literals/global identifiers; structurally similar orchestration can therefore be outside this clone vocabulary. This is a documented coverage limit, not proof of no duplication.",
+        "next_step": "Keep population, token-equality, same-line, order-independence, and containment tests. Evaluate a broader clone definition on held-out examples before changing normalization."
+      }
+    },
+    {
+      "sequence": 51,
+      "review_id": "complexity:ec96f377f7c1a3dc05649ae8759652da8496874471e33e82655fad3fba66e127",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:07.636612Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "metric_deltas",
+            "locations": [
+              {
+                "path": "src/slop_measure/metrics/deltas.py",
+                "span": {
+                  "start_line": 54,
+                  "end_line": 78
+                }
+              }
+            ],
+            "evidence_fingerprint": "e570ed0ea7d2f7b900195c45812a1489d6a82d63a2f8df3603b1f439989f441b"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/metrics/deltas.py",
+              "sha256": "aa89062d7fa61a815755bd625d4b4de92ca14014bd61e84f65dad221e001f7d8"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The method compares current minus baseline while preserving missing, unavailable, and incompatible states. It rejects file/project and language/cohort mixing and compares scores only under the same profile/model IDs. The guards prevent plausible but fabricated zero deltas. Remaining risk: Raw metric-definition compatibility is established by the containing comparison pipeline, not encoded in isolated FileResult/CohortResult objects. Calling this internal helper with unrelated historical snapshots needs that precondition.",
+        "next_step": "Preserve missing-side, unit, population, and score-profile regressions. If cross-report comparison becomes public, require metric-version compatibility explicitly."
+      }
+    },
+    {
+      "sequence": 52,
+      "review_id": "complexity:76274e21f107b6bf5112720db0ea0111a08c4a9c50de634ab1ea4b1ce1f18647",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:07.742266Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "render_callable_basis",
+            "locations": [
+              {
+                "path": "src/slop_measure/reporting/callables.py",
+                "span": {
+                  "start_line": 19,
+                  "end_line": 58
+                }
+              }
+            ],
+            "evidence_fingerprint": "596a3382f678c76737af12523fd9289983f34c02f6a7c196dcaf6ebb9f59b524"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/reporting/callables.py",
+              "sha256": "6849ede35dc8a5f2c1bf5f125430e2407750fd18d8d5790c90e30a393343fa54"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Callable presentation correctly distinguishes M4v1 above-threshold mass, M4v2 excess mass, and M4v3 assertion-excluded test CC. Unknown versions report an unavailable basis. Production assertions are retained and the self-check hint does not reclassify source. Remaining risk: The related findings query currently ignores this version distinction; that separate reproducible defect is recorded under item56. This renderer itself passes historical-version and fallback tests.",
+        "next_step": "Keep this version-aware basis as the semantic reference while fixing query selection through independent regression tests."
+      }
+    },
+    {
+      "sequence": 53,
+      "review_id": "complexity:719078ba1535e3804dc509de5a7325350aa25036293eaa71e75a35248ef46802",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:07.872810Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "render_derived",
+            "locations": [
+              {
+                "path": "src/slop_measure/reporting/derived.py",
+                "span": {
+                  "start_line": 6,
+                  "end_line": 47
+                }
+              }
+            ],
+            "evidence_fingerprint": "147d31b28fd8e293d1e98f654bdec31a2341106e7d87587a5c83ba5bb78cdd2f"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/reporting/derived.py",
+              "sha256": "a6096d56a4da27861605ee147127966f557a7519fd6bd9fe3bc24181289c4164"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "defer",
+        "reason": "Measured evidence is valid. The renderer exposes derivation, mutation, and read locations and distinguishes unresolved functions from failed files. It calls results review candidates and retains interpretation text about intentional snapshots. Its nested loops reflect the report hierarchy rather than hidden analysis. Remaining risk: Large experimental reports have no terminal pagination here, and a failed file message can also appear in the diagnostic summary. These are usability costs, not incorrect measurements.",
+        "next_step": "Consider a shared presentation-only pagination/diagnostic layout after usage shows need; keep JSON complete and all uncertainty visible."
+      }
+    },
+    {
+      "sequence": 54,
+      "review_id": "complexity:e1b66f37fdf0fc4d8a9001e55bc46411a2a00bc172cd5e4380348408325de79f",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:07.989515Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "render_findings",
+            "locations": [
+              {
+                "path": "src/slop_measure/reporting/evidence.py",
+                "span": {
+                  "start_line": 55,
+                  "end_line": 137
+                }
+              }
+            ],
+            "evidence_fingerprint": "e4e5727ad6ed52350fa263b85fd2762c760c8763e424641c5b9126a2749f3d99"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/reporting/evidence.py",
+              "sha256": "b0f363acfdf04003d9b10a8d4f80bf343f027bb387807c7a86c65b2a42ed1a78"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "defer",
+        "reason": "Measured evidence is valid. Evidence rendering keeps native pattern, clone, and callable records separate and retains all members of any displayed clone group. Top limits whole records and reports omitted counts. Family ordering is deterministic, not an invented mixed-unit priority score. Remaining risk: A small top limit can show patterns before higher-impact clones because family order is fixed. Callers must not read this as a severity ranking across evidence types.",
+        "next_step": "Document or label family ordering if users mistake it for cross-family prioritization. A future selector should use explicit review intent instead of combining incomparable units."
+      }
+    },
+    {
+      "sequence": 55,
+      "review_id": "complexity:f7d7b87481f1f50f548ce226db76dc92dcbc1864fc455344b67ad909b2929e8c",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:08.104950Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "render_models",
+            "locations": [
+              {
+                "path": "src/slop_measure/reporting/models.py",
+                "span": {
+                  "start_line": 6,
+                  "end_line": 53
+                }
+              }
+            ],
+            "evidence_fingerprint": "317c73d4f0ee7f7310549f84f7e70dc9cb28f462523c131215e7463f77f683da"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/reporting/models.py",
+              "sha256": "2da8c366f7b17a3f134c39e06aa8c2ab404533ea92403c476b00f68e6a89d48c"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "defer",
+        "reason": "Measured evidence is valid. The renderer shows coupled fields, the rejecting validator, and each distinct repeated consumer, while keeping unresolved models and failed files visible. It says review candidate and includes the trust-boundary limitation; there is no unsupported proof-of-defect claim. Remaining risk: Like the derived renderer, long reports can be verbose and failed-file diagnostics can be repeated. Per-model analyzed-empty records are summarized indirectly rather than listed individually.",
+        "next_step": "Evaluate a shared experimental display layout and concise analyzed-empty counts when improving usability. Do not remove evidence or reduce CC merely to improve self-score."
+      }
+    },
+    {
+      "sequence": 56,
+      "review_id": "complexity:919d06038a269644c991a25ac092cf9e1c7625030018e6d261cba113cc3fb5af",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:08.239936Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "query_findings",
+            "locations": [
+              {
+                "path": "src/slop_measure/reporting/queries.py",
+                "span": {
+                  "start_line": 153,
+                  "end_line": 212
+                }
+              }
+            ],
+            "evidence_fingerprint": "4a711e20f7a66b0fd6d0beb8692a0be2c1d448e180899319069ad1b30cc919ff"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/reporting/queries.py",
+              "sha256": "046a7f5ea1f47fac8812f0cd0aaa342a776b8925fd46c0421061e9a78b499939"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "actionable",
+        "reason": "Measured evidence is valid. The measured CC23 is accurate, but query_findings delegates eroded selection to _eroded, which always calls complexity_for(cohort). That applies M4v3 assertion exclusion even when the report declares M4v1/v2. The existing version-aware renderer then disagrees: a test callable with fullCC12 and adjustedCC1 should be selected under v1/v2 but is omitted. A bounded probe and the existing historical-rendering fixture reproduce the mismatch. Remaining risk: This affects historical/unknown-version evidence selection, not the current v3 self-report raw metrics. Unknown metric versions also need an explicit policy rather than guessing a basis.",
+        "next_step": "Fixed in commit 0cfc86a. Independent v1/v2/v3 and unknown/missing-version regressions pass; 75 reporting/explainability tests and static checks pass. Raw formulas, thresholds, calibration and current v3 measurements are unchanged."
+      }
+    },
+    {
+      "sequence": 57,
+      "review_id": "complexity:49628c9dd3fd837abb044409d5f3e7e99ad026d6fedb112eb6092b75f48b4c35",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:08.349109Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_score_row",
+            "locations": [
+              {
+                "path": "src/slop_measure/reporting/terminal.py",
+                "span": {
+                  "start_line": 380,
+                  "end_line": 410
+                }
+              }
+            ],
+            "evidence_fingerprint": "26578d448660644f6386397f3fdf89f170ea74226a9138ed1bfc90f240fe08c7"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/reporting/terminal.py",
+              "sha256": "9c1322a576b22c0a10611aae1e8836dec95d6c411b68bbf1355871c39013346f"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The score row keeps unavailable scores distinct from measured zero, reports profile/model/reference support, and explains nonzero raw evidence at percentile-zero or rounded-zero points. Contributions show their own raw value, percentile, weight, and severity transform. Stored contributions have one-decimal precision, matching display precision. Remaining risk: Users may still overinterpret a calibrated rank as absolute quality; the reference/domain-match and interpretation text must remain prominent.",
+        "next_step": "Retain zero-score, historical-support, and contribution roundtrip tests. No reason to alter calibration or rounding for this repository."
+      }
+    },
+    {
+      "sequence": 58,
+      "review_id": "complexity:cef1c47a871729f7452ae7a91e6aadf8b825bdb312e2dfb1fa922fc27c9f600c",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:08.449812Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_explain_change",
+            "locations": [
+              {
+                "path": "src/slop_measure/reporting/terminal.py",
+                "span": {
+                  "start_line": 765,
+                  "end_line": 800
+                }
+              }
+            ],
+            "evidence_fingerprint": "cc11f28cb456be3424d04bdfb907994daa5a749867c913183ef165ab2cde16e5"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/reporting/terminal.py",
+              "sha256": "9c1322a576b22c0a10611aae1e8836dec95d6c411b68bbf1355871c39013346f"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The whole-file change block shows both paths, measured added/deleted/net lines and growth, and marks unavailable inputs explicitly. Raw ratio deltas use percentage points; score deltas use points. Better/worse applies to lower-is-better metrics, while M1 line growth is left without a quality judgment. Remaining risk: A symbol explanation still includes a whole-file change block; the File change heading is important to avoid implying symbol-level line deltas.",
+        "next_step": "Keep positive/negative delta labeling, added/deleted/renamed paths, and zero-baseline growth tests. Do not reinterpret larger source size as worse quality."
+      }
+    },
+    {
+      "sequence": 59,
+      "review_id": "complexity:5c1020f581616833ed47249c7ac4aa8a7a5b18cef15341fd251482fbb065d56b",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:08.588187Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_signature",
+            "locations": [
+              {
+                "path": "src/slop_measure/scoring/calibration.py",
+                "span": {
+                  "start_line": 43,
+                  "end_line": 68
+                }
+              }
+            ],
+            "evidence_fingerprint": "3c1585fa6dcfb29569daf23f332ab5cc4ed577c4e66c903ccce982493fbea1e2"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/scoring/calibration.py",
+              "sha256": "0366f8df687ffcd66edaf5e0d2de512cee9986f8ab8cc35294d8b1d5c69ca737"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Calibration signature requires snapshots, exactly one language, rule/clone identity, all metric versions and matching metric settings. Remaining risk: It checks measurement compatibility, not domain fit. Corpus lineage remains manifest-reviewed.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 60,
+      "review_id": "complexity:b668856ab7569bf86970f0197579a1e5f9a4defdf2215e08e240c2c414967082",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:08.701041Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_collect",
+            "locations": [
+              {
+                "path": "src/slop_measure/scoring/calibration.py",
+                "span": {
+                  "start_line": 128,
+                  "end_line": 148
+                }
+              }
+            ],
+            "evidence_fingerprint": "ba79a9d78fb3e011b6e7745471bb7c393a94969377113909fa5c74e28f34a4e1"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/scoring/calibration.py",
+              "sha256": "0366f8df687ffcd66edaf5e0d2de512cee9986f8ab8cc35294d8b1d5c69ca737"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Samples remain separated by file/project, production/test, scoring model, and SLOC band. Empty or incomplete metric observations are skipped. Remaining risk: Overlapping repository scans must not be supplied as independent projects; the builder cannot infer ownership lineage.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 61,
+      "review_id": "complexity:6ef3e683c52deff1f94a6c20b6b7c3de7d8a09d48067cd261acec3dc66cd7bd7",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:08.835209Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "build_profile",
+            "locations": [
+              {
+                "path": "src/slop_measure/scoring/calibration.py",
+                "span": {
+                  "start_line": 151,
+                  "end_line": 216
+                }
+              }
+            ],
+            "evidence_fingerprint": "1b14a9a3465e98fe362ff56d7d169942287e75c0cac051709d7751bd6a021743"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/scoring/calibration.py",
+              "sha256": "0366f8df687ffcd66edaf5e0d2de512cee9986f8ab8cc35294d8b1d5c69ca737"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Profile construction rejects duplicate identities and incompatible signatures before collecting enough complete samples. Fixed models/weights are explicit. Remaining risk: Source identity is not proof of independent lineage. Do not rebuild calibration from this self-review to improve scores.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 62,
+      "review_id": "complexity:edc3958e7d7f8245f31b7d7c194822a92d11243cd0a37c358f6d830c815b7fff",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:08.956518Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "score_snapshot",
+            "locations": [
+              {
+                "path": "src/slop_measure/scoring/engine.py",
+                "span": {
+                  "start_line": 191,
+                  "end_line": 225
+                }
+              }
+            ],
+            "evidence_fingerprint": "8f32917e21ae382cba664d99cd1adc33cab3897380a7781fad6f2a0edc4f01d3"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/scoring/engine.py",
+              "sha256": "79a79cd9700263182b94f3db3e59630c84c4553b0118f003678eba0a96db627f"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Scoring validates scope/metric uniqueness, selects a compatible model/population, and sums rounded contributions into the configured band. Remaining risk: A percentile zero can coexist with raw evidence; this is documented and is not a bug to tune away here.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 63,
+      "review_id": "complexity:5a787686b984838957125fd62b67823d8b0cb504851400a9ee85c2265eef7374",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:09.065965Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_score_result",
+            "locations": [
+              {
+                "path": "src/slop_measure/scoring/engine.py",
+                "span": {
+                  "start_line": 228,
+                  "end_line": 278
+                }
+              }
+            ],
+            "evidence_fingerprint": "d322c93881088c6ff800e63b85a7036e274f92f26324230ef6c0f5b020cad5e2"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/scoring/engine.py",
+              "sha256": "79a79cd9700263182b94f3db3e59630c84c4553b0118f003678eba0a96db627f"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Score availability rules preserve raw facts and attach individual metric percentiles from the selected population. The project result is computed from aggregate inputs. Remaining risk: Metric percentiles and weighted contribution points answer different questions; existing labels must remain explicit.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 64,
+      "review_id": "complexity:671540ddd8e2c83fe8515917ad4bfe0c7c398ad575b97cb33ac974b7a42a19b2",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:09.205861Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "FilesystemSourceProvider._git_paths",
+            "locations": [
+              {
+                "path": "src/slop_measure/sources/filesystem.py",
+                "span": {
+                  "start_line": 171,
+                  "end_line": 197
+                }
+              }
+            ],
+            "evidence_fingerprint": "898a3a754b869b749520c4cc5fa00c6fd953cbf2ef8b8cebd550251ed2e29e44"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/sources/filesystem.py",
+              "sha256": "583cb364613d8bc94c418b9edee7bd6879bcafac71d673aee3c38637c4dc8b07"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Git inventory collapses ignored-directory coverage, keeps independent ignored leaves, and checks candidate paths for safe traversal before reading. Remaining risk: Ignored contents are not counted. Symlink/junction restrictions and unreadable-source cases need retained tests.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 65,
+      "review_id": "complexity:2a8c70016987478d637704d0e6af72bf42f13998554ce4c5f564522ce1ff2e86",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:09.322410Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_InventoryBuilder.add",
+            "locations": [
+              {
+                "path": "src/slop_measure/sources/filesystem.py",
+                "span": {
+                  "start_line": 241,
+                  "end_line": 264
+                }
+              }
+            ],
+            "evidence_fingerprint": "9ae26a3bed45c84b62dfcf6799046e718b1b1fc97c333081792e8fafbc7d92a2"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/sources/filesystem.py",
+              "sha256": "583cb364613d8bc94c418b9edee7bd6879bcafac71d673aee3c38637c4dc8b07"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Directory selection applies the language filter before cohort classification and then records configured/ignored/unsupported outcomes or reads source. Remaining risk: Filename-based test classification is limited; changing this repository's exclusions would hide coverage rather than fix measurement.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 66,
+      "review_id": "complexity:2edcfc2ae03153c563f21d0e274892cf76c2e3402e961d596e453c4031a5e555",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:09.432015Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_GitInventory.add",
+            "locations": [
+              {
+                "path": "src/slop_measure/sources/git.py",
+                "span": {
+                  "start_line": 155,
+                  "end_line": 185
+                }
+              }
+            ],
+            "evidence_fingerprint": "312f02c24624c17d1a08bdbb4e3bbe2b99eb7745f9c7bf8f1067e3e969dc7128"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/sources/git.py",
+              "sha256": "fd01f038bd124b80fe7b59268a339f4d343afb915082ee589b21ef1db8c60b99"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. Committed-tree selection mirrors language/cohort/exclusion policies, rejects unsupported modes, and reads immutable blobs. Generated markers are applied consistently. Remaining risk: Git and working-tree snapshots intentionally differ for dirty/untracked files; repository comparison tests protect parity on equal inputs.",
+        "next_step": "Retain behavior and focused regression coverage."
+      }
+    },
+    {
+      "sequence": 67,
+      "review_id": "complexity:f11591ed76c20cecb8ea3e3c2f85cd09a4469757b9ea7ff90425c99cdec4ccad",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:09.567816Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "test",
+            "symbol": "high",
+            "locations": [
+              {
+                "path": "tests/fixtures/erosion/high.py",
+                "span": {
+                  "start_line": 1,
+                  "end_line": 2
+                }
+              }
+            ],
+            "evidence_fingerprint": "662dde595a5a5f2672a8272927c15c99a45d3286771cd598396c81d390b9edd2"
+          },
+          "source_hashes": [
+            {
+              "path": "tests/fixtures/erosion/high.py",
+              "sha256": "729c21e3811bd91f46a7e89291871debfffd873ceb5f2f0496796cb0cb22d6fc"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The high complexity is the fixture's purpose. Rewriting it would remove the boundary condition under test. The metric correctly counts short-circuit decisions and two SLOC; it does not establish a defect. Remaining risk: The synthetic callable indexes eleven values and is not a general-purpose runtime API. It is used as source evidence. A test-cohort hotspot must not be presented as a production defect.",
+        "next_step": "Retain the fixture and its explicit test-cohort classification; do not tune the evaluator or refactor this fixture to lower its score."
+      }
+    },
+    {
+      "sequence": 68,
+      "review_id": "complexity:468616982572ee2bcb68b3b68d065b7d70ff4d80e9296f9984d2e9912b8540b1",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:09.675021Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "test",
+            "symbol": "test_basic_scan_matches_hand_counted_manifest_and_never_executes_source",
+            "locations": [
+              {
+                "path": "tests/golden/test_scan_basic.py",
+                "span": {
+                  "start_line": 63,
+                  "end_line": 131
+                }
+              }
+            ],
+            "evidence_fingerprint": "dfbb86ed211c6f195dc0a9437badd9e085a1b22f5cd95bdca94d1001e740b429"
+          },
+          "source_hashes": [
+            {
+              "path": "tests/golden/test_scan_basic.py",
+              "sha256": "6a0e66aa8174fd06082db7ed8ba402f3a9eb8a0f65b1e1998e32e4d5e4b9df58"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. This is one coherent end-to-end report contract, with explicit expected values outside the implementation. The projection branches are necessary to compare heterogeneous measured/unavailable states. Complexity accurately describes that work; splitting it solely for the score would distribute the same work across helpers without improving the contract. Remaining risk: The bad-file assertion uses the deterministic report ordering and index 1. The manifest and ordering assertions currently protect that assumption, but fixture changes must update them together. CC alone does not measure the test's diagnostic quality.",
+        "next_step": "Retain this golden contract. Change helper structure only when a concrete maintenance problem appears; preserve assertion coverage and hand-authored expectations."
+      }
+    },
+    {
+      "sequence": 69,
+      "review_id": "complexity:e84036ac940dfd87cf81e74d4649783de97e93fc760c96d5bcb86255095a8744",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:09.779761Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "test",
+            "symbol": "test_profile_rejects_inconsistent_model_population_and_provenance",
+            "locations": [
+              {
+                "path": "tests/unit/scoring/test_calibration_contract.py",
+                "span": {
+                  "start_line": 136,
+                  "end_line": 169
+                }
+              }
+            ],
+            "evidence_fingerprint": "8a1be1e07818a69ea2a38916c633f27e42f882cb8d25b42910fd86bbbccd1301"
+          },
+          "source_hashes": [
+            {
+              "path": "tests/unit/scoring/test_calibration_contract.py",
+              "sha256": "c3d5ff68ac2492697b1ef46baf6be62134431e7da93429896bb520c8a24476ae"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The branching is a test-case generator, not complex production behavior. Every branch names a separate rejected contract state, and each parameter creates a fresh payload. The test verifies useful independent invariants. A dispatch-table rewrite would lower the reported function CC without adding correctness evidence. Remaining risk: The final else assumes the closed parameter list's unknown-policy case. New parameters must add an explicit mutation branch rather than silently using that fallback. ValidationError proves rejection but does not assert an exact error message, intentionally avoiding coupling to validator wording.",
+        "next_step": "Keep the named negative cases and do not refactor merely for CC. Add a targeted case only when a new calibration invariant is introduced or a concrete validation defect is reproduced."
+      }
+    },
+    {
+      "sequence": 70,
+      "review_id": "complexity:38cb5d23faae5f9843b1759d542068af68f7496d3130f094660fc27dd0352048",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:09.892262Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_fields",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 89,
+                  "end_line": 108
+                }
+              }
+            ],
+            "evidence_fingerprint": "59c7319ed6e3fdd9cec2a8c855fb40b1eb98710f5027ccd4904d3917882c4e90"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The field collector needs distinct guards for annotation form, unique binding and class-local bool shadowing. The new guard prevents a reproduced false type proof. CC11 is correctly measured; crossing the threshold does not justify removing a correctness condition or splitting it to move the score. Remaining risk: Class-scope binding rejection is conservative and can leave safe aliases unresolved. This matches the narrow experimental contract; no runtime annotation resolution is claimed.",
+        "next_step": "Retain the corrected guard and paired regression. Include this new final-source hotspot in the review ledger; make no threshold, profile, exclusion or weight changes."
+      }
+    },
+    {
+      "sequence": 71,
+      "review_id": "pattern:004cae82670aa19af9d7a1c2ecfab9f9a670db731bf713e9e7642c650796b699",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:09.982364Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "pattern",
+            "language": "python",
+            "cohort": "test",
+            "symbol": "py.boolean-conditional",
+            "locations": [
+              {
+                "path": "tests/fixtures/patterns/overlap.py",
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ],
+            "evidence_fingerprint": "09cbe764ea7c5fb5da81402713382a2c2dd581cd2deeef16601a280926b34d89"
+          },
+          "source_hashes": [
+            {
+              "path": "tests/fixtures/patterns/overlap.py",
+              "sha256": "d278b570a0ff2d82a6446fbf3431ae3f242bb88534503bec8ce9634dd86968c6"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "589edbc512dbcfcdcea2542ceb1b73db185e7848351352029e26b3a196f6415c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The expression selects True/False from a condition and matches the boolean-conditional rule. This is an intentional positive regression fixture; simplifying it would erase the test case rather than improve production behavior. Remaining risk: Do not treat fixture findings as production cleanup work. The test cohort and path identify their purpose.",
+        "next_step": "Keep the fixture and its hand-counted union assertion. Both findings must contribute only one affected physical line."
+      }
+    },
+    {
+      "sequence": 72,
+      "review_id": "pattern:7760b3a5a892a6af65319bad4b27c7ea8c5282b96b2ab7b95dbe1c00edcfc090",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:10.311754Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "pattern",
+            "language": "python",
+            "cohort": "test",
+            "symbol": "py.literal-fstring",
+            "locations": [
+              {
+                "path": "tests/fixtures/patterns/overlap.py",
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ],
+            "evidence_fingerprint": "ed846301a3b36ec7b34cb61386697460a7fc67755233128fec9a7be26c50dc1b"
+          },
+          "source_hashes": [
+            {
+              "path": "tests/fixtures/patterns/overlap.py",
+              "sha256": "d278b570a0ff2d82a6446fbf3431ae3f242bb88534503bec8ce9634dd86968c6"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "589edbc512dbcfcdcea2542ceb1b73db185e7848351352029e26b3a196f6415c"
+        },
+        "disposition": "no-change",
+        "reason": "Measured evidence is valid. The f-string contains no formatted value and is a genuine literal-fstring match. It deliberately overlaps P1 to verify that native findings remain distinct while M2 unions their source lines. Remaining risk: Removing the unused prefix here would reduce test coverage. Literal-fstring fixes elsewhere must preserve decoded values, including escaped braces.",
+        "next_step": "Retain both positive findings and the one-line numerator. No rule suppression or special self-repository exclusion is warranted."
+      }
+    },
+    {
+      "sequence": 73,
+      "review_id": "complexity:0a121ce3e95fb6ed16124eb59a74c5599c47e1624d26d2128d8805a12e02a42b",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:10.583021Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_model_reason",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 293,
+                  "end_line": 315
+                }
+              }
+            ],
+            "evidence_fingerprint": "3ff27679ed38631bd9feb0893120977e4f74183e7f8b6e690fb57a15fef5271c"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Re-reviewed after 5084ac1 and its independent regression checks. The demonstrated evaluator defect is fixed. Module-level and decorator identity guards are valid but omit class-local bool resolution. Its caller therefore accepts an unsupported field type. Remaining risk: Conservative rejection may include safe aliases; false negatives are preferable to fabricated type evidence.",
+        "next_step": "Retain the regression and inspect future semantic changes."
+      }
+    },
+    {
+      "sequence": 74,
+      "review_id": "complexity:1750661b8fafa9709f15ff3d3e1e60711e078b90d1585ea0fb17c5407547af17",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:10.704850Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_findings",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 264,
+                  "end_line": 290
+                }
+              }
+            ],
+            "evidence_fingerprint": "193149418cf0109d7856dab25a8f15a7eb35cea6116faa5e4cf1fe97603cdfb0"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Re-reviewed after 5084ac1 and its independent regression checks. The changed guard and shifted locations do not invalidate the source rationale. The finding join requires a rejecting validator, mixed Boolean/nullable fields, and two distinct typed consumers; branches enforce the experiment evidence threshold. Remaining risk: Upstream field classification bug ID22 can contaminate this join, but the join criteria itself are correct.",
+        "next_step": "Retain the regression and inspect future semantic changes."
+      }
+    },
+    {
+      "sequence": 75,
+      "review_id": "complexity:18a4dfd6f64a1e77ba53d6560fa826276a9e9e7970235b84bfa45aaf745f88ea",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:10.804676Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_field_kind",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 73,
+                  "end_line": 86
+                }
+              }
+            ],
+            "evidence_fingerprint": "b64ac3657dd3ac3b225d30843d20f9ad4cc07b1b4cf7b04a33a1889b496a4c70"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Re-reviewed after 5084ac1 and its independent regression checks. The demonstrated evaluator defect is fixed. CC is valid, but builtin-bool proof is not: class-local bool = int before active: bool still yields kind boolean and a coupled-state finding. This is a general detector binding bug. Remaining risk: Other class-scope annotation aliases must remain unresolved rather than inferred.",
+        "next_step": "Retain the regression and inspect future semantic changes."
+      }
+    },
+    {
+      "sequence": 76,
+      "review_id": "complexity:2a1dd9413228e2972bcf5b8ea385d24165572d3f4bd8a9cc2e2b337982f48c18",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:10.893548Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_predicate",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 121,
+                  "end_line": 150
+                }
+              }
+            ],
+            "evidence_fingerprint": "2701ea19615fc6c17c34a954e5c6d64216940f260b029ba83b3d67f725029be4"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Re-reviewed after 5084ac1 and its independent regression checks. The changed guard and shifted locations do not invalidate the source rationale. The recursive predicate recognizer accepts only declared Boolean attributes, nullable identity comparisons, and explicit Boolean operators. Receiver normalization preserves operand order and structure. Remaining risk: This is syntactic matching, not logical equivalence; alias predicates remain unsupported.",
+        "next_step": "Retain the regression and inspect future semantic changes."
+      }
+    },
+    {
+      "sequence": 77,
+      "review_id": "complexity:78bd5148b6896366a565a2ae540e1eb2e661fb1a44a2df5c5478a6bfc92ae49a",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:11.018289Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "_construction_reason",
+            "locations": [
+              {
+                "path": "src/slop_measure/languages/python/model_review.py",
+                "span": {
+                  "start_line": 318,
+                  "end_line": 334
+                }
+              }
+            ],
+            "evidence_fingerprint": "e0833bb583201014b4f69faf0e82c32f09cbfcc7a227e90af07fb78b6f0daeb7"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/languages/python/model_review.py",
+              "sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Re-reviewed after 5084ac1 and its independent regression checks. The changed guard and shifted locations do not invalidate the source rationale. Constructor and post-init replacement checks reject cases where dataclass-generated construction cannot be established; init must be literal True when specified. Remaining risk: The experiment does not prove all runtime decorator behavior or class validity.",
+        "next_step": "Retain the regression and inspect future semantic changes."
+      }
+    },
+    {
+      "sequence": 78,
+      "review_id": "complexity:919d06038a269644c991a25ac092cf9e1c7625030018e6d261cba113cc3fb5af",
+      "actor": "codex-assisted-source-review",
+      "recorded_at": "2026-09-21T18:08:11.112539Z",
+      "decision": {
+        "anchor": {
+          "subject": {
+            "kind": "complexity",
+            "language": "python",
+            "cohort": "production",
+            "symbol": "query_findings",
+            "locations": [
+              {
+                "path": "src/slop_measure/reporting/queries.py",
+                "span": {
+                  "start_line": 159,
+                  "end_line": 218
+                }
+              }
+            ],
+            "evidence_fingerprint": "b56f47d759228bf31302cf91910c8aab36cf3e54ed99f9561c46170203397033"
+          },
+          "source_hashes": [
+            {
+              "path": "src/slop_measure/reporting/queries.py",
+              "sha256": "9afc8ea7872355eb7215cd775b355f89fd3b916ea57176a7ec3be2623f19744b"
+            }
+          ],
+          "boundary": {
+            "state": "not-applicable"
+          },
+          "analysis_fingerprint": "7c9af1570c552e034f66b10672cb050b11755f81473ffa6ebe51b03df5a0917c"
+        },
+        "disposition": "no-change",
+        "reason": "Re-reviewed after 0cfc86a and its independent regression checks. The demonstrated evaluator defect is fixed. The measured CC23 is accurate, but query_findings delegates eroded selection to _eroded, which always calls complexity_for(cohort). That applies M4v3 assertion exclusion even when the report declares M4v1/v2. The existing version-aware renderer then disagrees: a test callable with fullCC12 and adjustedCC1 should be selected under v1/v2 but is omitted. A bounded probe and the existing historical-rendering fixture reproduce the mismatch. Remaining risk: This affects historical/unknown-version evidence selection, not the current v3 self-report raw metrics. Unknown metric versions also need an explicit policy rather than guessing a basis.",
+        "next_step": "Retain the regression and inspect future semantic changes."
+      }
+    }
+  ]
+}

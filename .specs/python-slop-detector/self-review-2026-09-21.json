@@ -1,0 +1,2811 @@
+{
+  "schema_version": "1",
+  "baseline_commit": "408a5fd",
+  "date": "2026-09-21",
+  "scope": "All 69 baseline effective-CC>10 callables, two patterns, one parse diagnostic, plus one new hotspot after fixes.",
+  "assessment_limits": "Agent-assisted source review; not human adjudication, defect recall, or representative calibration evidence.",
+  "ordinary_reports_match_release_on_final_source": true,
+  "score_policy_changed": false,
+  "counts": {
+    "no-change": 64,
+    "defer": 6,
+    "actionable": 3
+  },
+  "unique_fixes": [
+    "5084ac1",
+    "0cfc86a"
+  ],
+  "native_current_reviews": 72,
+  "native_history_events": 78,
+  "items": [
+    {
+      "id": 1,
+      "path": "src/slop_measure/application/_review_targets.py",
+      "symbol": "_analysis",
+      "evidence": "CC 12, 33 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Dispatch selects distinct version identities for patterns, clones, and complexity. Missing analyzer or metric identity yields an unavailable anchor.",
+      "remaining_risk": "Version constants must change when measurement semantics change; profile selection is intentionally not review evidence.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/_review_targets.py",
+        "symbol": "_analysis",
+        "line": 87,
+        "end": 119,
+        "cc": 12,
+        "full_cc": 12,
+        "sloc": 33,
+        "source_sha256": "dd7f4cf3c0df68a2df4d61ee02c60c0de3cf26298069b03a167e808690d89f24"
+      },
+      "final_measurement": {
+        "source_sha256": "dd7f4cf3c0df68a2df4d61ee02c60c0de3cf26298069b03a167e808690d89f24",
+        "line": 87,
+        "end": 119,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 33
+      },
+      "review_id": "complexity:4040aa329b9cdd0a429310241ce714de8c246a76d8c4e663c3040c12cf93d46f"
+    },
+    {
+      "id": 2,
+      "path": "src/slop_measure/application/_review_targets.py",
+      "symbol": "_snapshot_targets",
+      "evidence": "CC 12, 53 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Current-side groups, patterns, and callables keep their owned source paths and hashes. Clone anchors use only effective member assignments; baseline evidence is skipped.",
+      "remaining_risk": "Saved-report coverage can be partial, and unavailable source hashes must remain unreviewable.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/_review_targets.py",
+        "symbol": "_snapshot_targets",
+        "line": 122,
+        "end": 174,
+        "cc": 12,
+        "full_cc": 12,
+        "sloc": 53,
+        "source_sha256": "dd7f4cf3c0df68a2df4d61ee02c60c0de3cf26298069b03a167e808690d89f24"
+      },
+      "final_measurement": {
+        "source_sha256": "dd7f4cf3c0df68a2df4d61ee02c60c0de3cf26298069b03a167e808690d89f24",
+        "line": 122,
+        "end": 174,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 53
+      },
+      "review_id": "complexity:3e784fd8eb3f1c4650a79e4dc7b5b5b673d5f8c693bfcb3ef1d0f5915793965f"
+    },
+    {
+      "id": 3,
+      "path": "src/slop_measure/application/comparison.py",
+      "symbol": "_changes",
+      "evidence": "CC 16, 38 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "File pairing retains unreadable evidence and computes deltas from the two owned document maps. Added, deleted, and renamed paths stay explicit.",
+      "remaining_risk": "Rename ambiguity and unreadable-source behavior need the retained matching and comparison tests.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/comparison.py",
+        "symbol": "_changes",
+        "line": 102,
+        "end": 139,
+        "cc": 16,
+        "full_cc": 16,
+        "sloc": 38,
+        "source_sha256": "c5ec48e2783e0561a63a87172f878d01519577214698ef57b2ad22e3e743bb9e"
+      },
+      "final_measurement": {
+        "source_sha256": "c5ec48e2783e0561a63a87172f878d01519577214698ef57b2ad22e3e743bb9e",
+        "line": 102,
+        "end": 139,
+        "full_cc": 16,
+        "effective_cc": 16,
+        "sloc": 38
+      },
+      "review_id": "complexity:371cb003874d1aab9a917e709a25c8c413e200377b757c4f7791036bc071ea6a"
+    },
+    {
+      "id": 4,
+      "path": "src/slop_measure/application/comparison.py",
+      "symbol": "assemble_comparison",
+      "evidence": "CC 13, 50 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Assembly checks snapshot/provenance compatibility, remaps side-specific IDs and diagnostics, and preserves both source populations. Most decisions are comprehensions over the two sides.",
+      "remaining_risk": "New metadata fields must be assigned to their owning side; avoid bypassing report validation.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/comparison.py",
+        "symbol": "assemble_comparison",
+        "line": 219,
+        "end": 269,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 50,
+        "source_sha256": "c5ec48e2783e0561a63a87172f878d01519577214698ef57b2ad22e3e743bb9e"
+      },
+      "final_measurement": {
+        "source_sha256": "c5ec48e2783e0561a63a87172f878d01519577214698ef57b2ad22e3e743bb9e",
+        "line": 219,
+        "end": 269,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 50
+      },
+      "review_id": "complexity:5dfdffd39c080ececef9c6f7e95baaf837d863f9aac812d9e0d2e68735191d14"
+    },
+    {
+      "id": 5,
+      "path": "src/slop_measure/application/derived.py",
+      "symbol": "inspect_derived",
+      "evidence": "CC 13, 33 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Directory inventory, isolated per-file analysis, failed-read outcomes, and strict-mode errors are separate visible phases. The CC counts filters and diagnostic accumulation.",
+      "remaining_risk": "The three experimental entry points repeat orchestration; keep behavior parity tests until a real shared change warrants extraction.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/derived.py",
+        "symbol": "inspect_derived",
+        "line": 36,
+        "end": 69,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 33,
+        "source_sha256": "bad5cbd404fecd36864f31d159097c47f43706c2a2bf45bd22ffc7a728585c5d"
+      },
+      "final_measurement": {
+        "source_sha256": "bad5cbd404fecd36864f31d159097c47f43706c2a2bf45bd22ffc7a728585c5d",
+        "line": 36,
+        "end": 69,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 33
+      },
+      "review_id": "complexity:6fa767b7ad7848b324c99b63c094b5486dadb7dd0504bf5ba4d9da4a608ecb45"
+    },
+    {
+      "id": 6,
+      "path": "src/slop_measure/application/models.py",
+      "symbol": "inspect_models",
+      "evidence": "CC 13, 33 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "The model experiment uses the same explicit inventory/failure/strict/report sequence. It does not import source or turn failed files into empty findings.",
+      "remaining_risk": "Unsupported model shapes remain unresolved. Low finding counts must not be presented as correctness.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/models.py",
+        "symbol": "inspect_models",
+        "line": 32,
+        "end": 65,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 33,
+        "source_sha256": "bf2a5ac04d5a6b0b4b1fc6a0ed28fbb0eb8b08b4dea613603e59c812f0d10533"
+      },
+      "final_measurement": {
+        "source_sha256": "bf2a5ac04d5a6b0b4b1fc6a0ed28fbb0eb8b08b4dea613603e59c812f0d10533",
+        "line": 32,
+        "end": 65,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 33
+      },
+      "review_id": "complexity:d98a46702dec68b03f4fabbe8e94e90cf64ee79445789acd48c702373b45d99f"
+    },
+    {
+      "id": 7,
+      "path": "src/slop_measure/application/reviews.py",
+      "symbol": "_resolve",
+      "evidence": "CC 15, 33 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Legacy resolution requires exact anchor equality for current; candidates with changed or missing identity are stale and absent candidates are missing.",
+      "remaining_risk": "Candidate groups can be broad, but none is automatically approved. Legacy whole-policy invalidation is deliberate.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/reviews.py",
+        "symbol": "_resolve",
+        "line": 43,
+        "end": 75,
+        "cc": 15,
+        "full_cc": 15,
+        "sloc": 33,
+        "source_sha256": "33be792c334d2179da041a75be4ce7272e452acdbbd60cc18313ec713654087a"
+      },
+      "final_measurement": {
+        "source_sha256": "33be792c334d2179da041a75be4ce7272e452acdbbd60cc18313ec713654087a",
+        "line": 43,
+        "end": 75,
+        "full_cc": 15,
+        "effective_cc": 15,
+        "sloc": 33
+      },
+      "review_id": "complexity:d8c30a66cbbb003981387a65a2888e432f01608cf51755f573d9e8b8d0466873"
+    },
+    {
+      "id": 8,
+      "path": "src/slop_measure/application/service.py",
+      "symbol": "_validate_evidence",
+      "evidence": "CC 13, 19 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Short adapter contract checklist verifies complete path/language/cohort accounting, declared capabilities, and error evidence for failed files.",
+      "remaining_risk": "Removing guards would weaken adapter isolation. Domain validators separately reject duplicate paths.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/service.py",
+        "symbol": "_validate_evidence",
+        "line": 64,
+        "end": 82,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 19,
+        "source_sha256": "72cfaa143296ea47fb4985a38d4298e6c86cbb61f148d8aeffcb128e8741e5a5"
+      },
+      "final_measurement": {
+        "source_sha256": "72cfaa143296ea47fb4985a38d4298e6c86cbb61f148d8aeffcb128e8741e5a5",
+        "line": 64,
+        "end": 82,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 19
+      },
+      "review_id": "complexity:bc591df74a0d413138898b198a01b74964f529b67999dc7033ddd571c6bb7e18"
+    },
+    {
+      "id": 9,
+      "path": "src/slop_measure/application/service.py",
+      "symbol": "AnalysisService._scan",
+      "evidence": "CC 15, 60 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "defer",
+      "reason": "The scan loop performs config validation, source discovery, adapter isolation, provenance assembly, aggregation and strict-mode enforcement. The full source-review path did not establish a correctness defect.",
+      "remaining_risk": "Consider separating adapter execution from coordination when another adapter needs it; do not extract merely to reduce CC.",
+      "next_step": "Revisit coordination only when adapter requirements change.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "defer",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/service.py",
+        "symbol": "AnalysisService._scan",
+        "line": 129,
+        "end": 188,
+        "cc": 15,
+        "full_cc": 15,
+        "sloc": 60,
+        "source_sha256": "72cfaa143296ea47fb4985a38d4298e6c86cbb61f148d8aeffcb128e8741e5a5"
+      },
+      "final_measurement": {
+        "source_sha256": "72cfaa143296ea47fb4985a38d4298e6c86cbb61f148d8aeffcb128e8741e5a5",
+        "line": 129,
+        "end": 188,
+        "full_cc": 15,
+        "effective_cc": 15,
+        "sloc": 60
+      },
+      "review_id": "complexity:866e7f57eba9bb38a24afc1998202471088c132cd1de046d8666e7b741d0147a"
+    },
+    {
+      "id": 10,
+      "path": "src/slop_measure/application/variants.py",
+      "symbol": "inspect_variants",
+      "evidence": "CC 13, 33 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "The variant experiment preserves directory source coverage and failures, then applies strict mode to error diagnostics. The complexity reflects the same explicit application pipeline.",
+      "remaining_risk": "Maintain parity with the other experimental commands without hiding their separate report types.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/application/variants.py",
+        "symbol": "inspect_variants",
+        "line": 36,
+        "end": 69,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 33,
+        "source_sha256": "a0b2fc07874c79ffd3d02c1c5157be50250d97cb69a4f02cb8086b01f259aa25"
+      },
+      "final_measurement": {
+        "source_sha256": "a0b2fc07874c79ffd3d02c1c5157be50250d97cb69a4f02cb8086b01f259aa25",
+        "line": 36,
+        "end": 69,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 33
+      },
+      "review_id": "complexity:2a1f542b31774c88cbcb359c138a0ce218c774c7fc1645fa36f5629ad6dd67cd"
+    },
+    {
+      "id": 11,
+      "path": "src/slop_measure/domain/comparison_validation.py",
+      "symbol": "validate_deltas",
+      "evidence": "CC 11, 22 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Delta validation distinguishes missing, unavailable, and incompatible inputs and verifies current-minus-baseline arithmetic with a small tolerance.",
+      "remaining_risk": "These are integrity checks for imported reports, not business branches to remove.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/domain/comparison_validation.py",
+        "symbol": "validate_deltas",
+        "line": 64,
+        "end": 86,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 22,
+        "source_sha256": "5c87b4b3c0500e9ccb85796424de952355eef9b15ef38d29d08243869a8b26f5"
+      },
+      "final_measurement": {
+        "source_sha256": "5c87b4b3c0500e9ccb85796424de952355eef9b15ef38d29d08243869a8b26f5",
+        "line": 64,
+        "end": 86,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 22
+      },
+      "review_id": "complexity:192190da1cfa201b8645f5be497b6c1f82b9420ac0baa6bbf95227426695cc3b"
+    },
+    {
+      "id": 12,
+      "path": "src/slop_measure/domain/comparison_validation.py",
+      "symbol": "_validate_totals",
+      "evidence": "CC 16, 41 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Line totals reconcile every source file and measured change. M1 availability and raw values must agree with owned totals.",
+      "remaining_risk": "Unavailable values deliberately carry no invented numeric total; retain malformed-import tests.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/domain/comparison_validation.py",
+        "symbol": "_validate_totals",
+        "line": 110,
+        "end": 150,
+        "cc": 16,
+        "full_cc": 16,
+        "sloc": 41,
+        "source_sha256": "5c87b4b3c0500e9ccb85796424de952355eef9b15ef38d29d08243869a8b26f5"
+      },
+      "final_measurement": {
+        "source_sha256": "5c87b4b3c0500e9ccb85796424de952355eef9b15ef38d29d08243869a8b26f5",
+        "line": 110,
+        "end": 150,
+        "full_cc": 16,
+        "effective_cc": 16,
+        "sloc": 41
+      },
+      "review_id": "complexity:d778901c784c91c252487f703d45a97c09169298487b9a6bd91624bd1ec3d22b"
+    },
+    {
+      "id": 13,
+      "path": "src/slop_measure/domain/evidence.py",
+      "symbol": "LanguageEvidence.validate_clone_analyses",
+      "evidence": "CC 11, 16 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Capability guard and exact parsed-file coverage checks protect clone evidence. Candidate spans are validated against their own file.",
+      "remaining_risk": "A failure outcome remains different from a successful empty candidate list.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/domain/evidence.py",
+        "symbol": "LanguageEvidence.validate_clone_analyses",
+        "line": 489,
+        "end": 504,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 16,
+        "source_sha256": "026f47ed1473d8dd350aba0128c896bdccd11b3c420b9eab66fbb6f727658fd3"
+      },
+      "final_measurement": {
+        "source_sha256": "026f47ed1473d8dd350aba0128c896bdccd11b3c420b9eab66fbb6f727658fd3",
+        "line": 489,
+        "end": 504,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 16
+      },
+      "review_id": "complexity:a64d5c3da876e7e755830ded77fb42f6fe71e3874aec040b4efe72961ece4077"
+    },
+    {
+      "id": 14,
+      "path": "src/slop_measure/domain/evidence.py",
+      "symbol": "LanguageEvidence.validate_pattern_analyses",
+      "evidence": "CC 11, 16 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Pattern capability and one-outcome-per-parsed-file checks prevent partial output from looking complete. Finding spans are checked against source lines.",
+      "remaining_risk": "Keep the integrity guards; a high predicate count is expected for this boundary.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/domain/evidence.py",
+        "symbol": "LanguageEvidence.validate_pattern_analyses",
+        "line": 557,
+        "end": 572,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 16,
+        "source_sha256": "026f47ed1473d8dd350aba0128c896bdccd11b3c420b9eab66fbb6f727658fd3"
+      },
+      "final_measurement": {
+        "source_sha256": "026f47ed1473d8dd350aba0128c896bdccd11b3c420b9eab66fbb6f727658fd3",
+        "line": 557,
+        "end": 572,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 16
+      },
+      "review_id": "complexity:63bdb75a8ac27966c436ddbee101f69687b0945f4833ad75785089b2e78788b0"
+    },
+    {
+      "id": 15,
+      "path": "src/slop_measure/domain/reports.py",
+      "symbol": "AnalysisReport.clone_review_anchor",
+      "evidence": "CC 13, 37 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Legacy anchors require owned current groups, hashes for each member, and the clone metric version before storing the exact policy/definition context.",
+      "remaining_risk": "Whole-file hashes and legacy policy fingerprints are intentionally conservative; new ledger rules are separate.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/domain/reports.py",
+        "symbol": "AnalysisReport.clone_review_anchor",
+        "line": 341,
+        "end": 378,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 37,
+        "source_sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344"
+      },
+      "final_measurement": {
+        "source_sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344",
+        "line": 341,
+        "end": 378,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 37
+      },
+      "review_id": "complexity:6ddf5d91110c886587dcf872f33dc02753a3dfee91ede937a64c65a4f6e15e6c"
+    },
+    {
+      "id": 16,
+      "path": "src/slop_measure/domain/reports.py",
+      "symbol": "AnalysisReport.validate_reviews",
+      "evidence": "CC 15, 19 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Imported current reviews must match their actual anchors; stale candidate IDs and supplied explanations must agree with current groups.",
+      "remaining_risk": "This validates supplied explanation detail; it is not an independent source re-scan or automatic reapproval.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/domain/reports.py",
+        "symbol": "AnalysisReport.validate_reviews",
+        "line": 419,
+        "end": 437,
+        "cc": 15,
+        "full_cc": 15,
+        "sloc": 19,
+        "source_sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344"
+      },
+      "final_measurement": {
+        "source_sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344",
+        "line": 419,
+        "end": 437,
+        "full_cc": 15,
+        "effective_cc": 15,
+        "sloc": 19
+      },
+      "review_id": "complexity:656851b0cb2da6b03c7f6efec0a27d81d018d1c9260c68bc02b3395eed6e95f4"
+    },
+    {
+      "id": 17,
+      "path": "src/slop_measure/domain/reports.py",
+      "symbol": "AnalysisReport.validate_clones",
+      "evidence": "CC 13, 29 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Clone context is recomputed from declarations; each member must belong to a source file with matching language/cohort and valid spans.",
+      "remaining_risk": "Boundary relation says where duplication occurs, not whether extraction is desirable.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/domain/reports.py",
+        "symbol": "AnalysisReport.validate_clones",
+        "line": 440,
+        "end": 468,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 29,
+        "source_sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344"
+      },
+      "final_measurement": {
+        "source_sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344",
+        "line": 440,
+        "end": 468,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 29
+      },
+      "review_id": "complexity:b5ff2c5f1590258d88bc850e1e900ccaea688595084df065a84c2ffaee6e3c45"
+    },
+    {
+      "id": 18,
+      "path": "src/slop_measure/domain/reports.py",
+      "symbol": "AnalysisReport.validate_metadata",
+      "evidence": "CC 13, 27 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Snapshot metadata cannot claim a baseline. Coverage, diagnostic IDs, exclusions, and metric diagnostic links are checked for unique source ownership.",
+      "remaining_risk": "These import-time consistency predicates are legitimate; new metadata types need the same ownership discipline.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/domain/reports.py",
+        "symbol": "AnalysisReport.validate_metadata",
+        "line": 516,
+        "end": 542,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 27,
+        "source_sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344"
+      },
+      "final_measurement": {
+        "source_sha256": "0b6ac29a53235b31e6b08c215ff5b34df5f7f737fc79087a35e98e592ea30344",
+        "line": 516,
+        "end": 542,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 27
+      },
+      "review_id": "complexity:06e554af327af8494885cfbc58cd400f684a14631da1bb51e2365d46ff162706"
+    },
+    {
+      "id": 19,
+      "path": "src/slop_measure/domain/scoring.py",
+      "symbol": "CalibrationProfile.validate_models",
+      "evidence": "CC 11, 18 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Profile validation checks unique models/eligibility/versions, required metric definitions, distribution inputs, and non-overlapping population ranges.",
+      "remaining_risk": "Validation cannot prove corpus representativeness or repository-lineage independence; those remain evaluation policy.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/domain/scoring.py",
+        "symbol": "CalibrationProfile.validate_models",
+        "line": 298,
+        "end": 315,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 18,
+        "source_sha256": "cd64d80389a40a731b06867725b1ad8e52594443928d01266aca6b7720be8157"
+      },
+      "final_measurement": {
+        "source_sha256": "cd64d80389a40a731b06867725b1ad8e52594443928d01266aca6b7720be8157",
+        "line": 298,
+        "end": 315,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 18
+      },
+      "review_id": "complexity:5efda465d358f34ee19b0a61def6100b4f698337ce3125156f9454bca068b3a0"
+    },
+    {
+      "id": 20,
+      "path": "src/slop_measure/languages/python/clones.py",
+      "symbol": "extract_clone_candidates",
+      "evidence": {
+        "source_sha256": "aa927e77b013c841b62f41b6d061ed38afb9ec1c8372f0142a89251ae7c18f56",
+        "lines": [
+          148,
+          181
+        ],
+        "cc": 13,
+        "sloc": 33,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "test_clones.py: complete runs, independent minima, nested suites, match containers, docstring removal, same-line deduplication."
+      },
+      "code_disposition": "no-change",
+      "reason": "Complete sibling runs are thresholded by both statement count and exact owned SLOC, then deduplicated by observable identity. Nested suites and token projection account for the branches.",
+      "remaining_risk": "Conservative lexical normalization can miss semantic clones; it must not guess bindings.",
+      "next_step": "Retain current normalization and regression suite; change only for a reproducible token/ownership defect.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/clones.py",
+        "symbol": "extract_clone_candidates",
+        "line": 148,
+        "end": 181,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 33,
+        "source_sha256": "aa927e77b013c841b62f41b6d061ed38afb9ec1c8372f0142a89251ae7c18f56"
+      },
+      "final_measurement": {
+        "source_sha256": "aa927e77b013c841b62f41b6d061ed38afb9ec1c8372f0142a89251ae7c18f56",
+        "line": 148,
+        "end": 181,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 33
+      },
+      "review_id": "complexity:b2c483744c17da92a857c6dca02721dfbfb4a80ebcb9c6020495ed5af6991c71"
+    },
+    {
+      "id": 21,
+      "path": "src/slop_measure/languages/python/derived_review.py",
+      "symbol": "_mutation_kind",
+      "evidence": {
+        "source_sha256": "0601b661035d10f61526d65f86db262369e73ce4365fab55e2ebc15e6958e990",
+        "lines": [
+          138,
+          159
+        ],
+        "cc": 15,
+        "sloc": 22,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "test_derived_review_detector.py: three mutations, empty extend, unknown calls, recomputation and alias rejection."
+      },
+      "code_disposition": "no-change",
+      "reason": "The explicit append/insert/extend alternatives establish guaranteed length increases. Integer-position and literal-argument guards are evidence preconditions, not redundant defenses.",
+      "remaining_risk": "Only straight-line known local lists qualify; other mutations remain unresolved.",
+      "next_step": "Keep separate guarded cases; extend supported mutations only with independent proof tests.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/derived_review.py",
+        "symbol": "_mutation_kind",
+        "line": 138,
+        "end": 159,
+        "cc": 15,
+        "full_cc": 15,
+        "sloc": 22,
+        "source_sha256": "0601b661035d10f61526d65f86db262369e73ce4365fab55e2ebc15e6958e990"
+      },
+      "final_measurement": {
+        "source_sha256": "0601b661035d10f61526d65f86db262369e73ce4365fab55e2ebc15e6958e990",
+        "line": 138,
+        "end": 159,
+        "full_cc": 15,
+        "effective_cc": 15,
+        "sloc": 22
+      },
+      "review_id": "complexity:ba441e85e1644e674536b26488103ea9848d20403fce13b592ada940b429fe11"
+    },
+    {
+      "id": 22,
+      "path": "src/slop_measure/languages/python/model_review.py",
+      "symbol": "_field_kind",
+      "evidence": {
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33",
+        "lines": [
+          73,
+          86
+        ],
+        "cc": 13,
+        "sloc": 14,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "AST-only model-shadow-probe.json reproduces incorrect positive; existing model tests cover module shadowing but not this class binding.",
+        "fix": "5084ac1; reviewed measurements remain the pre-fix snapshot values."
+      },
+      "code_disposition": "actionable",
+      "reason": "CC is valid, but builtin-bool proof is not: class-local bool = int before active: bool still yields kind boolean and a coupled-state finding. This is a general detector binding bug.",
+      "remaining_risk": "Other class-scope annotation aliases must remain unresolved rather than inferred.",
+      "next_step": "Fixed by commit 5084ac1 after independent regression commit bec66ba. Field collection rejects Boolean annotations when class scope binds bool. Detector/service/CLI focused 52 tests pass; Ruff formatting/lint and Pyright pass. Preserve regression; no scoring changes.",
+      "hotspot_measurement": "valid",
+      "change_decision": "general-evaluator-fix",
+      "resolution": "fixed",
+      "fix_commit": "5084ac1",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/model_review.py",
+        "symbol": "_field_kind",
+        "line": 73,
+        "end": 86,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 14,
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+      },
+      "final_measurement": {
+        "source_sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc",
+        "line": 73,
+        "end": 86,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 14
+      },
+      "review_id": "complexity:18a4dfd6f64a1e77ba53d6560fa826276a9e9e7970235b84bfa45aaf745f88ea"
+    },
+    {
+      "id": 23,
+      "path": "src/slop_measure/languages/python/model_review.py",
+      "symbol": "_predicate",
+      "evidence": {
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33",
+        "lines": [
+          120,
+          149
+        ],
+        "cc": 20,
+        "sloc": 30,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "test_model_review_detector.py: precise predicates, or/not groups, unrelated guards and reordered/nonmatching predicates."
+      },
+      "code_disposition": "no-change",
+      "reason": "The recursive predicate recognizer accepts only declared Boolean attributes, nullable identity comparisons, and explicit Boolean operators. Receiver normalization preserves operand order and structure.",
+      "remaining_risk": "This is syntactic matching, not logical equivalence; alias predicates remain unsupported.",
+      "next_step": "Keep the closed AST grammar and explicit negative cases.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/model_review.py",
+        "symbol": "_predicate",
+        "line": 120,
+        "end": 149,
+        "cc": 20,
+        "full_cc": 20,
+        "sloc": 30,
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+      },
+      "final_measurement": {
+        "source_sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc",
+        "line": 121,
+        "end": 150,
+        "full_cc": 20,
+        "effective_cc": 20,
+        "sloc": 30
+      },
+      "review_id": "complexity:2a1dd9413228e2972bcf5b8ea385d24165572d3f4bd8a9cc2e2b337982f48c18"
+    },
+    {
+      "id": 24,
+      "path": "src/slop_measure/languages/python/model_review.py",
+      "symbol": "_findings",
+      "evidence": {
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33",
+        "lines": [
+          263,
+          289
+        ],
+        "cc": 11,
+        "sloc": 27,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "test_model_review_detector.py: model-only, one consumer, duplicate symbol and three-consumer grouping."
+      },
+      "code_disposition": "no-change",
+      "reason": "The finding join requires a rejecting validator, mixed Boolean/nullable fields, and two distinct typed consumers; branches enforce the experiment evidence threshold.",
+      "remaining_risk": "Upstream field classification bug ID22 can contaminate this join, but the join criteria itself are correct.",
+      "next_step": "Fix upstream binding proof; do not weaken consumer evidence requirements or add score impact.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/model_review.py",
+        "symbol": "_findings",
+        "line": 263,
+        "end": 289,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 27,
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+      },
+      "final_measurement": {
+        "source_sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc",
+        "line": 264,
+        "end": 290,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 27
+      },
+      "review_id": "complexity:1750661b8fafa9709f15ff3d3e1e60711e078b90d1585ea0fb17c5407547af17"
+    },
+    {
+      "id": 25,
+      "path": "src/slop_measure/languages/python/model_review.py",
+      "symbol": "_model_reason",
+      "evidence": {
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33",
+        "lines": [
+          292,
+          314
+        ],
+        "cc": 22,
+        "sloc": 23,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "model-shadow-probe.json plus model tests for inheritance, decorated/ambiguous declarations and module binding.",
+        "fix": "5084ac1; reviewed measurements remain the pre-fix snapshot values."
+      },
+      "code_disposition": "actionable",
+      "reason": "Module-level and decorator identity guards are valid but omit class-local bool resolution. Its caller therefore accepts an unsupported field type.",
+      "remaining_risk": "Conservative rejection may include safe aliases; false negatives are preferable to fabricated type evidence.",
+      "next_step": "Fixed by commit 5084ac1 after independent regression commit bec66ba. Field collection rejects Boolean annotations when class scope binds bool. Detector/service/CLI focused 52 tests pass; Ruff formatting/lint and Pyright pass. Preserve regression; no scoring changes.",
+      "hotspot_measurement": "valid",
+      "change_decision": "general-evaluator-fix",
+      "resolution": "fixed",
+      "fix_commit": "5084ac1",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/model_review.py",
+        "symbol": "_model_reason",
+        "line": 292,
+        "end": 314,
+        "cc": 22,
+        "full_cc": 22,
+        "sloc": 23,
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+      },
+      "final_measurement": {
+        "source_sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc",
+        "line": 293,
+        "end": 315,
+        "full_cc": 22,
+        "effective_cc": 22,
+        "sloc": 23
+      },
+      "review_id": "complexity:0a121ce3e95fb6ed16124eb59a74c5599c47e1624d26d2128d8805a12e02a42b"
+    },
+    {
+      "id": 26,
+      "path": "src/slop_measure/languages/python/model_review.py",
+      "symbol": "_construction_reason",
+      "evidence": {
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33",
+        "lines": [
+          317,
+          333
+        ],
+        "cc": 13,
+        "sloc": 17,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "test_model_review_detector.py: custom constructor, init=False, replaced post-init and annotated field replacement."
+      },
+      "code_disposition": "no-change",
+      "reason": "Constructor and post-init replacement checks reject cases where dataclass-generated construction cannot be established; init must be literal True when specified.",
+      "remaining_risk": "The experiment does not prove all runtime decorator behavior or class validity.",
+      "next_step": "Keep the narrow supported decorator contract; no complexity-driven rewrite.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/model_review.py",
+        "symbol": "_construction_reason",
+        "line": 317,
+        "end": 333,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 17,
+        "source_sha256": "9170b93683036bc53d55f87cf1fd065880ca8714448bc700603496f188ff7b33"
+      },
+      "final_measurement": {
+        "source_sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc",
+        "line": 318,
+        "end": 334,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 17
+      },
+      "review_id": "complexity:78bd5148b6896366a565a2ae540e1eb2e661fb1a44a2df5c5478a6bfc92ae49a"
+    },
+    {
+      "id": 27,
+      "path": "src/slop_measure/languages/python/rules/_shared.py",
+      "symbol": "bound_names",
+      "evidence": {
+        "source_sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423",
+        "lines": [
+          58,
+          80
+        ],
+        "cc": 12,
+        "sloc": 23,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "test_pattern_catalog.py: builtin shadows including imports, parameters, except, match and type parameters; engine guard regressions."
+      },
+      "code_disposition": "no-change",
+      "reason": "Binding alternatives cover Python name stores, parameters, imports, exception captures, match captures and type parameters. Each alternative is a distinct binding form.",
+      "remaining_risk": "Future Python binding syntax needs an explicit new case and learning test.",
+      "next_step": "Retain centralized binding enumeration and version-bound grammar tests.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/rules/_shared.py",
+        "symbol": "bound_names",
+        "line": 58,
+        "end": 80,
+        "cc": 12,
+        "full_cc": 12,
+        "sloc": 23,
+        "source_sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423"
+      },
+      "final_measurement": {
+        "source_sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423",
+        "line": 58,
+        "end": 80,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 23
+      },
+      "review_id": "complexity:ee770ec0fb6ff17cbe4b4733a13be4e0f31fd08bd2bcf7cc745d3d33de9975b8"
+    },
+    {
+      "id": 28,
+      "path": "src/slop_measure/languages/python/rules/_shared.py",
+      "symbol": "ScopeIndex.stable_local",
+      "evidence": {
+        "source_sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423",
+        "lines": [
+          121,
+          141
+        ],
+        "cc": 17,
+        "sloc": 21,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Pattern catalog local-capture, dynamic-locals, global/nonlocal, lambda/comprehension and wrapper guards."
+      },
+      "code_disposition": "no-change",
+      "reason": "A stable local requires lexical ownership, a real binding, no relevant global/nonlocal, dynamic introspection or nested capture. Flat rejection checks protect rule soundness.",
+      "remaining_risk": "Whole-owner conservative rejection can suppress safe opportunities; it is not evidence of wrong measurement.",
+      "next_step": "Keep proof guards; do not lower recorded CC to reward flat layout.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/rules/_shared.py",
+        "symbol": "ScopeIndex.stable_local",
+        "line": 121,
+        "end": 141,
+        "cc": 17,
+        "full_cc": 17,
+        "sloc": 21,
+        "source_sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423"
+      },
+      "final_measurement": {
+        "source_sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423",
+        "line": 121,
+        "end": 141,
+        "full_cc": 17,
+        "effective_cc": 17,
+        "sloc": 21
+      },
+      "review_id": "complexity:d82841d79e3294a3815bf70aaf3de17dcdca1f534757a9146b9864effdbbd47e"
+    },
+    {
+      "id": 29,
+      "path": "src/slop_measure/languages/python/rules/_shared.py",
+      "symbol": "header",
+      "evidence": {
+        "source_sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423",
+        "lines": [
+          183,
+          211
+        ],
+        "cc": 13,
+        "sloc": 28,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Pattern catalog exact header spans, multiline expressions and existing lambda-header regression."
+      },
+      "code_disposition": "no-change",
+      "reason": "Token-based header spans track indentation and bracket depth so punctuation inside expressions is not the block boundary. The if caller handles lambda-colon ambiguity.",
+      "remaining_risk": "New grammar/header forms require token cases; malformed source is rejected before rules.",
+      "next_step": "Retain token-span tests and avoid approximating headers by string search.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/rules/_shared.py",
+        "symbol": "header",
+        "line": 183,
+        "end": 211,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 28,
+        "source_sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423"
+      },
+      "final_measurement": {
+        "source_sha256": "f932623349943c7c1e44ce1bc74704f75a38af58b520890b2ecb9aad5df21423",
+        "line": 183,
+        "end": 211,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 28
+      },
+      "review_id": "complexity:a22cb92a2216d772f785e575cb8a856581a264b5a094abd2738355d4229e2094"
+    },
+    {
+      "id": 30,
+      "path": "src/slop_measure/languages/python/rules/abstraction.py",
+      "symbol": "_plain_forwarder",
+      "evidence": {
+        "source_sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d",
+        "lines": [
+          72,
+          101
+        ],
+        "cc": 22,
+        "sloc": 30,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Pattern catalog wrapper keep cases for public/decorated/typed/default/async/callback forms."
+      },
+      "code_disposition": "no-change",
+      "reason": "Twenty-two paths largely represent explicit exclusions for API boundaries and forwarding shape. Defaults, annotations, decorators, variadics and keyword calls each invalidate the narrow proof.",
+      "remaining_risk": "An inline rewrite is not performed or proved behavior-preserving under arbitrary reflection.",
+      "next_step": "Keep narrow advisory finding and preserve all boundary guards.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/rules/abstraction.py",
+        "symbol": "_plain_forwarder",
+        "line": 72,
+        "end": 101,
+        "cc": 22,
+        "full_cc": 22,
+        "sloc": 30,
+        "source_sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d"
+      },
+      "final_measurement": {
+        "source_sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d",
+        "line": 72,
+        "end": 101,
+        "full_cc": 22,
+        "effective_cc": 22,
+        "sloc": 30
+      },
+      "review_id": "complexity:4dbd90063f0b2e0d41a80aff279b72d8652aabe30eecb4863b63188b65f4394f"
+    },
+    {
+      "id": 31,
+      "path": "src/slop_measure/languages/python/rules/abstraction.py",
+      "symbol": "_trivial_wrapper",
+      "evidence": {
+        "source_sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d",
+        "lines": [
+          104,
+          124
+        ],
+        "cc": 13,
+        "sloc": 21,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Pattern catalog unique-use, nested-loop/conditional use, callbacks, extra uses and type-comment regressions."
+      },
+      "code_disposition": "no-change",
+      "reason": "The wrapper rule combines private nested ownership, a plain forwarding body, one use and an immediately following direct call. It avoids project-wide reachability claims.",
+      "remaining_risk": "Finding is a review suggestion, not authorization to remove an intentional abstraction.",
+      "next_step": "Retain direct-use contract and manual review wording.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/rules/abstraction.py",
+        "symbol": "_trivial_wrapper",
+        "line": 104,
+        "end": 124,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 21,
+        "source_sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d"
+      },
+      "final_measurement": {
+        "source_sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d",
+        "line": 104,
+        "end": 124,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 21
+      },
+      "review_id": "complexity:94b4ae6972ef5a84dc4cbdd623a57ef9cdc38581207dfcc3ca8db54781454e04"
+    },
+    {
+      "id": 32,
+      "path": "src/slop_measure/languages/python/rules/abstraction.py",
+      "symbol": "_return_binding",
+      "evidence": {
+        "source_sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d",
+        "lines": [
+          127,
+          148
+        ],
+        "cc": 14,
+        "sloc": 22,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Pattern catalog single-use return positive plus repeated use, capture, global/nonlocal and type-comment keeps."
+      },
+      "code_disposition": "no-change",
+      "reason": "A single binding immediately returned qualifies only when local and unique, with no await/yield or type-comment boundary. Its branches prevent cross-scope and typed-binding false positives.",
+      "remaining_risk": "Debugging intent can justify a named temporary even when the syntax qualifies.",
+      "next_step": "Keep advisory evidence; use no-change review disposition when naming aids comprehension.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/rules/abstraction.py",
+        "symbol": "_return_binding",
+        "line": 127,
+        "end": 148,
+        "cc": 14,
+        "full_cc": 14,
+        "sloc": 22,
+        "source_sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d"
+      },
+      "final_measurement": {
+        "source_sha256": "6bfb9c31df6ccd1e7dc29cb14a43d8bfd8e6b4a05cabd04f75f3c6f62055632d",
+        "line": 127,
+        "end": 148,
+        "full_cc": 14,
+        "effective_cc": 14,
+        "sloc": 22
+      },
+      "review_id": "complexity:5293d40256e3b6f23cee50c3dcd309c00f24ad622a28d6e8d3abb768b517fc1a"
+    },
+    {
+      "id": 33,
+      "path": "src/slop_measure/languages/python/rules/defensive.py",
+      "symbol": "_reraise",
+      "evidence": {
+        "source_sha256": "01b0246e78d09820ea36e7f97b5a37811a0aefea4f17c469712aead9c9b23341",
+        "lines": [
+          23,
+          47
+        ],
+        "cc": 13,
+        "sloc": 25,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Pattern catalog bare-reraise positive and typed/side-effect handler negatives."
+      },
+      "code_disposition": "no-change",
+      "reason": "Only one bare except containing a bare raise qualifies; typed handlers, aliases, else and finally are preserved. Exact header-to-raise ownership is explicit.",
+      "remaining_risk": "The syntactic finding does not account for tracing/debugger intent.",
+      "next_step": "Keep narrow recognizer and precise source span.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/rules/defensive.py",
+        "symbol": "_reraise",
+        "line": 23,
+        "end": 47,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 25,
+        "source_sha256": "01b0246e78d09820ea36e7f97b5a37811a0aefea4f17c469712aead9c9b23341"
+      },
+      "final_measurement": {
+        "source_sha256": "01b0246e78d09820ea36e7f97b5a37811a0aefea4f17c469712aead9c9b23341",
+        "line": 23,
+        "end": 47,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 25
+      },
+      "review_id": "complexity:4bdb46cb9c42a484477ece6ab9ea32c12308e0f391d0d3468832291fe04e2247"
+    },
+    {
+      "id": 34,
+      "path": "src/slop_measure/languages/python/rules/defensive.py",
+      "symbol": "_literal_guard",
+      "evidence": {
+        "source_sha256": "01b0246e78d09820ea36e7f97b5a37811a0aefea4f17c469712aead9c9b23341",
+        "lines": [
+          92,
+          112
+        ],
+        "cc": 12,
+        "sloc": 21,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Pattern catalog literal-None-guard positive, computed-value negative and local stability guards."
+      },
+      "code_disposition": "no-change",
+      "reason": "Immediate non-None literal assignment plus stable local identity proves the None branch unreachable within the supported shape. Calls and uncertain bindings are kept.",
+      "remaining_risk": "Assignment forms or effects outside the narrow sequence remain unsupported.",
+      "next_step": "Retain immediate adjacency and stable-local proof.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/rules/defensive.py",
+        "symbol": "_literal_guard",
+        "line": 92,
+        "end": 112,
+        "cc": 12,
+        "full_cc": 12,
+        "sloc": 21,
+        "source_sha256": "01b0246e78d09820ea36e7f97b5a37811a0aefea4f17c469712aead9c9b23341"
+      },
+      "final_measurement": {
+        "source_sha256": "01b0246e78d09820ea36e7f97b5a37811a0aefea4f17c469712aead9c9b23341",
+        "line": 92,
+        "end": 112,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 21
+      },
+      "review_id": "complexity:b97e3fb178842e74e91695e831c6a67cec7ae9f7b414f61c367fa1c796d38677"
+    },
+    {
+      "id": 35,
+      "path": "src/slop_measure/languages/python/rules/redundancy.py",
+      "symbol": "_identity_comprehension",
+      "evidence": {
+        "source_sha256": "7f3393f2e230c9efc3d8dd987f3e010949ffdfa322bbf3047ec21683ed1bcd97",
+        "lines": [
+          36,
+          50
+        ],
+        "cc": 12,
+        "sloc": 15,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Pattern catalog literal identity positive and filtered/unknown iterable keep cases."
+      },
+      "code_disposition": "no-change",
+      "reason": "An identity list comprehension is recognized only over list/tuple literal ASTs with a simple matching target, no filter, async iteration or starred elements.",
+      "remaining_risk": "Literal elements may execute calls, but element evaluation and list construction remain ordered; no arbitrary iterable simplification is claimed.",
+      "next_step": "Keep literal-only boundary and do not generalize to protocol-driven iterables.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/rules/redundancy.py",
+        "symbol": "_identity_comprehension",
+        "line": 36,
+        "end": 50,
+        "cc": 12,
+        "full_cc": 12,
+        "sloc": 15,
+        "source_sha256": "7f3393f2e230c9efc3d8dd987f3e010949ffdfa322bbf3047ec21683ed1bcd97"
+      },
+      "final_measurement": {
+        "source_sha256": "7f3393f2e230c9efc3d8dd987f3e010949ffdfa322bbf3047ec21683ed1bcd97",
+        "line": 36,
+        "end": 50,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 15
+      },
+      "review_id": "complexity:b965ae2b0c0f0a41027815ad3362db23ed784c6a43d9313611f89386f72a0fc6"
+    },
+    {
+      "id": 36,
+      "path": "src/slop_measure/languages/python/sloc.py",
+      "symbol": "classify_sloc",
+      "evidence": {
+        "source_sha256": "dc646120b8a757c60118aca27374019748598d0f4ab78d069565ffd48ba1c33a",
+        "lines": [
+          50,
+          70
+        ],
+        "cc": 11,
+        "sloc": 19,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "test_sloc.py: Unicode byte spans, CRLF, parenthesized docstrings, semicolon mixed code and f-string semicolon content."
+      },
+      "code_disposition": "no-change",
+      "reason": "Token and physical-line checks distinguish code, true docstrings and multiline literal content while reusing the supplied AST. Multiple branches implement documented SLOC semantics.",
+      "remaining_risk": "Future tokenizer grammar can change token shapes; tests pin supported interpreter behavior.",
+      "next_step": "Retain learning tests and exact physical-line classification.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/sloc.py",
+        "symbol": "classify_sloc",
+        "line": 50,
+        "end": 70,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 19,
+        "source_sha256": "dc646120b8a757c60118aca27374019748598d0f4ab78d069565ffd48ba1c33a"
+      },
+      "final_measurement": {
+        "source_sha256": "dc646120b8a757c60118aca27374019748598d0f4ab78d069565ffd48ba1c33a",
+        "line": 50,
+        "end": 70,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 19
+      },
+      "review_id": "complexity:6fe24a8b5ae7b59a6ff3c26b4d15944c72390d3d5863868c5b50f9897c4f8576"
+    },
+    {
+      "id": 37,
+      "path": "src/slop_measure/languages/python/variant_review.py",
+      "symbol": "_enum_members",
+      "evidence": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "lines": [
+          173,
+          201
+        ],
+        "cc": 12,
+        "sloc": 29,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "test_variant_review_detector.py: enum aliases, dynamic values, supported auto and StrEnum collisions."
+      },
+      "code_disposition": "no-change",
+      "reason": "Each enum member must be a single unique ordinary assignment; mixed auto/literal modes and aliases are rejected. The finite vocabulary is not inferred from dynamic values.",
+      "remaining_risk": "Enum features outside the simple declaration subset are unresolved by design.",
+      "next_step": "Keep finite-set proof; expand only through independent semantic cases.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/variant_review.py",
+        "symbol": "_enum_members",
+        "line": 173,
+        "end": 201,
+        "cc": 12,
+        "full_cc": 12,
+        "sloc": 29,
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+      },
+      "final_measurement": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "line": 173,
+        "end": 201,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 29
+      },
+      "review_id": "complexity:2c00879d1a2806152f00ea34b5e4959994dd1d1257423c3914597cd7124ffd92"
+    },
+    {
+      "id": 38,
+      "path": "src/slop_measure/languages/python/variant_review.py",
+      "symbol": "_enum_value",
+      "evidence": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "lines": [
+          204,
+          227
+        ],
+        "cc": 13,
+        "sloc": 24,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Variant tests for imported auto aliases, invalid IntEnum strings, invalid StrEnum integers and auto collisions."
+      },
+      "code_disposition": "no-change",
+      "reason": "Enum values are restricted to proven direct auto calls or supported literals with IntEnum/StrEnum type restrictions. Local auto shadowing is excluded.",
+      "remaining_risk": "Custom enum generation/metaclasses are outside the supported declaration contract.",
+      "next_step": "Retain exact enum origin and value restrictions.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/variant_review.py",
+        "symbol": "_enum_value",
+        "line": 204,
+        "end": 227,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 24,
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+      },
+      "final_measurement": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "line": 204,
+        "end": 227,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 24
+      },
+      "review_id": "complexity:0e175b7657729a67e937c4d84fd85af3e905392616759af9025d53a528763772"
+    },
+    {
+      "id": 39,
+      "path": "src/slop_measure/languages/python/variant_review.py",
+      "symbol": "_alias_parts",
+      "evidence": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "lines": [
+          247,
+          266
+        ],
+        "cc": 11,
+        "sloc": 20,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Variant tests parameterize named Literal alias declaration forms and rebound aliases."
+      },
+      "code_disposition": "no-change",
+      "reason": "Plain assignment, imported TypeAlias annotation and non-generic type-alias syntax are separate supported forms; other assignment shapes return no declaration.",
+      "remaining_risk": "Generic aliases and indirect alias chains remain unresolved.",
+      "next_step": "Keep explicit syntax alternatives; do not infer alias resolution across modules.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/variant_review.py",
+        "symbol": "_alias_parts",
+        "line": 247,
+        "end": 266,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 20,
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+      },
+      "final_measurement": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "line": 247,
+        "end": 266,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 20
+      },
+      "review_id": "complexity:65c041474d103d5a91c9d995aa0c3049dc6bd45ec006ecce3523c78754ad19da"
+    },
+    {
+      "id": 40,
+      "path": "src/slop_measure/languages/python/variant_review.py",
+      "symbol": "_literal_declaration",
+      "evidence": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "lines": [
+          269,
+          294
+        ],
+        "cc": 11,
+        "sloc": 26,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Variant tests for Literal forms, missing case identity and duplicate literals."
+      },
+      "code_disposition": "no-change",
+      "reason": "A Literal declaration requires a known import, supported constant values and a unique finite set; per-element locations are retained.",
+      "remaining_risk": "Only string/integer literal cases are supported; absence of a declaration is not a clean result.",
+      "next_step": "Preserve closed literal domain and unresolved handler output.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/variant_review.py",
+        "symbol": "_literal_declaration",
+        "line": 269,
+        "end": 294,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 26,
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+      },
+      "final_measurement": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "line": 269,
+        "end": 294,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 26
+      },
+      "review_id": "complexity:097aa765febee5ca915177ee59d2394a0bbe3455af0b0ec9f9f20d65765192c9"
+    },
+    {
+      "id": 41,
+      "path": "src/slop_measure/languages/python/variant_review.py",
+      "symbol": "_handler_type",
+      "evidence": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "lines": [
+          349,
+          367
+        ],
+        "cc": 21,
+        "sloc": 19,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Variant tests for decorators, nested/conditional definitions, reassignment, variadic subjects/qualifiers and annotation rebinding."
+      },
+      "code_disposition": "no-change",
+      "reason": "The handler must be a top-level undecorated function whose first effective statement matches a fixed typed argument. Binding, rebinding and variadic checks protect subject identity.",
+      "remaining_risk": "The conservative first-match restriction excludes useful later matches.",
+      "next_step": "Keep scope limitations explicit; extend through a separate proof-oriented slice.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/variant_review.py",
+        "symbol": "_handler_type",
+        "line": 349,
+        "end": 367,
+        "cc": 21,
+        "full_cc": 21,
+        "sloc": 19,
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+      },
+      "final_measurement": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "line": 349,
+        "end": 367,
+        "full_cc": 21,
+        "effective_cc": 21,
+        "sloc": 19
+      },
+      "review_id": "complexity:280639fce8e63554dda6c12a901b1d3ed36abba01bc4e7cee7a65017766acc92"
+    },
+    {
+      "id": 42,
+      "path": "src/slop_measure/languages/python/variant_review.py",
+      "symbol": "_pattern_cases",
+      "evidence": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "lines": [
+          370,
+          388
+        ],
+        "cc": 15,
+        "sloc": 19,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Variant tests distinguish explicit, conditional, fallback, missing and unsupported sequence patterns."
+      },
+      "code_disposition": "no-change",
+      "reason": "OR patterns recurse only through recognized case values; enum qualifiers and literal values must belong to the exact finite declaration. Unsupported structural patterns return unresolved.",
+      "remaining_risk": "This does not establish runtime type correctness of callers; it describes declared finite vocabulary coverage.",
+      "next_step": "Retain exact declaration membership and separate guarded/fallback semantics.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/python/variant_review.py",
+        "symbol": "_pattern_cases",
+        "line": 370,
+        "end": 388,
+        "cc": 15,
+        "full_cc": 15,
+        "sloc": 19,
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a"
+      },
+      "final_measurement": {
+        "source_sha256": "3c53bfeeeb435e21395dca5ba2430f11afbf13725c677469a8e75974aeb7ca2a",
+        "line": 370,
+        "end": 388,
+        "full_cc": 15,
+        "effective_cc": 15,
+        "sloc": 19
+      },
+      "review_id": "complexity:544ad2be374bc10f8ce19c38bfd9db1d871f432d8970ba0179b83eb01b31cb21"
+    },
+    {
+      "id": 43,
+      "path": "src/slop_measure/languages/registry.py",
+      "symbol": "_normalized_extensions",
+      "evidence": {
+        "source_sha256": "b02d17b84cdbb2fd2c678c69872d38bd9cef20aab248c559341d115ce101050d",
+        "lines": [
+          20,
+          43
+        ],
+        "cc": 13,
+        "sloc": 24,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "test_registry.py: empty/malformed extensions, normalized collisions and atomic registration."
+      },
+      "code_disposition": "no-change",
+      "reason": "Extension validation rejects malformed suffixes and case-normalized duplicates before registration changes state. Branches implement independent registry invariants.",
+      "remaining_risk": "Future compound extensions need a deliberate routing contract; current single-final-suffix semantics are explicit.",
+      "next_step": "Keep fail-fast validation; no extraction solely to reduce CC.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/registry.py",
+        "symbol": "_normalized_extensions",
+        "line": 20,
+        "end": 43,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 24,
+        "source_sha256": "b02d17b84cdbb2fd2c678c69872d38bd9cef20aab248c559341d115ce101050d"
+      },
+      "final_measurement": {
+        "source_sha256": "b02d17b84cdbb2fd2c678c69872d38bd9cef20aab248c559341d115ce101050d",
+        "line": 20,
+        "end": 43,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 24
+      },
+      "review_id": "complexity:88fd53a2b0ff2be5047e03e722647f75797876e85f986781f397794bd11a38d6"
+    },
+    {
+      "id": 44,
+      "path": "src/slop_measure/languages/registry.py",
+      "symbol": "LanguageRegistry.resolve_languages",
+      "evidence": {
+        "source_sha256": "b02d17b84cdbb2fd2c678c69872d38bd9cef20aab248c559341d115ce101050d",
+        "lines": [
+          84,
+          104
+        ],
+        "cc": 12,
+        "sloc": 20,
+        "measurement_check": "Independent Radon AST result and physical SLOC reproduce retained values; source hash matches.",
+        "tests_and_probe": "Registry and language pipeline tests cover aliases, case, ambiguity, unknown IDs and immutable registered routing."
+      },
+      "code_disposition": "no-change",
+      "reason": "Language selection resolves installed IDs then aliases, rejects unknown or ambiguous requests, and returns canonical deduplicated identities. No unavailable adapter is simulated.",
+      "remaining_risk": "Adapters with colliding aliases require explicit IDs; mutation after registration must not alter extension snapshots.",
+      "next_step": "Retain explicit error behavior and canonical provenance.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/languages/registry.py",
+        "symbol": "LanguageRegistry.resolve_languages",
+        "line": 84,
+        "end": 104,
+        "cc": 12,
+        "full_cc": 12,
+        "sloc": 20,
+        "source_sha256": "b02d17b84cdbb2fd2c678c69872d38bd9cef20aab248c559341d115ce101050d"
+      },
+      "final_measurement": {
+        "source_sha256": "b02d17b84cdbb2fd2c678c69872d38bd9cef20aab248c559341d115ce101050d",
+        "line": 84,
+        "end": 104,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 20
+      },
+      "review_id": "complexity:4918a4ad60b7d6e16a86f518f338fb646997803eff4b81f9447ab1abb3a5d850"
+    },
+    {
+      "id": 45,
+      "path": "src/slop_measure/metrics/aggregate.py",
+      "symbol": "_PatternContext.measure",
+      "evidence": {
+        "line": 132,
+        "end": 155,
+        "full_cc": 14,
+        "effective_cc": 14,
+        "sloc": 24,
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_patterns_pipeline.py",
+          "test_scan_patterns.py"
+        ]
+      },
+      "code_disposition": "no-change",
+      "reason": "The method isolates pattern failures from function/clone outcomes, preserves parse or analyzer failure precedence, and measures a union of owned source lines. Its branches correspond to real analyzed, unsupported, and failed states; merging those states to reduce CC would weaken the contract.",
+      "remaining_risk": "A future pattern capability must still supply one outcome per parsed file; the method relies on LanguageEvidence validation for completeness.",
+      "next_step": "Keep the failure-isolation and overlapping-line regression tests. Revisit only when another outcome state is introduced.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/metrics/aggregate.py",
+        "symbol": "_PatternContext.measure",
+        "line": 132,
+        "end": 155,
+        "cc": 14,
+        "full_cc": 14,
+        "sloc": 24,
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964"
+      },
+      "final_measurement": {
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964",
+        "line": 132,
+        "end": 155,
+        "full_cc": 14,
+        "effective_cc": 14,
+        "sloc": 24
+      },
+      "review_id": "complexity:7825705e0bab781a016d913d252af0b93d309fe7ae97d076e022bf0ea1899171"
+    },
+    {
+      "id": 46,
+      "path": "src/slop_measure/metrics/aggregate.py",
+      "symbol": "_project_errors",
+      "evidence": {
+        "line": 350,
+        "end": 370,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 21,
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_service.py"
+        ]
+      },
+      "code_disposition": "no-change",
+      "reason": "Project-level errors include unassigned source discovery failures and language-owned pathless analyzer errors. Failed-file diagnostics remain file-scoped. This deliberately prevents an unenumerated directory from producing a false complete cohort result.",
+      "remaining_risk": "A pathless source error cannot be assigned confidently to production versus tests, so both project cohorts can become unavailable. This is conservative scope loss, not an incorrect zero.",
+      "next_step": "Retain source traversal failure tests and diagnostic ownership checks; require additional source location evidence before narrowing error scope.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/metrics/aggregate.py",
+        "symbol": "_project_errors",
+        "line": 350,
+        "end": 370,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 21,
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964"
+      },
+      "final_measurement": {
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964",
+        "line": 350,
+        "end": 370,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 21
+      },
+      "review_id": "complexity:c0412c4ee947dc4ca286aaff6ad3d7cc01d7c296b8b57806505d6758852f7c47"
+    },
+    {
+      "id": 47,
+      "path": "src/slop_measure/metrics/aggregate.py",
+      "symbol": "_snapshot_metrics",
+      "evidence": {
+        "line": 373,
+        "end": 416,
+        "full_cc": 21,
+        "effective_cc": 21,
+        "sloc": 44,
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_patterns_pipeline.py",
+          "test_erosion_pipeline.py",
+          "test_clone_pipeline.py"
+        ]
+      },
+      "code_disposition": "defer",
+      "reason": "The three capability-specific projections repeat filtering, but None means unsupported while an empty tuple means supported with no outcomes. Current code preserves that distinction and keeps M2, M3, and M4 failures independent. The CC count is accurate; repetition is a maintainability concern rather than a demonstrated bad metric.",
+      "remaining_risk": "A new capability could be added to one projection but omitted from another mapping or version declaration.",
+      "next_step": "When adding a fourth measured family, consider one typed capability-to-context construction table with contract tests. Do not refactor only to lower this score.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "defer",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/metrics/aggregate.py",
+        "symbol": "_snapshot_metrics",
+        "line": 373,
+        "end": 416,
+        "cc": 21,
+        "full_cc": 21,
+        "sloc": 44,
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964"
+      },
+      "final_measurement": {
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964",
+        "line": 373,
+        "end": 416,
+        "full_cc": 21,
+        "effective_cc": 21,
+        "sloc": 44
+      },
+      "review_id": "complexity:4e08ad835b97581ef24d6fde670867bbc4e9e156bc4b52fedb1f874514b5d0b2"
+    },
+    {
+      "id": 48,
+      "path": "src/slop_measure/metrics/aggregate.py",
+      "symbol": "aggregate_snapshot",
+      "evidence": {
+        "line": 449,
+        "end": 559,
+        "full_cc": 31,
+        "effective_cc": 31,
+        "sloc": 110,
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_service.py",
+          "test_patterns_pipeline.py",
+          "test_erosion_pipeline.py",
+          "test_clone_pipeline.py"
+        ]
+      },
+      "code_disposition": "defer",
+      "reason": "The 110-SLOC coordinator owns diagnostic collection, file/source hash ownership, population formation, coverage, provenance, findings, and clone annotations. Direct Radon confirms CC31. Existing outcomes and sorted report construction are consistent; the long function is a credible review priority but no source correctness defect was reproduced.",
+      "remaining_risk": "This assembly boundary is broad: future metadata and evidence families must update collection, versions, and cohort construction together.",
+      "next_step": "Split a cohesive report-assembly phase when a real new responsibility is added, preserving deterministic JSON and all failure/population tests. No score-directed rewrite now.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "defer",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/metrics/aggregate.py",
+        "symbol": "aggregate_snapshot",
+        "line": 449,
+        "end": 559,
+        "cc": 31,
+        "full_cc": 31,
+        "sloc": 110,
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964"
+      },
+      "final_measurement": {
+        "source_sha256": "0aebd4deb5d53bc25d42cf8cff170f9e70061b5d311282c8e0c29dbdef843964",
+        "line": 449,
+        "end": 559,
+        "full_cc": 31,
+        "effective_cc": 31,
+        "sloc": 110
+      },
+      "review_id": "complexity:27574d7321268d6e8a80bc0c2cc7d9754bd08c1f1792d36d0f761bc270fee476"
+    },
+    {
+      "id": 49,
+      "path": "src/slop_measure/metrics/clones.py",
+      "symbol": "_contained",
+      "evidence": {
+        "line": 28,
+        "end": 59,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 30,
+        "source_sha256": "df7f6688a7b6596853e1f88b9b247a7977fde318d7e42a8c96b78f80ee63b9a9",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_clone_grouping.py::test_containment_requires_distinct_enclosing_instances",
+          "test_clone_grouping.py::test_partial_overlap_groups_remain_distinct"
+        ]
+      },
+      "code_disposition": "no-change",
+      "reason": "Containment uses an injective matching between inner and outer instances, not a simple any-parent test. This is necessary when repeated spans in one file overlap: two inner instances cannot collapse into one enclosing instance. The recursive augmenting-path helper has a real algorithmic purpose.",
+      "remaining_risk": "Large dense containment graphs can be costly or stress recursion; the inspected repository yields no clone groups, so this review does not establish a large-group performance bound.",
+      "next_step": "Retain the distinct-enclosing-instance and partial-overlap tests. Profile representative large groups before choosing a different matching implementation.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/metrics/clones.py",
+        "symbol": "_contained",
+        "line": 28,
+        "end": 59,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 30,
+        "source_sha256": "df7f6688a7b6596853e1f88b9b247a7977fde318d7e42a8c96b78f80ee63b9a9"
+      },
+      "final_measurement": {
+        "source_sha256": "df7f6688a7b6596853e1f88b9b247a7977fde318d7e42a8c96b78f80ee63b9a9",
+        "line": 28,
+        "end": 59,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 30
+      },
+      "review_id": "complexity:d930872d4b47c2090e19bd36608a4dc0aa413f097ce8a593800cae81bf4d51dd"
+    },
+    {
+      "id": 50,
+      "path": "src/slop_measure/metrics/clones.py",
+      "symbol": "group_clones",
+      "evidence": {
+        "line": 72,
+        "end": 118,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 46,
+        "source_sha256": "df7f6688a7b6596853e1f88b9b247a7977fde318d7e42a8c96b78f80ee63b9a9",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_clone_grouping.py",
+          "test_clone_pipeline.py"
+        ]
+      },
+      "code_disposition": "no-change",
+      "reason": "Grouping checks owning files and exact SLOC, rejects duplicate identities, and partitions by language, cohort, normalization version, and complete token sequences. Fingerprint equality alone never creates a group. Stable sorting and maximal containment preserve deterministic native evidence.",
+      "remaining_risk": "The detector supplies complete runs and retains literals/global identifiers; structurally similar orchestration can therefore be outside this clone vocabulary. This is a documented coverage limit, not proof of no duplication.",
+      "next_step": "Keep population, token-equality, same-line, order-independence, and containment tests. Evaluate a broader clone definition on held-out examples before changing normalization.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/metrics/clones.py",
+        "symbol": "group_clones",
+        "line": 72,
+        "end": 118,
+        "cc": 12,
+        "full_cc": 12,
+        "sloc": 46,
+        "source_sha256": "df7f6688a7b6596853e1f88b9b247a7977fde318d7e42a8c96b78f80ee63b9a9"
+      },
+      "final_measurement": {
+        "source_sha256": "df7f6688a7b6596853e1f88b9b247a7977fde318d7e42a8c96b78f80ee63b9a9",
+        "line": 72,
+        "end": 118,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 46
+      },
+      "review_id": "complexity:540caeca5c8531303540a161a60590e25deb6f7b603c824046770801c96ae908"
+    },
+    {
+      "id": 51,
+      "path": "src/slop_measure/metrics/deltas.py",
+      "symbol": "metric_deltas",
+      "evidence": {
+        "line": 54,
+        "end": 78,
+        "full_cc": 16,
+        "effective_cc": 16,
+        "sloc": 24,
+        "source_sha256": "aa89062d7fa61a815755bd625d4b4de92ca14014bd61e84f65dad221e001f7d8",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_snapshot_deltas.py"
+        ]
+      },
+      "code_disposition": "no-change",
+      "reason": "The method compares current minus baseline while preserving missing, unavailable, and incompatible states. It rejects file/project and language/cohort mixing and compares scores only under the same profile/model IDs. The guards prevent plausible but fabricated zero deltas.",
+      "remaining_risk": "Raw metric-definition compatibility is established by the containing comparison pipeline, not encoded in isolated FileResult/CohortResult objects. Calling this internal helper with unrelated historical snapshots needs that precondition.",
+      "next_step": "Preserve missing-side, unit, population, and score-profile regressions. If cross-report comparison becomes public, require metric-version compatibility explicitly.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/metrics/deltas.py",
+        "symbol": "metric_deltas",
+        "line": 54,
+        "end": 78,
+        "cc": 16,
+        "full_cc": 16,
+        "sloc": 24,
+        "source_sha256": "aa89062d7fa61a815755bd625d4b4de92ca14014bd61e84f65dad221e001f7d8"
+      },
+      "final_measurement": {
+        "source_sha256": "aa89062d7fa61a815755bd625d4b4de92ca14014bd61e84f65dad221e001f7d8",
+        "line": 54,
+        "end": 78,
+        "full_cc": 16,
+        "effective_cc": 16,
+        "sloc": 24
+      },
+      "review_id": "complexity:ec96f377f7c1a3dc05649ae8759652da8496874471e33e82655fad3fba66e127"
+    },
+    {
+      "id": 52,
+      "path": "src/slop_measure/reporting/callables.py",
+      "symbol": "render_callable_basis",
+      "evidence": {
+        "line": 19,
+        "end": 58,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 40,
+        "source_sha256": "6849ede35dc8a5f2c1bf5f125430e2407750fd18d8d5790c90e30a393343fa54",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_callable_presentation.py::test_historical_erosion_explanation_uses_full_cc_even_with_assertion_evidence",
+          "test_callable_presentation.py::test_unknown_metric_version_does_not_guess_callable_basis"
+        ]
+      },
+      "code_disposition": "no-change",
+      "reason": "Callable presentation correctly distinguishes M4v1 above-threshold mass, M4v2 excess mass, and M4v3 assertion-excluded test CC. Unknown versions report an unavailable basis. Production assertions are retained and the self-check hint does not reclassify source.",
+      "remaining_risk": "The related findings query currently ignores this version distinction; that separate reproducible defect is recorded under item56. This renderer itself passes historical-version and fallback tests.",
+      "next_step": "Keep this version-aware basis as the semantic reference while fixing query selection through independent regression tests.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/reporting/callables.py",
+        "symbol": "render_callable_basis",
+        "line": 19,
+        "end": 58,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 40,
+        "source_sha256": "6849ede35dc8a5f2c1bf5f125430e2407750fd18d8d5790c90e30a393343fa54"
+      },
+      "final_measurement": {
+        "source_sha256": "6849ede35dc8a5f2c1bf5f125430e2407750fd18d8d5790c90e30a393343fa54",
+        "line": 19,
+        "end": 58,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 40
+      },
+      "review_id": "complexity:76274e21f107b6bf5112720db0ea0111a08c4a9c50de634ab1ea4b1ce1f18647"
+    },
+    {
+      "id": 53,
+      "path": "src/slop_measure/reporting/derived.py",
+      "symbol": "render_derived",
+      "evidence": {
+        "line": 6,
+        "end": 47,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 42,
+        "source_sha256": "a6096d56a4da27861605ee147127966f557a7519fd6bd9fe3bc24181289c4164",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_derived_review_cli.py"
+        ]
+      },
+      "code_disposition": "defer",
+      "reason": "The renderer exposes derivation, mutation, and read locations and distinguishes unresolved functions from failed files. It calls results review candidates and retains interpretation text about intentional snapshots. Its nested loops reflect the report hierarchy rather than hidden analysis.",
+      "remaining_risk": "Large experimental reports have no terminal pagination here, and a failed file message can also appear in the diagnostic summary. These are usability costs, not incorrect measurements.",
+      "next_step": "Consider a shared presentation-only pagination/diagnostic layout after usage shows need; keep JSON complete and all uncertainty visible.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "defer",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/reporting/derived.py",
+        "symbol": "render_derived",
+        "line": 6,
+        "end": 47,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 42,
+        "source_sha256": "a6096d56a4da27861605ee147127966f557a7519fd6bd9fe3bc24181289c4164"
+      },
+      "final_measurement": {
+        "source_sha256": "a6096d56a4da27861605ee147127966f557a7519fd6bd9fe3bc24181289c4164",
+        "line": 6,
+        "end": 47,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 42
+      },
+      "review_id": "complexity:719078ba1535e3804dc509de5a7325350aa25036293eaa71e75a35248ef46802"
+    },
+    {
+      "id": 54,
+      "path": "src/slop_measure/reporting/evidence.py",
+      "symbol": "render_findings",
+      "evidence": {
+        "line": 55,
+        "end": 137,
+        "full_cc": 18,
+        "effective_cc": 18,
+        "sloc": 82,
+        "source_sha256": "b0f363acfdf04003d9b10a8d4f80bf343f027bb387807c7a86c65b2a42ed1a78",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_explainability.py"
+        ]
+      },
+      "code_disposition": "defer",
+      "reason": "Evidence rendering keeps native pattern, clone, and callable records separate and retains all members of any displayed clone group. Top limits whole records and reports omitted counts. Family ordering is deterministic, not an invented mixed-unit priority score.",
+      "remaining_risk": "A small top limit can show patterns before higher-impact clones because family order is fixed. Callers must not read this as a severity ranking across evidence types.",
+      "next_step": "Document or label family ordering if users mistake it for cross-family prioritization. A future selector should use explicit review intent instead of combining incomparable units.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "defer",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/reporting/evidence.py",
+        "symbol": "render_findings",
+        "line": 55,
+        "end": 137,
+        "cc": 18,
+        "full_cc": 18,
+        "sloc": 82,
+        "source_sha256": "b0f363acfdf04003d9b10a8d4f80bf343f027bb387807c7a86c65b2a42ed1a78"
+      },
+      "final_measurement": {
+        "source_sha256": "b0f363acfdf04003d9b10a8d4f80bf343f027bb387807c7a86c65b2a42ed1a78",
+        "line": 55,
+        "end": 137,
+        "full_cc": 18,
+        "effective_cc": 18,
+        "sloc": 82
+      },
+      "review_id": "complexity:e1b66f37fdf0fc4d8a9001e55bc46411a2a00bc172cd5e4380348408325de79f"
+    },
+    {
+      "id": 55,
+      "path": "src/slop_measure/reporting/models.py",
+      "symbol": "render_models",
+      "evidence": {
+        "line": 6,
+        "end": 53,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 48,
+        "source_sha256": "2da8c366f7b17a3f134c39e06aa8c2ab404533ea92403c476b00f68e6a89d48c",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_model_review_cli.py"
+        ]
+      },
+      "code_disposition": "defer",
+      "reason": "The renderer shows coupled fields, the rejecting validator, and each distinct repeated consumer, while keeping unresolved models and failed files visible. It says review candidate and includes the trust-boundary limitation; there is no unsupported proof-of-defect claim.",
+      "remaining_risk": "Like the derived renderer, long reports can be verbose and failed-file diagnostics can be repeated. Per-model analyzed-empty records are summarized indirectly rather than listed individually.",
+      "next_step": "Evaluate a shared experimental display layout and concise analyzed-empty counts when improving usability. Do not remove evidence or reduce CC merely to improve self-score.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "defer",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/reporting/models.py",
+        "symbol": "render_models",
+        "line": 6,
+        "end": 53,
+        "cc": 12,
+        "full_cc": 12,
+        "sloc": 48,
+        "source_sha256": "2da8c366f7b17a3f134c39e06aa8c2ab404533ea92403c476b00f68e6a89d48c"
+      },
+      "final_measurement": {
+        "source_sha256": "2da8c366f7b17a3f134c39e06aa8c2ab404533ea92403c476b00f68e6a89d48c",
+        "line": 6,
+        "end": 53,
+        "full_cc": 12,
+        "effective_cc": 12,
+        "sloc": 48
+      },
+      "review_id": "complexity:f7d7b87481f1f50f548ce226db76dc92dcbc1864fc455344b67ad909b2929e8c"
+    },
+    {
+      "id": 56,
+      "path": "src/slop_measure/reporting/queries.py",
+      "symbol": "query_findings",
+      "evidence": {
+        "line": 153,
+        "end": 212,
+        "full_cc": 23,
+        "effective_cc": 23,
+        "sloc": 59,
+        "source_sha256": "046a7f5ea1f47fac8812f0cd0aaa342a776b8925fd46c0421061e9a78b499939",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_callable_presentation.py",
+          "probe-metrics-rendering.json"
+        ]
+      },
+      "code_disposition": "actionable",
+      "reason": "The measured CC23 is accurate, but query_findings delegates eroded selection to _eroded, which always calls complexity_for(cohort). That applies M4v3 assertion exclusion even when the report declares M4v1/v2. The existing version-aware renderer then disagrees: a test callable with fullCC12 and adjustedCC1 should be selected under v1/v2 but is omitted. A bounded probe and the existing historical-rendering fixture reproduce the mismatch.",
+      "remaining_risk": "This affects historical/unknown-version evidence selection, not the current v3 self-report raw metrics. Unknown metric versions also need an explicit policy rather than guessing a basis.",
+      "next_step": "Fixed in commit 0cfc86a. Independent v1/v2/v3 and unknown/missing-version regressions pass; 75 reporting/explainability tests and static checks pass. Raw formulas, thresholds, calibration and current v3 measurements are unchanged.",
+      "hotspot_measurement": "valid",
+      "change_decision": "general-evaluator-fix",
+      "resolution": "fixed",
+      "fix_commit": "0cfc86a",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/reporting/queries.py",
+        "symbol": "query_findings",
+        "line": 153,
+        "end": 212,
+        "cc": 23,
+        "full_cc": 23,
+        "sloc": 59,
+        "source_sha256": "046a7f5ea1f47fac8812f0cd0aaa342a776b8925fd46c0421061e9a78b499939"
+      },
+      "final_measurement": {
+        "source_sha256": "9afc8ea7872355eb7215cd775b355f89fd3b916ea57176a7ec3be2623f19744b",
+        "line": 159,
+        "end": 218,
+        "full_cc": 23,
+        "effective_cc": 23,
+        "sloc": 59
+      },
+      "review_id": "complexity:919d06038a269644c991a25ac092cf9e1c7625030018e6d261cba113cc3fb5af"
+    },
+    {
+      "id": 57,
+      "path": "src/slop_measure/reporting/terminal.py",
+      "symbol": "_score_row",
+      "evidence": {
+        "line": 380,
+        "end": 410,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 31,
+        "source_sha256": "9c1322a576b22c0a10611aae1e8836dec95d6c411b68bbf1355871c39013346f",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_reference_support.py::test_zero_points_with_nonzero_raw_values_distinguishes_rank_from_rounding"
+        ]
+      },
+      "code_disposition": "no-change",
+      "reason": "The score row keeps unavailable scores distinct from measured zero, reports profile/model/reference support, and explains nonzero raw evidence at percentile-zero or rounded-zero points. Contributions show their own raw value, percentile, weight, and severity transform. Stored contributions have one-decimal precision, matching display precision.",
+      "remaining_risk": "Users may still overinterpret a calibrated rank as absolute quality; the reference/domain-match and interpretation text must remain prominent.",
+      "next_step": "Retain zero-score, historical-support, and contribution roundtrip tests. No reason to alter calibration or rounding for this repository.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/reporting/terminal.py",
+        "symbol": "_score_row",
+        "line": 380,
+        "end": 410,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 31,
+        "source_sha256": "9c1322a576b22c0a10611aae1e8836dec95d6c411b68bbf1355871c39013346f"
+      },
+      "final_measurement": {
+        "source_sha256": "9c1322a576b22c0a10611aae1e8836dec95d6c411b68bbf1355871c39013346f",
+        "line": 380,
+        "end": 410,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 31
+      },
+      "review_id": "complexity:49628c9dd3fd837abb044409d5f3e7e99ad026d6fedb112eb6092b75f48b4c35"
+    },
+    {
+      "id": 58,
+      "path": "src/slop_measure/reporting/terminal.py",
+      "symbol": "_explain_change",
+      "evidence": {
+        "line": 765,
+        "end": 800,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 36,
+        "source_sha256": "9c1322a576b22c0a10611aae1e8836dec95d6c411b68bbf1355871c39013346f",
+        "measurement_check": "Source hash and direct Radon full CC matched; current M4 formula independently checked by parent reviewer.",
+        "focused_tests": [
+          "test_explainability.py",
+          "test_comparison_terminal.py"
+        ]
+      },
+      "code_disposition": "no-change",
+      "reason": "The whole-file change block shows both paths, measured added/deleted/net lines and growth, and marks unavailable inputs explicitly. Raw ratio deltas use percentage points; score deltas use points. Better/worse applies to lower-is-better metrics, while M1 line growth is left without a quality judgment.",
+      "remaining_risk": "A symbol explanation still includes a whole-file change block; the File change heading is important to avoid implying symbol-level line deltas.",
+      "next_step": "Keep positive/negative delta labeling, added/deleted/renamed paths, and zero-baseline growth tests. Do not reinterpret larger source size as worse quality.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/reporting/terminal.py",
+        "symbol": "_explain_change",
+        "line": 765,
+        "end": 800,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 36,
+        "source_sha256": "9c1322a576b22c0a10611aae1e8836dec95d6c411b68bbf1355871c39013346f"
+      },
+      "final_measurement": {
+        "source_sha256": "9c1322a576b22c0a10611aae1e8836dec95d6c411b68bbf1355871c39013346f",
+        "line": 765,
+        "end": 800,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 36
+      },
+      "review_id": "complexity:cef1c47a871729f7452ae7a91e6aadf8b825bdb312e2dfb1fa922fc27c9f600c"
+    },
+    {
+      "id": 59,
+      "path": "src/slop_measure/scoring/calibration.py",
+      "symbol": "_signature",
+      "evidence": "CC 13, 26 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Calibration signature requires snapshots, exactly one language, rule/clone identity, all metric versions and matching metric settings.",
+      "remaining_risk": "It checks measurement compatibility, not domain fit. Corpus lineage remains manifest-reviewed.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/scoring/calibration.py",
+        "symbol": "_signature",
+        "line": 43,
+        "end": 68,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 26,
+        "source_sha256": "0366f8df687ffcd66edaf5e0d2de512cee9986f8ab8cc35294d8b1d5c69ca737"
+      },
+      "final_measurement": {
+        "source_sha256": "0366f8df687ffcd66edaf5e0d2de512cee9986f8ab8cc35294d8b1d5c69ca737",
+        "line": 43,
+        "end": 68,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 26
+      },
+      "review_id": "complexity:5c1020f581616833ed47249c7ac4aa8a7a5b18cef15341fd251482fbb065d56b"
+    },
+    {
+      "id": 60,
+      "path": "src/slop_measure/scoring/calibration.py",
+      "symbol": "_collect",
+      "evidence": "CC 13, 21 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Samples remain separated by file/project, production/test, scoring model, and SLOC band. Empty or incomplete metric observations are skipped.",
+      "remaining_risk": "Overlapping repository scans must not be supplied as independent projects; the builder cannot infer ownership lineage.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/scoring/calibration.py",
+        "symbol": "_collect",
+        "line": 128,
+        "end": 148,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 21,
+        "source_sha256": "0366f8df687ffcd66edaf5e0d2de512cee9986f8ab8cc35294d8b1d5c69ca737"
+      },
+      "final_measurement": {
+        "source_sha256": "0366f8df687ffcd66edaf5e0d2de512cee9986f8ab8cc35294d8b1d5c69ca737",
+        "line": 128,
+        "end": 148,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 21
+      },
+      "review_id": "complexity:b668856ab7569bf86970f0197579a1e5f9a4defdf2215e08e240c2c414967082"
+    },
+    {
+      "id": 61,
+      "path": "src/slop_measure/scoring/calibration.py",
+      "symbol": "build_profile",
+      "evidence": "CC 13, 65 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Profile construction rejects duplicate identities and incompatible signatures before collecting enough complete samples. Fixed models/weights are explicit.",
+      "remaining_risk": "Source identity is not proof of independent lineage. Do not rebuild calibration from this self-review to improve scores.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/scoring/calibration.py",
+        "symbol": "build_profile",
+        "line": 151,
+        "end": 216,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 65,
+        "source_sha256": "0366f8df687ffcd66edaf5e0d2de512cee9986f8ab8cc35294d8b1d5c69ca737"
+      },
+      "final_measurement": {
+        "source_sha256": "0366f8df687ffcd66edaf5e0d2de512cee9986f8ab8cc35294d8b1d5c69ca737",
+        "line": 151,
+        "end": 216,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 65
+      },
+      "review_id": "complexity:6ef3e683c52deff1f94a6c20b6b7c3de7d8a09d48067cd261acec3dc66cd7bd7"
+    },
+    {
+      "id": 62,
+      "path": "src/slop_measure/scoring/engine.py",
+      "symbol": "score_snapshot",
+      "evidence": "CC 13, 34 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Scoring validates scope/metric uniqueness, selects a compatible model/population, and sums rounded contributions into the configured band.",
+      "remaining_risk": "A percentile zero can coexist with raw evidence; this is documented and is not a bug to tune away here.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/scoring/engine.py",
+        "symbol": "score_snapshot",
+        "line": 191,
+        "end": 225,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 34,
+        "source_sha256": "79a79cd9700263182b94f3db3e59630c84c4553b0118f003678eba0a96db627f"
+      },
+      "final_measurement": {
+        "source_sha256": "79a79cd9700263182b94f3db3e59630c84c4553b0118f003678eba0a96db627f",
+        "line": 191,
+        "end": 225,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 34
+      },
+      "review_id": "complexity:edc3958e7d7f8245f31b7d7c194822a92d11243cd0a37c358f6d830c815b7fff"
+    },
+    {
+      "id": 63,
+      "path": "src/slop_measure/scoring/engine.py",
+      "symbol": "_score_result",
+      "evidence": "CC 17, 51 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Score availability rules preserve raw facts and attach individual metric percentiles from the selected population. The project result is computed from aggregate inputs.",
+      "remaining_risk": "Metric percentiles and weighted contribution points answer different questions; existing labels must remain explicit.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/scoring/engine.py",
+        "symbol": "_score_result",
+        "line": 228,
+        "end": 278,
+        "cc": 17,
+        "full_cc": 17,
+        "sloc": 51,
+        "source_sha256": "79a79cd9700263182b94f3db3e59630c84c4553b0118f003678eba0a96db627f"
+      },
+      "final_measurement": {
+        "source_sha256": "79a79cd9700263182b94f3db3e59630c84c4553b0118f003678eba0a96db627f",
+        "line": 228,
+        "end": 278,
+        "full_cc": 17,
+        "effective_cc": 17,
+        "sloc": 51
+      },
+      "review_id": "complexity:5a787686b984838957125fd62b67823d8b0cb504851400a9ee85c2265eef7374"
+    },
+    {
+      "id": 64,
+      "path": "src/slop_measure/sources/filesystem.py",
+      "symbol": "FilesystemSourceProvider._git_paths",
+      "evidence": "CC 13, 27 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Git inventory collapses ignored-directory coverage, keeps independent ignored leaves, and checks candidate paths for safe traversal before reading.",
+      "remaining_risk": "Ignored contents are not counted. Symlink/junction restrictions and unreadable-source cases need retained tests.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/sources/filesystem.py",
+        "symbol": "FilesystemSourceProvider._git_paths",
+        "line": 171,
+        "end": 197,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 27,
+        "source_sha256": "583cb364613d8bc94c418b9edee7bd6879bcafac71d673aee3c38637c4dc8b07"
+      },
+      "final_measurement": {
+        "source_sha256": "583cb364613d8bc94c418b9edee7bd6879bcafac71d673aee3c38637c4dc8b07",
+        "line": 171,
+        "end": 197,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 27
+      },
+      "review_id": "complexity:671540ddd8e2c83fe8515917ad4bfe0c7c398ad575b97cb33ac974b7a42a19b2"
+    },
+    {
+      "id": 65,
+      "path": "src/slop_measure/sources/filesystem.py",
+      "symbol": "_InventoryBuilder.add",
+      "evidence": "CC 11, 24 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Directory selection applies the language filter before cohort classification and then records configured/ignored/unsupported outcomes or reads source.",
+      "remaining_risk": "Filename-based test classification is limited; changing this repository's exclusions would hide coverage rather than fix measurement.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/sources/filesystem.py",
+        "symbol": "_InventoryBuilder.add",
+        "line": 241,
+        "end": 264,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 24,
+        "source_sha256": "583cb364613d8bc94c418b9edee7bd6879bcafac71d673aee3c38637c4dc8b07"
+      },
+      "final_measurement": {
+        "source_sha256": "583cb364613d8bc94c418b9edee7bd6879bcafac71d673aee3c38637c4dc8b07",
+        "line": 241,
+        "end": 264,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 24
+      },
+      "review_id": "complexity:2a8c70016987478d637704d0e6af72bf42f13998554ce4c5f564522ce1ff2e86"
+    },
+    {
+      "id": 66,
+      "path": "src/slop_measure/sources/git.py",
+      "symbol": "_GitInventory.add",
+      "evidence": "CC 13, 31 callable SLOC; source and surrounding integrity paths inspected.",
+      "code_disposition": "no-change",
+      "reason": "Committed-tree selection mirrors language/cohort/exclusion policies, rejects unsupported modes, and reads immutable blobs. Generated markers are applied consistently.",
+      "remaining_risk": "Git and working-tree snapshots intentionally differ for dirty/untracked files; repository comparison tests protect parity on equal inputs.",
+      "next_step": "Retain behavior and focused regression coverage.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "production",
+        "path": "src/slop_measure/sources/git.py",
+        "symbol": "_GitInventory.add",
+        "line": 155,
+        "end": 185,
+        "cc": 13,
+        "full_cc": 13,
+        "sloc": 31,
+        "source_sha256": "fd01f038bd124b80fe7b59268a339f4d343afb915082ee589b21ef1db8c60b99"
+      },
+      "final_measurement": {
+        "source_sha256": "fd01f038bd124b80fe7b59268a339f4d343afb915082ee589b21ef1db8c60b99",
+        "line": 155,
+        "end": 185,
+        "full_cc": 13,
+        "effective_cc": 13,
+        "sloc": 31
+      },
+      "review_id": "complexity:2edcfc2ae03153c563f21d0e274892cf76c2e3402e961d596e453c4031a5e555"
+    },
+    {
+      "id": 67,
+      "path": "tests/fixtures/erosion/high.py",
+      "symbol": "high",
+      "evidence": "Lines 1-2 contain eleven operands joined by ten short-circuit or operators: baseline 1 plus ten decisions gives CC 11. Both physical lines are source lines. This is the deliberate above-threshold erosion fixture.",
+      "code_disposition": "no-change",
+      "reason": "The high complexity is the fixture's purpose. Rewriting it would remove the boundary condition under test. The metric correctly counts short-circuit decisions and two SLOC; it does not establish a defect.",
+      "remaining_risk": "The synthetic callable indexes eleven values and is not a general-purpose runtime API. It is used as source evidence. A test-cohort hotspot must not be presented as a production defect.",
+      "next_step": "Retain the fixture and its explicit test-cohort classification; do not tune the evaluator or refactor this fixture to lower its score.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "test",
+        "path": "tests/fixtures/erosion/high.py",
+        "symbol": "high",
+        "line": 1,
+        "end": 2,
+        "cc": 11,
+        "full_cc": 11,
+        "sloc": 2,
+        "source_sha256": "729c21e3811bd91f46a7e89291871debfffd873ceb5f2f0496796cb0cb22d6fc"
+      },
+      "final_measurement": {
+        "source_sha256": "729c21e3811bd91f46a7e89291871debfffd873ceb5f2f0496796cb0cb22d6fc",
+        "line": 1,
+        "end": 2,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 2
+      },
+      "review_id": "complexity:f11591ed76c20cecb8ea3e3c2f85cd09a4469757b9ea7ff90425c99cdec4ccad"
+    },
+    {
+      "id": 68,
+      "path": "tests/golden/test_scan_basic.py",
+      "symbol": "test_basic_scan_matches_hand_counted_manifest_and_never_executes_source",
+      "evidence": "Lines 63-131 project files, coverage, excluded directories, metrics and diagnostics into a hand-authored expected manifest. Ten decisions across comprehension generators, a conditional metric projection and the final metric-ID loop explain CC 11. Full CC 19 also counts test assertions. The test separately checks no execution, source identity, version/config, metric IDs and diagnostic links. Focused test_scan_basic.py plus calibration contract run: 45 passed.",
+      "code_disposition": "no-change",
+      "reason": "This is one coherent end-to-end report contract, with explicit expected values outside the implementation. The projection branches are necessary to compare heterogeneous measured/unavailable states. Complexity accurately describes that work; splitting it solely for the score would distribute the same work across helpers without improving the contract.",
+      "remaining_risk": "The bad-file assertion uses the deterministic report ordering and index 1. The manifest and ordering assertions currently protect that assumption, but fixture changes must update them together. CC alone does not measure the test's diagnostic quality.",
+      "next_step": "Retain this golden contract. Change helper structure only when a concrete maintenance problem appears; preserve assertion coverage and hand-authored expectations.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "test",
+        "path": "tests/golden/test_scan_basic.py",
+        "symbol": "test_basic_scan_matches_hand_counted_manifest_and_never_executes_source",
+        "line": 63,
+        "end": 131,
+        "cc": 11,
+        "full_cc": 19,
+        "sloc": 69,
+        "source_sha256": "6a0e66aa8174fd06082db7ed8ba402f3a9eb8a0f65b1e1998e32e4d5e4b9df58"
+      },
+      "final_measurement": {
+        "source_sha256": "6a0e66aa8174fd06082db7ed8ba402f3a9eb8a0f65b1e1998e32e4d5e4b9df58",
+        "line": 63,
+        "end": 131,
+        "full_cc": 19,
+        "effective_cc": 11,
+        "sloc": 69
+      },
+      "review_id": "complexity:468616982572ee2bcb68b3b68d065b7d70ff4d80e9296f9984d2e9912b8540b1"
+    },
+    {
+      "id": 69,
+      "path": "tests/unit/scoring/test_calibration_contract.py",
+      "symbol": "test_profile_rejects_inconsistent_model_population_and_provenance",
+      "evidence": "Lines 136-169 select fourteen named invalid mutations using thirteen if/elif conditions, then require ValidationError. Baseline 1 plus thirteen conditions gives CC 14. Mutations cover duplicate/missing inputs and distributions, eligibility, model references, overlapping populations, invalid bands, provenance hash/version and unsupported percentile policy. The focused 45-test run passed, including all fourteen parameter cases.",
+      "code_disposition": "no-change",
+      "reason": "The branching is a test-case generator, not complex production behavior. Every branch names a separate rejected contract state, and each parameter creates a fresh payload. The test verifies useful independent invariants. A dispatch-table rewrite would lower the reported function CC without adding correctness evidence.",
+      "remaining_risk": "The final else assumes the closed parameter list's unknown-policy case. New parameters must add an explicit mutation branch rather than silently using that fallback. ValidationError proves rejection but does not assert an exact error message, intentionally avoiding coupling to validator wording.",
+      "next_step": "Keep the named negative cases and do not refactor merely for CC. Add a targeted case only when a new calibration invariant is introduced or a concrete validation defect is reproduced.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": {
+        "cohort": "test",
+        "path": "tests/unit/scoring/test_calibration_contract.py",
+        "symbol": "test_profile_rejects_inconsistent_model_population_and_provenance",
+        "line": 136,
+        "end": 169,
+        "cc": 14,
+        "full_cc": 14,
+        "sloc": 34,
+        "source_sha256": "c3d5ff68ac2492697b1ef46baf6be62134431e7da93429896bb520c8a24476ae"
+      },
+      "final_measurement": {
+        "source_sha256": "c3d5ff68ac2492697b1ef46baf6be62134431e7da93429896bb520c8a24476ae",
+        "line": 136,
+        "end": 169,
+        "full_cc": 14,
+        "effective_cc": 14,
+        "sloc": 34
+      },
+      "review_id": "complexity:e84036ac940dfd87cf81e74d4649783de97e93fc760c96d5bcb86255095a8744"
+    },
+    {
+      "id": 70,
+      "path": "src/slop_measure/languages/python/model_review.py",
+      "symbol": "_fields",
+      "evidence": {
+        "source_sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc",
+        "lines": [
+          89,
+          108
+        ],
+        "cc": 11,
+        "sloc": 20,
+        "measurement_check": "Final after.json agrees with independent Radon AST, exact physical SLOC and file SHA256. Newly crossed hotspot threshold after necessary guard in 5084ac1.",
+        "tests_and_probe": "Independent red bec66ba tests class-local bool=int against the unshadowed control; 52 detector/service/CLI tests and Ruff/Pyright passed after fix."
+      },
+      "code_disposition": "no-change",
+      "reason": "The field collector needs distinct guards for annotation form, unique binding and class-local bool shadowing. The new guard prevents a reproduced false type proof. CC11 is correctly measured; crossing the threshold does not justify removing a correctness condition or splitting it to move the score.",
+      "remaining_risk": "Class-scope binding rejection is conservative and can leave safe aliases unresolved. This matches the narrow experimental contract; no runtime annotation resolution is claimed.",
+      "next_step": "Retain the corrected guard and paired regression. Include this new final-source hotspot in the review ledger; make no threshold, profile, exclusion or weight changes.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "baseline_measurement": null,
+      "final_measurement": {
+        "source_sha256": "d3a93e029986fe3915533b079234e246761f4f98f5c271db288fa17739bcf3bc",
+        "line": 89,
+        "end": 108,
+        "full_cc": 11,
+        "effective_cc": 11,
+        "sloc": 20
+      },
+      "review_id": "complexity:38cb5d23faae5f9843b1759d542068af68f7496d3130f094660fc27dd0352048"
+    },
+    {
+      "id": "D1",
+      "path": "tests/fixtures/basic/bad.py",
+      "symbol": "broken",
+      "evidence": "The fixture is exactly an invalid function header, 'def broken(:', followed by pass. expected.json explicitly expects failed parse state, zero SLOC, python.parse-error ERROR, and parse-failed project metrics. The golden contract and strict behavior tests pass in the focused run.",
+      "code_disposition": "no-change",
+      "reason": "This is intentional invalid source used to verify partial results, error evidence and strict failure. Reporting a parse error is correct. Repairing the fixture would remove a required failure-path test.",
+      "remaining_risk": "A scan of the repository including test fixtures correctly reports this error and may make the test-cohort project score unavailable. That is a property of the selected analysis scope, not a detector defect or production syntax failure.",
+      "next_step": "Retain the malformed source and explain its test-fixture role in the review. Do not suppress or weaken parse diagnostics to make the self-scan clean.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change"
+    },
+    {
+      "id": "P1",
+      "path": "tests/fixtures/patterns/overlap.py",
+      "symbol": "py.boolean-conditional",
+      "evidence": {
+        "line": 1,
+        "source": "result = True if f'constant' else False",
+        "rule_span": [
+          1,
+          1
+        ],
+        "cohort": "test",
+        "test": "test_scan_patterns.py::test_overlapping_pattern_fixture_counts_one_line_and_preserves_both_findings"
+      },
+      "code_disposition": "no-change",
+      "reason": "The expression selects True/False from a condition and matches the boolean-conditional rule. This is an intentional positive regression fixture; simplifying it would erase the test case rather than improve production behavior.",
+      "remaining_risk": "Do not treat fixture findings as production cleanup work. The test cohort and path identify their purpose.",
+      "next_step": "Keep the fixture and its hand-counted union assertion. Both findings must contribute only one affected physical line.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "review_id": "pattern:004cae82670aa19af9d7a1c2ecfab9f9a670db731bf713e9e7642c650796b699"
+    },
+    {
+      "id": "P2",
+      "path": "tests/fixtures/patterns/overlap.py",
+      "symbol": "py.literal-fstring",
+      "evidence": {
+        "line": 1,
+        "source": "f'constant'",
+        "rule_span": [
+          1,
+          1
+        ],
+        "cohort": "test",
+        "test": "test_scan_patterns.py::test_overlapping_pattern_fixture_counts_one_line_and_preserves_both_findings"
+      },
+      "code_disposition": "no-change",
+      "reason": "The f-string contains no formatted value and is a genuine literal-fstring match. It deliberately overlaps P1 to verify that native findings remain distinct while M2 unions their source lines.",
+      "remaining_risk": "Removing the unused prefix here would reduce test coverage. Literal-fstring fixes elsewhere must preserve decoded values, including escaped braces.",
+      "next_step": "Retain both positive findings and the one-line numerator. No rule suppression or special self-repository exclusion is warranted.",
+      "hotspot_measurement": "valid",
+      "change_decision": "none-now",
+      "resolution": "no-change",
+      "review_id": "pattern:7760b3a5a892a6af65319bad4b27c7ea8c5282b96b2ab7b95dbe1c00edcfc090"
+    }
+  ]
+}
