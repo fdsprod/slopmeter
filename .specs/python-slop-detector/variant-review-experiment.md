@@ -1,5 +1,7 @@
 # Experimental missing-variant review
 
+> Release status: the implemented features described here shipped in [v0.4.0](https://github.com/fdsprod/slopmeter/releases/tag/v0.4.0). Hosted CI passed. Validation counts and pre-release status statements below describe the original checkpoint.
+
 ## Thin slice
 
 Question: can source-only review connect locally declared finite variants to an

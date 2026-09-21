@@ -1,5 +1,7 @@
 # Experimental coupled-state review
 
+> Release status: the implemented features described here shipped in [v0.4.0](https://github.com/fdsprod/slopmeter/releases/tag/v0.4.0). Hosted CI passed. Validation counts and pre-release status statements below describe the original checkpoint.
+
 ## TB-1: Repeated cross-field rejection guards
 
 Question: can one read-only command connect a model invariant to repeated consumer

@@ -1,7 +1,7 @@
 # Python Slop Detector Tasks
 
 **Design**: `.specs/python-slop-detector/design.md`
-**Status**: Implementation complete; hosted platform validation pending
+**Status**: Original tracer bullets complete; hosted platform validation passed
 
 > [!NOTE]
 > The user's shared conversation has been read. [cli-output.md](cli-output.md)
@@ -18,9 +18,9 @@ the next bullet.
 
 Current checkpoint: Q01-Q07, T01-T78, and T79-T84 are implemented. TB-1 through
 TB-8 passed their gates. TB-9 passed all local release checks on Windows with Python
-3.12, 3.13, and 3.14. Hosted Linux/macOS CI execution remains pending because this
-checkout has no Git remote. [release-validation.md](release-validation.md) records
-acceptance mappings, exact results, and that external limit.
+3.12, 3.13, and 3.14. The hosted Windows/macOS/Linux matrix subsequently passed for v0.4.0
+([CI run](https://github.com/fdsprod/slopmeter/actions/runs/35628251656)).
+[release-validation.md](release-validation.md) retains the original local evidence.
 
 The TB-1 raw-scan slice passed these end-to-end checks:
 
@@ -155,9 +155,8 @@ TB-9 implementation and local release validation are complete:
   two small benchmark tests. Full benchmark runs were measured directly.
 - [x] Ruff, Pyright, five import contracts, locked resolution, dependency audit,
   builds, and CLI checks pass. Branch coverage is 96.66 percent.
-- [ ] Hosted Windows/macOS/Linux matrix results: no Git remote is configured, so
-  these jobs cannot be triggered from this checkout. This is the only remaining
-  external release-validation item; it is not claimed as passed.
+- [x] Hosted Windows/macOS/Linux matrix subsequently passed for v0.4.0 on Python
+  3.12, 3.13, and 3.14. The original local gate counts above remain historical.
 
 No P1 implementation work remains. History trends and P2/P3 features remain outside
 these tracer bullets. The application and command names remain unchanged.

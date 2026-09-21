@@ -1,5 +1,7 @@
 # Python MVP release validation
 
+> Release status: the implemented features described here shipped in [v0.4.0](https://github.com/fdsprod/slopmeter/releases/tag/v0.4.0). Hosted CI passed. Validation counts and pre-release status statements below describe the original checkpoint.
+
 Date: 2026-09-18. Package: `slop-measure` 0.1.0. Command: `slop`.
 
 TB-1 through TB-8 passed their recorded gates. TB-9 adds consistent public error

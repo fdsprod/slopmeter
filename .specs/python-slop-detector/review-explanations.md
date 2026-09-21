@@ -1,5 +1,7 @@
 # Explain retained review changes
 
+> Release status: the implemented features described here shipped in [v0.4.0](https://github.com/fdsprod/slopmeter/releases/tag/v0.4.0). Hosted CI passed. Validation counts and pre-release status statements below describe the original checkpoint.
+
 This pass addresses review friction from the v0.3.0 repeat assessment. It does not
 change thresholds, weights, calibration, classification, clone detection, or review
 applicability. The external assessment remains one repository lineage, not an
