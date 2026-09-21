@@ -5,6 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from slop_measure.api import AnalysisConfig, DirectorySourceReference, SnapshotRequest, scan
@@ -179,6 +180,13 @@ def test_relevant_changes_invalidate_without_changing_target_identity(
     result = resolve_reviews(changed, ledger).results[0]
     assert result.state == "stale"
     assert cause in result.changes[0].causes
+    change_record = result.changes[0]
+    assert change_record.candidate == target(changed, "clone")
+    assert change_record.target_id == change_record.candidate.id
+    with pytest.raises(ValidationError):
+        type(change_record).model_validate(
+            {**change_record.model_dump(), "target_id": "clone:" + "0" * 64}
+        )
 
 
 def test_unrelated_boundary_keeps_new_review_current_but_legacy_stale(root: Path) -> None:
@@ -284,6 +292,7 @@ def test_missing_source_hash_is_unavailable_and_cannot_be_recorded(root: Path) -
     resolution = resolve_reviews(legacy_report, ledger).results[0]
     assert resolution.state == "stale"
     assert "source-unavailable" in resolution.changes[0].causes
+    assert resolution.changes[0].candidate == unavailable
     before = store.read_bytes()
     with pytest.raises((InputError, ValueError)):
         write_review(
