@@ -167,6 +167,27 @@ def test_erosion_query_uses_report_version_for_test_callable_basis(
     assert report.model_dump_json() == before
 
 
+@pytest.mark.parametrize("version", [None, "future"])
+def test_erosion_query_does_not_invent_unknown_analysis_basis(
+    callable_report: AnalysisReport, version: str | None
+) -> None:
+    payload = callable_report.model_dump(mode="json")
+    if version is None:
+        payload["provenance"]["metrics"] = [
+            metric
+            for metric in payload["provenance"]["metrics"]
+            if metric["metric_id"] != "m4.erosion"
+        ]
+    else:
+        for metric in payload["provenance"]["metrics"]:
+            if metric["metric_id"] == "m4.erosion":
+                metric["version"] = version
+    report = AnalysisReport.model_validate(payload)
+    before = report.model_dump_json()
+    assert query_findings(report, metric="m4").functions == ()
+    assert report.model_dump_json() == before
+
+
 def test_unknown_metric_version_does_not_guess_callable_basis(
     callable_report: AnalysisReport,
 ) -> None:
