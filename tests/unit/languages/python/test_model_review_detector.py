@@ -47,6 +47,23 @@ def findings(payload: dict) -> list[dict]:
     return [finding for model in payload.get("models", []) for finding in model.get("findings", [])]
 
 
+@pytest.mark.parametrize("shadowed", [False, True])
+def test_class_local_bool_binding_controls_annotation_proof(shadowed: bool) -> None:
+    source = SOURCE
+    if shadowed:
+        source = source.replace("class State:\n", "class State:\n    bool = int\n")
+    payload = wire(source)
+    assert payload["state"] == "analyzed"
+    (model,) = payload["models"]
+    if shadowed:
+        assert model["state"] == "unresolved" and model["reason"]
+        assert findings(payload) == []
+    else:
+        assert model["state"] == "analyzed"
+        assert len(findings(payload)) == 1
+        assert findings(payload)[0]["fields"][0]["kind"] == "boolean"
+
+
 @pytest.mark.parametrize("alias,quoted", [(False, False), (True, True)])
 def test_repeated_boolean_nullable_rejection_has_precise_owned_locations(
     alias: bool, quoted: bool
