@@ -418,9 +418,9 @@ combined. A baseline revision uses the repository given by `--root`.
 
 ## Experimental data-model review
 
-### Coverage summaries (source checkout)
+### Coverage summaries
 
-This checkout adds a coverage summary before the detailed output of `models`,
+Version 0.5.0 adds a coverage summary before the detailed output of `models`,
 `variants`, and `derived`. The JSON report includes the same computed `summary`:
 
 | Count | Meaning |
@@ -441,7 +441,7 @@ assessed, but not as missing/fallback findings.
 Summaries are derived from detailed outcomes. The current reader accepts older
 reports without a summary and rejects supplied summaries that contradict the
 evidence. Saved review identities and detector eligibility are unchanged. These
-reporting changes are not included in the published v0.4.0 release.
+reporting changes first appear in v0.5.0.
 
 ### Coupled-state evidence
 
@@ -514,7 +514,7 @@ capture/wildcard fallbacks are supported. Unsupported patterns, enum aliases,
 custom enum behavior, nested or later matches, reassignment, and ambiguous bindings
 are reported as unresolved. No finding means no qualifying evidence in this scope.
 
-The source checkout gives specific reasons for unsupported handler scope or
+Version 0.5.0 gives specific reasons for unsupported handler scope or
 signature, match placement, subject shape, annotations, bindings, declarations,
 and patterns. It identifies the first blocking check, not every limitation in a
 handler. These explanations do not expand the accepted syntax. They help decide
@@ -525,9 +525,9 @@ Like `models`, this command keeps source hashes, locations, discovery coverage a
 failures visible. It supports external config and `--strict`, never executes source,
 and has no score or M2 contribution. Both commands are available in v0.4.0.
 
-## Experimental derived-state review (source checkout)
+## Experimental derived-state review
 
-The new `derived` command is available from this checkout, after v0.4.0:
+Version 0.5.0 adds the `derived` command:
 
 ```powershell
 slop derived --root . --lang py
@@ -721,13 +721,13 @@ contain sensitive paths and reviewer notes; choose where to keep them. Persisten
 in this legacy workflow covers clone groups and the current snapshot side only. Use separate
 stores for independent scan roots. Boundary prefixes are also relative to each root.
 
-### Attributed review history for all finding types (source checkout)
+### Attributed review history for all finding types
 
 The new `review-report` workflow reads saved native JSON from `score`, `models`,
 `variants`, or `derived`. It supports clones, callable complexity, pattern findings,
 model findings, analyzed variant handlers, and derived-state findings. Failed and
 unresolved experimental results are not reviewable targets. This workflow is
-available from the source checkout after v0.4.0.
+available in v0.5.0.
 
 Save JSON using UTF-8. For example, in PowerShell:
 
