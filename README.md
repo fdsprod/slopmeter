@@ -7,7 +7,7 @@ revisions. It does not execute target code or apply fixes.
 
 The command is **`slop`**, the Python package is **`slop-measure`**, and the import
 name is **`slop_measure`**. Terminal reports use the internal name `slop.measure`.
-Only Python analysis is currently implemented. This is an early 0.3.0 project;
+Only Python analysis is currently implemented. This is an early 0.4.0 project;
 scores are review signals, not defect probabilities or proof of AI authorship.
 
 ## Quick start
@@ -418,8 +418,8 @@ combined. A baseline revision uses the repository given by `--root`.
 
 ## Experimental data-model review
 
-The source checkout includes an experimental coupled-state check. It is separate
-from the published v0.3.0 release and from calibrated scores:
+Version 0.4.0 includes an experimental coupled-state check. It is separate
+from calibrated scores:
 
 ```powershell
 slop models --root . --lang py
@@ -458,7 +458,7 @@ these experimental findings yet.
 
 ## Experimental variant review
 
-Use the source checkout to inspect explicitly typed `match` handlers:
+Use version 0.4.0 to inspect explicitly typed `match` handlers:
 
 ```powershell
 slop variants --root . --lang py
@@ -489,8 +489,7 @@ are reported as unresolved. No finding means no qualifying evidence in this scop
 
 Like `models`, this command keeps source hashes, locations, discovery coverage and
 failures visible. It supports external config and `--strict`, never executes source,
-and has no score or M2 contribution. These commands are not yet part of the
-published v0.3.0 release.
+and has no score or M2 contribution. Both commands are available in v0.4.0.
 
 ## Development checks
 
@@ -588,8 +587,7 @@ scan does not inherit boundary declarations from its parent. Rebase the prefixes
 when using a different scan root. If both configuration files declare boundaries,
 the `slop.toml` list replaces the `pyproject.toml` list.
 
-The following external-config option and detailed stale explanations are available
-in the source checkout and are not part of the published v0.3.0 release.
+External configuration and detailed stale explanations are available in v0.4.0.
 
 To keep configuration outside the repository, select a file explicitly:
 

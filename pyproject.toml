@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "slop-measure"
-version = "0.3.0"
+version = "0.4.0"
 description = "Measure redundant and structurally eroded source code."
 readme = "README.md"
 requires-python = ">=3.12"
