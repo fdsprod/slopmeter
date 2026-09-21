@@ -59,7 +59,11 @@ def test_derived_cli_json_matches_api_and_plain_output_frames_review_candidate(p
     runner = CliRunner()
     result = runner.invoke(app, ["derived", "--root", str(root), "--lang", "py", "--json"])
     assert result.exit_code == 0, result.output
-    assert json.loads(result.stdout) == inspect_derived(request(root)).model_dump(mode="json")
+    selected = SnapshotRequest(
+        target=DirectorySourceReference(root=root),
+        config=AnalysisConfig.model_validate({"languages": ["python"]}),
+    )
+    assert json.loads(result.stdout) == inspect_derived(selected).model_dump(mode="json")
     plain = runner.invoke(app, ["derived", "--root", str(root)])
     assert plain.exit_code == 0
     assert "count" in plain.stdout and "items" in plain.stdout
@@ -85,7 +89,7 @@ def test_derived_parse_failure_remains_visible_and_strict_fails(project) -> None
 def test_derived_cli_loads_config_and_rejects_unknown_language(project) -> None:
     root, _ = project
     config = root / "custom.toml"
-    config.write_text('exclude_patterns = ["derived.py"]\n', encoding="utf-8")
+    config.write_text('exclusions = ["derived.py"]\n', encoding="utf-8")
     runner = CliRunner()
     result = runner.invoke(app, ["derived", "--root", str(root), "--config", str(config), "--json"])
     assert result.exit_code == 0, result.output
