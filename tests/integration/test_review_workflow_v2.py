@@ -338,3 +338,75 @@ def test_malformed_saved_inputs_are_input_errors(root: Path, contents: str) -> N
             load(path)
     runner = CliRunner()
     assert runner.invoke(app, ["review-report", "list", "--report", str(path)]).exit_code == 2
+
+
+@pytest.mark.parametrize(
+    "change", ["sequence-gap", "sequence-bool", "blank-actor", "naive-time", "incompatible-history"]
+)
+def test_ledger_rejects_forged_history(root: Path, change: str) -> None:
+    report = scan(request(root))
+    ledger = record(root.parent / "reviews.json", report)
+    wire = ledger.model_dump(mode="json")
+    if change == "sequence-gap":
+        wire["events"][0]["sequence"] = 2
+    elif change == "sequence-bool":
+        wire["events"][0]["sequence"] = True
+    elif change == "blank-actor":
+        wire["events"][0]["actor"] = " "
+    elif change == "naive-time":
+        wire["events"][0]["recorded_at"] = "2026-01-01T12:00:00"
+    else:
+        second = {**wire["events"][0], "sequence": 2}
+        second["decision"] = {
+            **second["decision"],
+            "anchor": target(report, "complexity").anchor.model_dump(mode="json"),
+        }
+        wire["events"].append(second)
+    with pytest.raises(ValidationError):
+        type(ledger).model_validate(wire)
+
+
+def test_target_id_cannot_be_forged_and_anchor_hashes_cover_exact_subject(root: Path) -> None:
+    chosen = target(scan(request(root)), "clone")
+    with pytest.raises(ValidationError):
+        type(chosen).model_validate({**chosen.model_dump(), "id": "clone:" + "0" * 64})
+    anchor = chosen.anchor.model_dump()
+    anchor["source_hashes"] = anchor["source_hashes"][:1]
+    with pytest.raises(ValidationError):
+        type(chosen.anchor).model_validate(anchor)
+
+
+def test_cli_set_records_explicit_actor_reason_and_followup(root: Path) -> None:
+    report = scan(request(root))
+    saved, store = root.parent / "report.json", root.parent / "reviews.json"
+    saved.write_text(report.model_dump_json(), encoding="utf-8")
+    result = CliRunner().invoke(
+        app,
+        [
+            "review-report",
+            "set",
+            target(report, "clone").id,
+            "--report",
+            str(saved),
+            "--store",
+            str(store),
+            "--actor",
+            "Ada",
+            "--disposition",
+            "defer",
+            "--reason",
+            "Wait for interface change.",
+            "--next-step",
+            "Review next release.",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    event = load_review_ledger(store).events[0]
+    assert event.actor == "Ada" and event.decision.reason == "Wait for interface change."
+    assert event.decision.next_step == "Review next release."
+    shown = CliRunner().invoke(
+        app, ["review-report", "show", "--report", str(saved), "--store", str(store)]
+    )
+    assert shown.exit_code == 0
+    for text in ("Ada", "Wait for interface change.", "Review next release.", "a.py", "b.py"):
+        assert text in shown.stdout
