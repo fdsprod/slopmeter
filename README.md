@@ -491,6 +491,30 @@ Like `models`, this command keeps source hashes, locations, discovery coverage a
 failures visible. It supports external config and `--strict`, never executes source,
 and has no score or M2 contribution. Both commands are available in v0.4.0.
 
+## Experimental derived-state review (source checkout)
+
+The new `derived` command is available from this checkout, after v0.4.0:
+
+```powershell
+slop derived --root . --lang py
+slop derived --root . --config C:/review-config/project.toml --json
+```
+
+It connects three locations: a stored `count = len(items)`, a length-increasing
+mutation of `items`, and a later read of `count` without recomputation. The first
+slice supports local list literals in straight-line functions, with `append`,
+nonempty literal `extend`, and `insert`. Unknown calls, aliases, branches, object
+fields, and uncertain bindings remain unresolved. Source is never executed.
+
+A candidate may be an intentional snapshot. Review whether the consumer needs
+the original count or the current count before changing code. Findings remain
+experimental and have no effect on M2 or calibrated scores.
+
+The [independent v0.4.0 evaluation](.specs/python-slop-detector/independent-evaluation-040.md)
+ran `models` and `variants` on pinned HTTPX, Rich, and Black snapshots. It found
+very limited supported coverage, with no qualifying positive cases. The results
+do not establish precision or recall. Synthetic controls are recorded separately.
+
 ## Development checks
 
 Use uv 0.11.14, the version pinned in `pyproject.toml`. Create or update the locked
@@ -598,7 +622,8 @@ slop review show --root . --config C:/review-config/service.toml --store C:/revi
 ```
 
 `--config` works on `score`, `scan`, `tree`, `compare`, `explain`, `findings`,
-`rules`, `review set`, and `review show`. Put it after the command name. An explicit
+`rules`, `models`, `variants`, `derived`, `review set`, and `review show`.
+Put it after the command name. An explicit
 file replaces both local config files. Settings come from defaults, then that file,
 then CLI overrides such as `--lang` and `--strict`. A missing or invalid explicit
 file is an error. The CLI does not fall back to local settings.
@@ -659,8 +684,50 @@ does not record reviewer identity or timestamps.
 
 Stores contain relative locations and hashes, not source text. They can still
 contain sensitive paths and reviewer notes; choose where to keep them. Persistence
-currently covers clone groups and the current snapshot side only. Use separate
+in this legacy workflow covers clone groups and the current snapshot side only. Use separate
 stores for independent scan roots. Boundary prefixes are also relative to each root.
+
+### Attributed review history for all finding types (source checkout)
+
+The new `review-report` workflow reads saved native JSON from `score`, `models`,
+`variants`, or `derived`. It supports clones, callable complexity, pattern findings,
+model findings, analyzed variant handlers, and derived-state findings. Failed and
+unresolved experimental results are not reviewable targets. This workflow is
+available from the source checkout after v0.4.0.
+
+Save JSON using UTF-8. For example, in PowerShell:
+
+```powershell
+slop score . --lang py --json | Set-Content -Encoding utf8 snapshot.json
+slop review-report list --report snapshot.json
+slop review-report set TARGET_ID --report snapshot.json --store decisions.json --actor reviewer-name --disposition defer --reason "Review this workflow when its contract changes." --next-step "Check retry and failure paths."
+slop review-report show --report snapshot.json --store decisions.json
+```
+
+Copy a target ID from `list`. Each write appends the explicit actor, UTC timestamp,
+decision, rationale, next step, and evidence anchor. `show --json` includes full
+history. To attach a fresh decision to an existing compatible history after the
+evidence changes, pass `--review REVIEW_ID` to `set`. Earlier events remain intact.
+The tool does not infer the reviewer's identity or automatically approve changes.
+
+**These commands inspect the saved report, not the live checkout.** Generate a
+fresh native report and run `show` against it to check applicability after edits.
+Keep one explicit ledger per project and scan root. Relative paths and hashes do
+not identify a repository globally. List and show do not write the ledger.
+
+New clone decisions bind the effective ownership assignments of their members.
+An unrelated boundary declaration leaves them current. A changed member assignment,
+exact file bytes, relevant evidence, or detector definition makes them stale.
+Stale output shows the changed files and hashes, evidence locations, or previous
+and current ownership assignments. Comment-only edits still require review:
+equal syntax does not establish that a reviewer note remains applicable.
+
+Schema-1 clone stores remain readable. Their first explicit write through
+`review-report set` preserves the old decisions under `legacy_decisions` in a
+schema-2 ledger. Legacy anchors retain their whole-policy invalidation rule.
+This does not reapprove or weaken old decisions. Use the new workflow for that
+ledger afterward; the legacy `review` commands still use schema 1. Keep a copy if
+you need both workflows. Missing evidence means absent or unavailable, not fixed.
 
 Callable explanations label the retained `mass` field as **full-CC mass**. They show
 the version-specific M4 basis, effective CC, effective mass, numerator, and threshold

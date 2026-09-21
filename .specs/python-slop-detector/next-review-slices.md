@@ -64,3 +64,43 @@ bytes still matter. A comment edit is not automatically approved as harmless.
 **Validation:** Unrelated declarations preserve new decisions; changed member
 assignments stale them. Source changes show old/new identities. Re-review appends
 history. No automatic migration or silent approval of old decisions.
+
+## Completed validation, 2026-09-21
+
+All four slices are complete as source-checkout features. The published release
+remains v0.4.0; this follow-up has not been pushed or released.
+
+- Independent evaluation: three pinned public repositories, 539 selected Python
+  files, 533 parsed, six malformed formatter fixtures. Two model assessments were
+  supported negatives; 760 were unresolved. All 99 variant assessments were
+  unresolved. No eligible positive cases occurred. These observations do not
+  establish precision or recall. See [the evaluation](independent-evaluation-040.md).
+- Independent test authorship preceded implementation. Separate commits retain
+  red contracts and regression cases. Another agent reviewed builtin shadowing
+  and saved-review persistence. Confirmed shadowing gaps received tests and fixes.
+- Full Windows Python 3.12 suite: 1,498 passed, four distribution cases skipped
+  for the separate artifact gate. Branch-inclusive coverage: 94.63 percent.
+- All four isolated wheel/source installation cases passed. An installed wheel
+  also ran the derived positive/recomputed negative fixture and saved-report
+  list/set/show lifecycle successfully.
+- All 74 new derived and review-workflow cases passed on Python 3.13 and 3.14.
+  The focused new/legacy review gate passed 84 cases.
+- Retained learning tests and small performance checks passed; the full opt-in
+  performance benchmark was not run. Ruff lint/format, Pyright with the project
+  interpreter, and all five import contracts passed. No dependency changed.
+- The released v0.4.0 executable and updated executable scanned this same final
+  Python source tree. Their ordinary score JSON was exactly equal. Calibration,
+  metric definitions, source selection, and scoring were not tuned.
+- The new derived scan selected 189 files. One intentional malformed fixture
+  failed parsing. Two functions were analyzed, 1,481 were unresolved, and no
+  candidates were found. This is limited coverage, not a clean result.
+- Local proof artifacts are under `.tmp/followup-confirmation/`. Public evaluation
+  clones and raw reports stay under `.tmp/evaluation040/`. Neither source corpus
+  nor generated reports are committed. No private external evaluation artifacts
+  were accessed or published.
+
+The saved-report ledger supports all six evidence kinds. New clone anchors depend
+on effective member ownership assignments, while legacy anchors keep whole-policy
+matching. Source bytes remain exact. Comment-only edits still require review.
+Actor, UTC timestamp, rationale, next step, and earlier decisions survive explicit
+re-review. Reads leave ledger bytes and measured reports unchanged.
