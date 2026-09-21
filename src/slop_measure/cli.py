@@ -13,6 +13,7 @@ import typer
 
 from slop_measure.api import compare, scan
 from slop_measure.application.catalog import rule_catalog
+from slop_measure.application.derived import inspect_derived
 from slop_measure.application.models import inspect_models
 from slop_measure.application.reviews import apply_reviews, load_review_store, write_clone_review
 from slop_measure.application.variants import inspect_variants
@@ -25,6 +26,7 @@ from slop_measure.domain.source import DirectorySourceReference, GitSourceRefere
 from slop_measure.errors import InputError, InvalidSource, SelectionError, error_message, exit_code
 from slop_measure.reporting import terminal
 from slop_measure.reporting.comparison import render_comparison
+from slop_measure.reporting.derived import render_derived
 from slop_measure.reporting.evidence import render_findings, render_rules
 from slop_measure.reporting.json import serialize_report
 from slop_measure.reporting.models import render_models
@@ -619,6 +621,32 @@ def variants_command(
         _fail(error)
     typer.echo(
         report.model_dump_json(indent=2) if json_output else render_variants(report), nl=json_output
+    )
+
+
+@app.command("derived")
+def derived_command(
+    *,
+    root_path: _Root = Path("."),
+    config_path: _Config = None,
+    languages: _Languages = None,
+    strict: _Strict = None,
+    json_output: _Json = False,
+) -> None:
+    """Review stored counts read after local list mutation without changing scores."""
+    try:
+        config = load_analysis_config(
+            root_path, config_path=config_path, cli_overrides=_overrides(strict, languages)
+        )
+        report = inspect_derived(
+            SnapshotRequest(target=DirectorySourceReference(root=root_path), config=config)
+        )
+    except (ValueError, OSError) as error:
+        _fail(InputError(str(error)))
+    except Exception as error:
+        _fail(error)
+    typer.echo(
+        report.model_dump_json(indent=2) if json_output else render_derived(report), nl=json_output
     )
 
 
