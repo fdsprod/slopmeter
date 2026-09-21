@@ -102,6 +102,24 @@ def test_module_binding_of_len_prevents_builtin_proof() -> None:
     assert inspect(source)["functions"][0]["state"] == "unresolved"
 
 
+def test_later_local_binding_of_len_prevents_builtin_proof() -> None:
+    source = function(
+        "items = [1]\ncount = len(items)\nitems.append(2)\nvalue = count\nlen = custom_len"
+    )
+    assert inspect(source)["functions"][0]["state"] == "unresolved"
+
+
+def test_nonlocal_candidate_remains_unresolved() -> None:
+    source = (
+        "def outer():\n    items = [1]\n    def inner():\n"
+        "        nonlocal items\n        count = len(items)\n"
+        "        items.append(2)\n        return count\n"
+    )
+    result = inspect(source)
+    assert result["functions"]
+    assert all(item["state"] == "unresolved" for item in result["functions"])
+
+
 def test_source_is_never_executed_and_functions_are_independent() -> None:
     source = 'raise RuntimeError("never execute")\n' + function(
         "items = [1]\ncount = len(items)\nitems.append(2)\nreturn count"
