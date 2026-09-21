@@ -91,6 +91,15 @@ def test_experimental_catalogs_load_from_saved_reports(root: Path, kind: str) ->
         source = (
             "from dataclasses import dataclass\n@dataclass\nclass Item:\n"
             "    enabled: bool\n    value: str | None\n"
+            "    def __post_init__(self):\n"
+            "        if self.enabled and self.value is None:\n"
+            "            raise ValueError('Value required')\n"
+            "def first(item: Item):\n"
+            "    if item.enabled and item.value is None:\n        return False\n"
+            "    return True\n"
+            "def second(item: Item):\n"
+            "    if item.enabled and item.value is None:\n        return None\n"
+            "    return item.value\n"
         )
         inspector = inspect_models
     elif kind == "variant":
@@ -229,3 +238,94 @@ def test_unknown_target_and_blank_actor_preserve_existing_store(root: Path) -> N
                 reason="Reason",
             )
         assert store.read_bytes() == before
+
+
+def test_explicit_rereview_retains_history_when_evidence_changes(root: Path) -> None:
+    report = scan(request(root))
+    store = root.parent / "reviews.json"
+    original = record(store, report)
+    for path in root.glob("*.py"):
+        path.write_text(path.read_text().replace("+ 1", "+ 2"), encoding="utf-8")
+    changed = scan(request(root))
+    assert target(changed, "clone").id != target(report, "clone").id
+    stale = resolve_reviews(changed, original).results[0]
+    assert stale.state == "stale" and "evidence-changed" in stale.changes[0].causes
+    updated = record(store, changed, review_id=original.events[0].review_id)
+    assert updated.events[0] == original.events[0]
+    assert updated.events[1].review_id == original.events[0].review_id
+    assert resolve_reviews(changed, updated).results[0].state == "current"
+    before = store.read_bytes()
+    with pytest.raises((InputError, ValueError)):
+        record(store, changed, "complexity", review_id=original.events[0].review_id)
+    assert store.read_bytes() == before
+
+
+def test_absent_evidence_is_missing_not_fixed(root: Path) -> None:
+    report = scan(request(root))
+    ledger = record(root.parent / "reviews.json", report)
+    (root / "b.py").unlink()
+    result = resolve_reviews(scan(request(root)), ledger).results[0]
+    assert result.state == "missing" and result.reason == "evidence-absent-or-unavailable"
+
+
+def test_missing_source_hash_is_unavailable_and_cannot_be_recorded(root: Path) -> None:
+    report = scan(request(root))
+    store = root.parent / "reviews.json"
+    ledger = record(store, report)
+    payload = report.model_dump(mode="json")
+    for cohort in payload["cohorts"]:
+        for file in cohort["current"]["files"]:
+            file.pop("source_sha256", None)
+    legacy_report = type(report).model_validate(payload)
+    unavailable = next(
+        item for item in review_targets(legacy_report) if item.id == target(report, "clone").id
+    )
+    assert unavailable.state == "unavailable" and unavailable.reason == "source-hash-unavailable"
+    resolution = resolve_reviews(legacy_report, ledger).results[0]
+    assert resolution.state == "stale"
+    assert "source-unavailable" in resolution.changes[0].causes
+    before = store.read_bytes()
+    with pytest.raises((InputError, ValueError)):
+        write_review(
+            store,
+            legacy_report,
+            unavailable.id,
+            actor="reviewer",
+            disposition=ReviewDisposition.DEFER,
+            reason="Review unavailable evidence.",
+        )
+    assert store.read_bytes() == before
+
+
+def test_replace_failure_preserves_store_and_cleans_owned_temporary_files(
+    root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import os  # noqa: PLC0415
+
+    report = scan(request(root))
+    store = root.parent / "reviews.json"
+    record(store, report)
+    before = store.read_bytes()
+    names = {path.name for path in store.parent.iterdir()}
+
+    def fail_replace(*args, **kwargs):
+        raise OSError("simulated replace failure")
+
+    monkeypatch.setattr(os, "replace", fail_replace)
+    with pytest.raises((InputError, OSError)):
+        record(store, report)
+    assert store.read_bytes() == before
+    assert {path.name for path in store.parent.iterdir()} == names
+
+
+@pytest.mark.parametrize(
+    "contents", ['{"schema_version":"999"}', '{"schema_version":"2","events":"bad"}', "not JSON"]
+)
+def test_malformed_saved_inputs_are_input_errors(root: Path, contents: str) -> None:
+    path = root.parent / "invalid.json"
+    path.write_text(contents, encoding="utf-8")
+    for load in (load_review_report, load_review_ledger):
+        with pytest.raises(InputError):
+            load(path)
+    runner = CliRunner()
+    assert runner.invoke(app, ["review-report", "list", "--report", str(path)]).exit_code == 2
