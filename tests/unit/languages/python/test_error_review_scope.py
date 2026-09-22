@@ -112,3 +112,48 @@ def test_lazy_type_expressions_are_not_invented_as_eager_protected_calls(
         return
     (finding,) = handler["findings"]
     assert [operation["expression"] for operation in finding["operations"]] == ["visible()"]
+
+
+def assert_annotation_operations(handler: dict, expected: list[str]) -> None:
+    if handler["state"] == "unresolved":
+        assert "annotation" in handler["reason"].lower()
+        return
+    (finding,) = handler["findings"]
+    assert sorted(operation["expression"] for operation in finding["operations"]) == sorted(
+        expected
+    )
+
+
+def test_local_variable_annotation_is_not_executed_but_assigned_value_is() -> None:
+    result = inspect("""\
+        def work():
+            try:
+                value: local_annotation() = visible_value()
+                return result
+            except Exception:
+                return []
+        """)
+    (handler,) = result["handlers"]
+    assert_annotation_operations(handler, ["visible_value()"])
+
+
+@pytest.mark.parametrize("future_annotations", [False, True])
+def test_nested_function_annotations_respect_postponed_evaluation(
+    future_annotations: bool,
+) -> None:
+    source = dedent("""\
+        def work():
+            try:
+                def inner(value: argument_annotation()) -> result_annotation():
+                    hidden()
+                return visible()
+            except Exception:
+                return []
+        """)
+    if future_annotations:
+        source = "from __future__ import annotations\n" + source
+    (handler,) = inspect(source)["handlers"]
+    expected = ["visible()"]
+    if not future_annotations:
+        expected.extend(["argument_annotation()", "result_annotation()"])
+    assert_annotation_operations(handler, expected)
