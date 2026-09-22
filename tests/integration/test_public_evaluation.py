@@ -61,10 +61,14 @@ def _run(snapshot: str, command: str, pointer: str, expected: object) -> dict:
     }
 
 
-def _invoke(tmp_path: Path, case: dict, *extra: str) -> subprocess.CompletedProcess[str]:
+def _invoke(
+    tmp_path: Path, case: dict, *extra: str, manifest_override: dict | None = None
+) -> subprocess.CompletedProcess[str]:
     assert RUNNER.is_file(), "The public evaluation CLI must exist."
     manifest = tmp_path / "manifest.json"
-    manifest.write_text(json.dumps({"schema_version": 1, "cases": [case]}), encoding="utf-8")
+    manifest.write_text(
+        json.dumps(manifest_override or {"schema_version": 1, "cases": [case]}), encoding="utf-8"
+    )
     return subprocess.run(  # noqa: S603
         [
             sys.executable,
@@ -132,7 +136,7 @@ def test_offline_fix_retains_reports_hashes_checks_and_never_executes_subject(
     provenance = result["provenance"]
     assert len(provenance["analyzer_fingerprint"]) == 64
     assert int(provenance["analyzer_fingerprint"], 16) >= 0
-    assert provenance["source_hashes"]
+    assert set(provenance["source_hashes"].values()) == set(original)
     reports = _reports(tmp_path)
     assert len(reports) == 3
     assert {report["experiment"] for report in reports} == {
@@ -249,3 +253,105 @@ def test_existing_output_is_rejected_without_overwriting(tmp_path: Path, cache: 
     run = _invoke(tmp_path, _case(cache))
     assert run.returncode == 2, run.stdout + run.stderr
     assert prior.read_bytes() == b"previous evidence"
+
+
+@pytest.mark.parametrize(
+    "invalid",
+    [
+        "schema-version",
+        "unknown-root-field",
+        "unknown-case-field",
+        "duplicate-case",
+        "duplicate-run",
+        "empty-cases",
+        "empty-checks",
+        "unsafe-case-id",
+        "unsafe-run-id",
+    ],
+)
+def test_manifest_rejects_ambiguous_or_vacuous_evaluation(
+    tmp_path: Path,
+    cache: Path,
+    invalid: str,
+) -> None:
+    case = _case(cache)
+    manifest: dict = {"schema_version": 1, "cases": [case]}
+    if invalid == "schema-version":
+        manifest["schema_version"] = 2
+    elif invalid == "unknown-root-field":
+        manifest["casess"] = []
+    elif invalid == "unknown-case-field":
+        case["runss"] = []
+    elif invalid == "duplicate-case":
+        manifest["cases"].append(case)
+    elif invalid == "duplicate-run":
+        case["runs"].append(case["runs"][0].copy())
+    elif invalid == "empty-cases":
+        manifest["cases"] = []
+    elif invalid == "empty-checks":
+        case["runs"][0]["checks"] = []
+    elif invalid == "unsafe-case-id":
+        case["id"] = "../escaped"
+    else:
+        case["runs"][0]["id"] = "../escaped"
+    run = _invoke(tmp_path, case, manifest_override=manifest)
+    assert run.returncode == 2, run.stdout + run.stderr
+
+
+def test_nested_json_comparison_does_not_equate_boolean_with_count(
+    tmp_path: Path, cache: Path
+) -> None:
+    case = _case(cache)
+    expected = {
+        "unit": "exception-handlers",
+        "files_analyzed": True,
+        "files_failed": 0,
+        "encountered": 1,
+        "assessed": 1,
+        "unresolved": 0,
+        "findings": 1,
+        "unresolved_reasons": [],
+    }
+    case["runs"] = [_run("before", "errors", "/summary", expected)]
+    run = _invoke(tmp_path, case)
+    assert run.returncode == 1, run.stdout + run.stderr
+    assert _result(tmp_path)["jobs"][0]["state"] == "mismatch"
+
+
+def test_mismatch_does_not_skip_other_jobs(tmp_path: Path, cache: Path) -> None:
+    case = _case(cache)
+    case["runs"] = [
+        _run("before", "errors", "/summary/findings", 999),
+        _run("after", "errors", "/summary/findings", 0),
+    ]
+    run = _invoke(tmp_path, case)
+    assert run.returncode == 1, run.stdout + run.stderr
+    assert [job["state"] for job in _result(tmp_path)["jobs"]] == ["mismatch", "passed"]
+    assert len(_reports(tmp_path)) == 2
+
+
+def test_parse_failure_is_incomplete_even_when_zero_findings_were_expected(
+    tmp_path: Path,
+    cache: Path,
+) -> None:
+    case = _case(cache, before="def invalid(:\n")
+    case["runs"] = [_run("before", "errors", "/summary/findings", 0)]
+    run = _invoke(tmp_path, case)
+    assert run.returncode == 2, run.stdout + run.stderr
+    result = _result(tmp_path)
+    assert result["state"] == "incomplete"
+    assert result["jobs"][0]["state"] == "error"
+    assert _reports(tmp_path)[0]["diagnostics"]
+
+
+def test_unresolved_subject_can_pass_explicit_coverage_gap_expectation(
+    tmp_path: Path,
+    cache: Path,
+) -> None:
+    case = _case(cache, before="class Example:\n    def method(self):\n        return 1\n")
+    case["label"] = "coverage-gap"
+    case["runs"] = [_run("before", "derived", "/summary/assessed", 0)]
+    case["runs"][0]["checks"].append({"pointer": "/summary/unresolved", "equals": 1})
+    run = _invoke(tmp_path, case)
+    assert run.returncode == 0, run.stdout + run.stderr
+    assert _result(tmp_path)["jobs"][0]["state"] == "passed"
