@@ -22,7 +22,11 @@ def _locations(subject: ReviewSubject) -> str:
 
 
 def render_review_targets(targets: tuple[ReviewTarget, ...]) -> str:
-    lines = [f"Saved-report review targets ({len(targets)})", _SAVED_NOTICE]
+    lines = [
+        f"Saved-report reviewable evidence ({len(targets)})",
+        "This is an evidence count, not a finding count, defect count, or hotspot count.",
+        _SAVED_NOTICE,
+    ]
     for target in targets:
         subject = target.anchor.subject if target.state == "reviewable" else target.subject
         lines.extend(

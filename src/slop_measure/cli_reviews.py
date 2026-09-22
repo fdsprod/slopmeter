@@ -13,8 +13,11 @@ from slop_measure.application.review_workflow import (
     review_targets,
     write_review,
 )
+from slop_measure.domain.review_workflow import ReviewKind
 from slop_measure.domain.reviews import ReviewDisposition
+from slop_measure.domain.source import Cohort
 from slop_measure.errors import InputError, error_message
+from slop_measure.reporting.review_selection import select_review_targets
 from slop_measure.reporting.review_workflow import render_review_resolution, render_review_targets
 
 app = typer.Typer(
@@ -33,10 +36,34 @@ def _fail(error: Exception) -> NoReturn:
 
 
 @app.command("list")
-def list_targets(*, report: _Report, json_output: _Json = False) -> None:
+def list_targets(
+    *,
+    report: _Report,
+    kind: Annotated[
+        list[ReviewKind] | None,
+        typer.Option("--kind", help="Select an evidence kind. Repeat to include multiple kinds."),
+    ] = None,
+    cohort: Annotated[
+        Cohort | None, typer.Option("--cohort", help="Select the saved source cohort.")
+    ] = None,
+    hotspots_only: Annotated[
+        bool,
+        typer.Option(
+            "--hotspots-only", help="Select complexity above the saved M4 threshold and basis."
+        ),
+    ] = False,
+    json_output: _Json = False,
+) -> None:
     """List evidence available for review in a saved report; do not scan source."""
     try:
-        targets = review_targets(load_review_report(report))
+        saved = load_review_report(report)
+        targets = select_review_targets(
+            saved,
+            review_targets(saved),
+            kinds=frozenset(kind or ()),
+            cohort=cohort,
+            hotspots_only=hotspots_only,
+        )
     except (ValueError, OSError) as error:
         _fail(error)
     if json_output:
