@@ -69,16 +69,36 @@ def test_unresolved_clone_member_retains_known_baseline_without_claiming_removal
     assert len(group.baseline) == 2 and len(group.current) == 1
 
 
+@pytest.mark.xfail(strict=True, reason="modified clone continuity is not implemented")
 def test_clone_member_states_are_explicit_and_empty_uncertainty_is_invalid() -> None:
     adapter = TypeAdapter(CloneMemberChange)
     assert set(adapter.json_schema()["discriminator"]["mapping"]) == {
         "introduced",
         "removed",
         "persisted",
+        "changed",
         "unresolved",
     }
     with pytest.raises(ValidationError):
         adapter.validate_python({"state": "unresolved", "reason": "Unknown"})
+
+
+@pytest.mark.xfail(strict=True, reason="modified clone continuity is not implemented")
+def test_modified_clone_keeps_two_fingerprints_and_rejects_forged_counts() -> None:
+    payload = group_payload()
+    payload["baseline_fingerprint"] = "a" * 64
+    payload["current_fingerprint"] = "b" * 64
+    payload["members"] = [
+        {"state": "changed", "baseline": clone(path), "current": clone(path)}
+        for path in ("a.py", "b.py")
+    ]
+    group = CloneGroupChange.model_validate(payload)
+    wire = group.model_dump(mode="json")
+    assert wire["modified"] == 2 and wire["state"] == "changed"
+    assert wire["added"] == wire["removed"] == 0
+    assert CloneGroupChange.model_validate_json(group.model_dump_json()) == group
+    with pytest.raises(ValidationError):
+        CloneGroupChange.model_validate({**wire, "modified": 0})
 
 
 def error_occurrence() -> dict:
