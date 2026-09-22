@@ -112,9 +112,7 @@ def test_raw_traversal_retains_older_commit_with_newer_parent_timestamp(
     # can omit the newer-dated parent; enumerate pinned ancestry before filtering.
     complete = run_git(git_repository, "rev-list", "--first-parent", "--reverse", child)
     assert complete.stdout.decode().splitlines() == [parent, child]
-    filtered = run_git(
-        git_repository, "rev-list", "--since=2026-09-10T00:00:00+00:00", child
-    )
+    filtered = run_git(git_repository, "rev-list", "--since=2026-09-10T00:00:00+00:00", child)
     assert filtered.stdout == b""
 
 
