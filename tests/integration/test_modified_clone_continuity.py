@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from test_git_comparison import git
 
 from slop_measure import api
 from slop_measure.application.budgets import evaluate_budget
@@ -127,11 +128,14 @@ def test_group_split_retains_uncertainty_instead_of_inventing_copy_additions(roo
     assert clone_budget(report).state.value == "incomplete"
 
 
-def test_unrelated_replacements_in_same_paths_do_not_establish_modified_continuity(roots):
+@pytest.mark.parametrize("declaration", ["def classify(values):", ORIGINAL.splitlines()[0]])
+def test_unrelated_replacements_in_same_paths_do_not_establish_modified_continuity(
+    roots, declaration
+):
     copies(roots[0], ORIGINAL)
     copies(
         roots[1],
-        "def classify(values):\n"
+        declaration + "\n"
         "    total = sum(values)\n"
         "    smallest = min(values)\n"
         "    largest = max(values)\n"
@@ -144,6 +148,38 @@ def test_unrelated_replacements_in_same_paths_do_not_establish_modified_continui
     assert report.clones
     assert all(group.state.value not in {"changed", "persisted"} for group in report.clones)
     assert clone_budget(report).state.value != "pass"
+
+
+@PENDING
+def test_git_rename_with_coordinated_edit_keeps_existing_copy_identity(tmp_path, monkeypatch):
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
+    root = tmp_path / "repo"
+    root.mkdir()
+    git(root, "init")
+    git(root, "config", "user.name", "Clone continuity test")
+    git(root, "config", "user.email", "clone@example.invalid")
+    copies(root, ORIGINAL)
+    git(root, "add", ".")
+    git(root, "commit", "-m", "baseline copies")
+    copies(root, EDITED)
+    git(root, "mv", "publisher_0.py", "renamed.py")
+    git(root, "add", ".")
+    git(root, "commit", "-m", "update copies and move one publisher")
+    report = api.review_change(
+        api.ComparisonRequest(
+            baseline=api.GitSourceReference(root=root, revision="HEAD~1"),
+            current=api.GitSourceReference(root=root, revision="HEAD"),
+            config=api.AnalysisConfig(calibration_profile="__raw__"),
+        )
+    )
+    assert len(report.clones) == 1
+    group = report.clones[0].model_dump(mode="json")
+    assert group["state"] == "changed" and group["modified"] == 4
+    moved = next(
+        item for item in group["members"] if item["current"]["member"]["path"] == "renamed.py"
+    )
+    assert moved["baseline"]["member"]["path"] == "publisher_0.py"
+    assert clone_budget(report).checks[0].observed == 0
 
 
 def test_exact_fingerprint_survives_comment_shift_and_exact_directory_rename(roots):
