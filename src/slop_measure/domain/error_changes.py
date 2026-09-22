@@ -4,6 +4,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from slop_measure.domain.change_states import FindingChangeState
 from slop_measure.domain.error_review import ErrorFallbackFinding, ErrorFileResult
 from slop_measure.domain.evidence import SourceSpan
 from slop_measure.domain.reports import SourceSide
@@ -33,12 +34,12 @@ class ErrorCoverage(_ErrorChange):
 
 
 class IntroducedError(_ErrorChange):
-    state: Literal["introduced"] = "introduced"
+    state: Literal[FindingChangeState.INTRODUCED] = FindingChangeState.INTRODUCED
     current: ErrorOccurrence
 
 
 class RemovedError(_ErrorChange):
-    state: Literal["removed"] = "removed"
+    state: Literal[FindingChangeState.REMOVED] = FindingChangeState.REMOVED
     baseline: ErrorOccurrence
 
 
@@ -54,15 +55,15 @@ class _PairedError(_ErrorChange):
 
 
 class PersistedError(_PairedError):
-    state: Literal["persisted"] = "persisted"
+    state: Literal[FindingChangeState.PERSISTED] = FindingChangeState.PERSISTED
 
 
 class ChangedError(_PairedError):
-    state: Literal["changed"] = "changed"
+    state: Literal[FindingChangeState.CHANGED] = FindingChangeState.CHANGED
 
 
 class UnresolvedErrors(_ErrorChange):
-    state: Literal["unresolved"] = "unresolved"
+    state: Literal[FindingChangeState.UNRESOLVED] = FindingChangeState.UNRESOLVED
     baseline: tuple[ErrorOccurrence, ...] = ()
     current: tuple[ErrorOccurrence, ...] = ()
     reason: _Text

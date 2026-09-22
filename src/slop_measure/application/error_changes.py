@@ -1,5 +1,7 @@
 """Compare the existing exception detector's outcomes on retained source snapshots."""
 
+from typing import assert_never
+
 from slop_measure.application.change_review import _skipped
 from slop_measure.application.error_review import _inspect
 from slop_measure.domain.error_changes import (
@@ -12,7 +14,13 @@ from slop_measure.domain.error_changes import (
     RemovedError,
     UnresolvedErrors,
 )
-from slop_measure.domain.error_review import AnalyzedErrorFile, ErrorFileResult, FailedErrorFile
+from slop_measure.domain.error_review import (
+    AnalyzedErrorFile,
+    AnalyzedErrorHandler,
+    ErrorFileResult,
+    FailedErrorFile,
+    UnresolvedErrorHandler,
+)
 from slop_measure.domain.evidence import FileEvidence, ParseState
 from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.reports import AnalysisReport, ComparisonCohortReport, SourceSide
@@ -33,7 +41,7 @@ def _coverage(
         diagnostic = next(item for item in inventory.diagnostics if item.path == file.path)
         outcomes.append(FailedErrorFile(path=file.path, cohort=file.cohort, diagnostic=diagnostic))
     if strict:
-        failure = next((item for item in outcomes if item.state == "failed"), None)
+        failure = next((item for item in outcomes if isinstance(item, FailedErrorFile)), None)
         if failure is not None:
             raise AnalysisFailure(
                 f"Strict exception change review failed: {failure.diagnostic.message}"
@@ -45,8 +53,10 @@ def _coverage(
 
 
 def _occurrences(file: ErrorFileResult | None) -> tuple[ErrorOccurrence, ...]:
-    if file is None or file.state == "failed":
+    if file is None or isinstance(file, FailedErrorFile):
         return ()
+    if not isinstance(file, AnalyzedErrorFile):
+        assert_never(file)
     return tuple(
         ErrorOccurrence(
             path=file.path,
@@ -57,7 +67,7 @@ def _occurrences(file: ErrorFileResult | None) -> tuple[ErrorOccurrence, ...]:
             finding=finding,
         )
         for handler in file.handlers
-        if handler.state == "analyzed"
+        if isinstance(handler, AnalyzedErrorHandler)
         for finding in handler.findings
     )
 
@@ -126,7 +136,7 @@ def _match_files(
         handler.symbol
         for file in (before, after)
         for handler in file.handlers
-        if handler.state == "unresolved"
+        if isinstance(handler, UnresolvedErrorHandler)
     }
     changes: list[ErrorChange] = []
     for symbol in sorted(old_symbols & new_symbols):
@@ -211,8 +221,8 @@ def compare_errors(
             if not old and not new:
                 continue
             uncertain = (
-                (before is not None and before.state == "failed")
-                or (after is not None and after.state == "failed")
+                isinstance(before, FailedErrorFile)
+                or isinstance(after, FailedErrorFile)
                 or (before is None and _missing_assessment(report, SourceSide.BASELINE, after))
                 or (after is None and _missing_assessment(report, SourceSide.CURRENT, before))
             )
@@ -228,7 +238,7 @@ def compare_errors(
                 changes.extend(IntroducedError(current=item) for item in new)
             elif after is None:
                 changes.extend(RemovedError(baseline=item) for item in old)
-            elif before.state == "analyzed" and after.state == "analyzed":
+            elif isinstance(before, AnalyzedErrorFile) and isinstance(after, AnalyzedErrorFile):
                 changes.extend(
                     _match_files(before, after, (documents[old_key], documents[new_key]))
                 )

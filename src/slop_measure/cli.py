@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import sys
+import tomllib
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -11,29 +12,40 @@ from typing import Annotated, NoReturn
 
 import typer
 
-from slop_measure.api import compare, scan
+from slop_measure.api import compare, review_change, scan
+from slop_measure.application.architecture import inspect_architecture
+from slop_measure.application.budgets import evaluate_budget
 from slop_measure.application.catalog import rule_catalog
 from slop_measure.application.derived import inspect_derived
 from slop_measure.application.error_review import inspect_errors
+from slop_measure.application.history import analyze_history
 from slop_measure.application.models import inspect_models
 from slop_measure.application.reviews import apply_reviews, load_review_store, write_clone_review
+from slop_measure.application.surface import review_surface
 from slop_measure.application.variants import inspect_variants
 from slop_measure.cli_reviews import app as review_report_app
 from slop_measure.config import load_analysis_config
+from slop_measure.domain.architecture import ArchitecturePolicy
+from slop_measure.domain.budgets import BudgetPolicy, BudgetState
 from slop_measure.domain.evidence import DiagnosticSeverity
+from slop_measure.domain.history import HistoryRequest
 from slop_measure.domain.reports import AnalysisReport, SourceSide
 from slop_measure.domain.requests import ComparisonRequest, SnapshotRequest
 from slop_measure.domain.reviews import ReviewDisposition
 from slop_measure.domain.source import DirectorySourceReference, GitSourceReference
 from slop_measure.errors import InputError, InvalidSource, SelectionError, error_message, exit_code
 from slop_measure.reporting import terminal
+from slop_measure.reporting.architecture import render_architecture
+from slop_measure.reporting.change_review import render_change_review
 from slop_measure.reporting.comparison import render_comparison
 from slop_measure.reporting.derived import render_derived
 from slop_measure.reporting.error_review import render_errors
 from slop_measure.reporting.evidence import render_findings, render_rules
+from slop_measure.reporting.history import render_history
 from slop_measure.reporting.json import serialize_report
 from slop_measure.reporting.models import render_models
 from slop_measure.reporting.queries import query_findings, select_callable, select_file
+from slop_measure.reporting.surface import render_surface
 from slop_measure.reporting.variants import render_variants
 
 _DESCRIPTION = "Measure redundant and structurally eroded source code."
@@ -200,7 +212,7 @@ def _evidence_report(  # noqa: PLR0913 - source selection and configuration are 
     return _analyze(request)
 
 
-def _compare_report(  # noqa: PLR0913 - source selection and configuration are independent
+def _comparison_request(  # noqa: PLR0913 - source selection and configuration are independent
     baseline: str,
     current: str,
     strict: bool | None,
@@ -208,7 +220,7 @@ def _compare_report(  # noqa: PLR0913 - source selection and configuration are i
     languages: list[str] | None = None,
     *,
     config_path: Path | None = None,
-) -> AnalysisReport:
+) -> ComparisonRequest:
     try:
         if repo is None:
             roots = (Path(baseline).resolve(), Path(current).resolve())
@@ -233,7 +245,176 @@ def _compare_report(  # noqa: PLR0913 - source selection and configuration are i
         )
     except (ValueError, OSError) as error:
         _fail(InputError(str(error)))
-    return _analyze(request)
+    return request
+
+
+def _compare_report(  # noqa: PLR0913
+    baseline: str,
+    current: str,
+    strict: bool | None,
+    repo: Path | None = None,
+    languages: list[str] | None = None,
+    *,
+    config_path: Path | None = None,
+) -> AnalysisReport:
+    return _analyze(
+        _comparison_request(baseline, current, strict, repo, languages, config_path=config_path)
+    )
+
+
+@app.command("changes")
+def changes_command(  # noqa: PLR0913
+    baseline: str,
+    current: str,
+    *,
+    repo: Annotated[
+        Path | None, typer.Option("--repo", exists=True, file_okay=False, resolve_path=True)
+    ] = None,
+    json_output: _Json = False,
+    strict: _Strict = None,
+    languages: _Languages = None,
+    config_path: _Config = None,
+    budget_path: Annotated[
+        Path | None, typer.Option("--budget", exists=True, dir_okay=False)
+    ] = None,
+    enforce_budget: Annotated[bool, typer.Option("--enforce-budget")] = False,
+) -> None:
+    """Review source-specific evidence introduced by a directory or Git change."""
+    if enforce_budget and budget_path is None:
+        _fail(InputError("--enforce-budget requires --budget."))
+    policy = None
+    if budget_path is not None:
+        try:
+            with budget_path.open("rb") as stream:
+                policy = BudgetPolicy.model_validate(tomllib.load(stream))
+        except (ValueError, OSError) as error:
+            _fail(InputError(str(error)))
+    request = _comparison_request(
+        baseline, current, strict, repo, languages, config_path=config_path
+    )
+    try:
+        report = review_change(request)
+    except Exception as error:
+        _fail(error)
+    if policy is None:
+        typer.echo(
+            report.model_dump_json(indent=2) if json_output else render_change_review(report)
+        )
+        return
+    budget = evaluate_budget(report, policy)
+    if json_output:
+        typer.echo(
+            json.dumps(
+                {
+                    "report": report.model_dump(mode="json"),
+                    "budget": budget.model_dump(mode="json"),
+                },
+                indent=2,
+            )
+        )
+    else:
+        typer.echo(render_change_review(report))
+        typer.echo(f"Budget: {budget.state}")
+        for check in budget.checks:
+            typer.echo(f"  {check.metric}: observed {check.observed}, maximum {check.maximum}")
+            for reason in check.incomplete_reasons:
+                typer.echo(f"    incomplete: {reason}")
+    if enforce_budget:
+        raise typer.Exit(
+            {BudgetState.PASSED: 0, BudgetState.EXCEEDED: 1, BudgetState.INCOMPLETE: 3}[
+                budget.state
+            ]
+        )
+
+
+@app.command("surface")
+def surface_command(  # noqa: PLR0913 - common comparison source/configuration controls
+    baseline: str,
+    current: str,
+    *,
+    repo: Annotated[
+        Path | None, typer.Option("--repo", exists=True, file_okay=False, resolve_path=True)
+    ] = None,
+    json_output: _Json = False,
+    strict: _Strict = None,
+    languages: _Languages = None,
+    config_path: _Config = None,
+) -> None:
+    """Count observed declaration changes separately from engineering quality."""
+    request = _comparison_request(
+        baseline, current, strict, repo, languages, config_path=config_path
+    )
+    try:
+        report = review_surface(request)
+    except Exception as error:
+        _fail(error)
+    typer.echo(report.model_dump_json(indent=2) if json_output else render_surface(report))
+
+
+@app.command("architecture")
+def architecture_command(  # noqa: PLR0913 - source and policy selection are independent
+    *,
+    policy_path: Annotated[Path, typer.Option("--policy", exists=True, dir_okay=False)],
+    root_path: _Root = Path("."),
+    revision: _Revision = None,
+    json_output: _Json = False,
+    strict: _Strict = None,
+    languages: _Languages = None,
+    config_path: _Config = None,
+) -> None:
+    """Review declared direct import boundaries without executing source."""
+    try:
+        with policy_path.open("rb") as stream:
+            policy = ArchitecturePolicy.model_validate(tomllib.load(stream))
+        config = load_analysis_config(
+            root_path, config_path=config_path, cli_overrides=_overrides(strict, languages)
+        )
+        target = (
+            DirectorySourceReference(root=root_path)
+            if revision is None
+            else GitSourceReference(root=root_path, revision=revision)
+        )
+        report = inspect_architecture(SnapshotRequest(target=target, config=config), policy)
+    except (ValueError, OSError) as error:
+        _fail(InputError(str(error)))
+    except Exception as error:
+        _fail(error)
+    typer.echo(report.model_dump_json(indent=2) if json_output else render_architecture(report))
+
+
+@app.command("history")
+def history_command(  # noqa: PLR0913 - explicit history horizon and source settings
+    start: str,
+    end: str,
+    *,
+    repo: Annotated[Path, typer.Option("--repo", exists=True, file_okay=False, resolve_path=True)],
+    window_days: Annotated[int, typer.Option("--window-days", min=1)] = 14,
+    max_commits: Annotated[int, typer.Option("--max-commits", min=1)] = 100,
+    json_output: _Json = False,
+    strict: _Strict = None,
+    languages: _Languages = None,
+    config_path: _Config = None,
+) -> None:
+    """Measure observed source churn and rework in a bounded first-parent range."""
+    try:
+        config = load_analysis_config(
+            repo, config_path=config_path, cli_overrides=_overrides(strict, languages)
+        )
+        report = analyze_history(
+            HistoryRequest(
+                root=repo,
+                start=start,
+                end=end,
+                window_days=window_days,
+                max_commits=max_commits,
+                config=config,
+            )
+        )
+    except (ValueError, OSError) as error:
+        _fail(InputError(str(error)))
+    except Exception as error:
+        _fail(error)
+    typer.echo(report.model_dump_json(indent=2) if json_output else render_history(report))
 
 
 @app.command("compare")

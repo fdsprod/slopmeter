@@ -2,8 +2,13 @@
 
 from dataclasses import dataclass
 
+from slop_measure.application.change_review import build_change_review
+from slop_measure.application.clone_changes import compare_clones
 from slop_measure.application.comparison import assemble_comparison
+from slop_measure.application.error_changes import compare_errors
+from slop_measure.application.state_dispatch import compare_state_dispatch
 from slop_measure.config import AnalysisConfig
+from slop_measure.domain.change_review import ChangeReviewReport
 from slop_measure.domain.evidence import (
     Diagnostic,
     DiagnosticSeverity,
@@ -86,6 +91,7 @@ def _validate_evidence(
 class _Snapshot:
     report: AnalysisReport
     inventory: SourceInventory
+    language_evidence: tuple[LanguageEvidence, ...]
 
 
 def _calibration(
@@ -124,6 +130,40 @@ class AnalysisService:
                 if isinstance(baseline.report.analysis.current, GitSourceIdentity)
                 else ()
             ),
+        )
+
+    def review_change(self, request: ComparisonRequest) -> ChangeReviewReport:
+        """Retain documents for continuity analysis without changing ordinary comparisons."""
+        baseline = self._scan(SnapshotRequest(target=request.baseline, config=request.config))
+        current = self._scan(SnapshotRequest(target=request.current, config=request.config))
+        report = assemble_comparison(
+            baseline.report,
+            current.report,
+            baseline.inventory,
+            current.inventory,
+            renames=(
+                rename_pairs(baseline.report.analysis.current, current.report.analysis.current)
+                if isinstance(baseline.report.analysis.current, GitSourceIdentity)
+                else ()
+            ),
+        )
+        result = build_change_review(report, baseline.inventory, current.inventory)
+        errors, error_coverage = compare_errors(report, baseline.inventory, current.inventory)
+        return result.model_copy(
+            update={
+                "errors": errors,
+                "error_coverage": error_coverage,
+                "state_dispatch": compare_state_dispatch(
+                    report, baseline.inventory, current.inventory
+                ),
+                "clones": compare_clones(
+                    report,
+                    baseline.inventory,
+                    current.inventory,
+                    baseline.language_evidence,
+                    current.language_evidence,
+                ),
+            }
         )
 
     def _scan(self, request: SnapshotRequest) -> _Snapshot:
@@ -185,4 +225,4 @@ class AnalysisService:
             first = failures[0]
             location = f"{first.path.root}: " if first.path else ""
             raise AnalysisFailure(f"Strict analysis failed: {location}{first.message}")
-        return _Snapshot(report, inventory)
+        return _Snapshot(report, inventory, tuple(evidence))
