@@ -2,7 +2,7 @@
 
 from collections import Counter
 
-from slop_measure.domain.history import HistoryReport
+from slop_measure.domain.history import HistoryReport, MeasuredHistoryCounts, PartialHistory
 
 
 def render_history(report: HistoryReport) -> str:
@@ -14,14 +14,14 @@ def render_history(report: HistoryReport) -> str:
         f"Recent age window: {report.window_days} days | commit limit: {report.max_commits}",
         f"Traversal: {report.traversal.state}",
     ]
-    if report.traversal.state == "partial":
+    if isinstance(report.traversal, PartialHistory):
         lines.append(
             f"  {report.traversal.reason} at {report.traversal.boundary_commit}; "
             "only observed steps are shown"
         )
     for step in report.steps:
         counts = step.totals
-        if counts.state == "measured":
+        if isinstance(counts, MeasuredHistoryCounts):
             lines.append(
                 f"  {step.commit[:12]} | +{counts.added} -{counts.deleted} source lines | "
                 f"churn {counts.churn} | net {counts.net:+d}"

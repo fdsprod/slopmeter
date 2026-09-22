@@ -205,20 +205,22 @@ class ArchitectureReport(_ArchitectureEvidence):
         return tuple(
             item
             for file in self.files
-            if file.state == "analyzed"
+            if isinstance(file, AnalyzedArchitectureFile)
             for item in file.imports
-            if item.state == "internal"
+            if isinstance(item, ImportEdge)
         )
 
     @computed_field
     @property
     def unresolved(self) -> tuple[UnresolvedImport | UnresolvedArchitectureFile, ...]:
-        return tuple(file for file in self.files if file.state == "unresolved") + tuple(
+        return tuple(
+            file for file in self.files if isinstance(file, UnresolvedArchitectureFile)
+        ) + tuple(
             item
             for file in self.files
-            if file.state == "analyzed"
+            if isinstance(file, AnalyzedArchitectureFile)
             for item in file.imports
-            if item.state == "unresolved"
+            if isinstance(item, UnresolvedImport)
         )
 
     @computed_field
@@ -233,7 +235,7 @@ class ArchitectureReport(_ArchitectureEvidence):
 
     def _graph(self) -> dict[str, set[str]]:
         graph: dict[str, set[str]] = {
-            file.module: set() for file in self.files if file.state == "analyzed"
+            file.module: set() for file in self.files if isinstance(file, AnalyzedArchitectureFile)
         }
         for edge in self.edges:
             graph.setdefault(edge.importer, set()).add(edge.imported)

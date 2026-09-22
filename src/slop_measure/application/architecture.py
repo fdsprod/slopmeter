@@ -39,7 +39,7 @@ def inspect_architecture(
         dict.fromkeys(
             (
                 *inventory.diagnostics,
-                *(file.diagnostic for file in files if file.state == "failed"),
+                *(file.diagnostic for file in files if isinstance(file, FailedArchitectureFile)),
             )
         )
     )

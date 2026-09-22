@@ -6,7 +6,13 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, StringConstraints, computed_field, model_validator
 
 from slop_measure.config import AnalysisConfig
-from slop_measure.domain.changes import AddedFile, FileChange, _Change
+from slop_measure.domain.changes import (
+    AddedFile,
+    FileChange,
+    MeasuredLineDelta,
+    UnavailableLineDelta,
+    _Change,
+)
 from slop_measure.domain.evidence import DiagnosticSeverity
 from slop_measure.domain.reports import Provenance, ReportCoverage, ReportDiagnostic
 from slop_measure.domain.source import Cohort, GitSourceIdentity, ProjectPath
@@ -96,7 +102,8 @@ class HistoryCohort(_Change):
         removals = {
             (change.pair.baseline_path, line)
             for change in self.changes
-            if not isinstance(change.pair, AddedFile) and change.lines.state == "measured"
+            if not isinstance(change.pair, AddedFile)
+            and isinstance(change.lines, MeasuredLineDelta)
             for line in change.lines.deleted_lines
         }
         observed = [(item.deleted_path, item.deleted_line) for item in self.rework]
@@ -117,14 +124,20 @@ class HistoryStep(_Change):
     @property
     def totals(self) -> HistoryCounts:
         changes = [change for cohort in self.cohorts for change in cohort.changes]
-        if any(change.lines.state == "unavailable" for change in changes) or any(
+        if any(isinstance(change.lines, UnavailableLineDelta) for change in changes) or any(
             item.detail.severity is DiagnosticSeverity.ERROR for item in self.diagnostics
         ):
             return UnavailableHistoryCounts()
         return MeasuredHistoryCounts(
-            added=sum(change.lines.added for change in changes if change.lines.state == "measured"),
+            added=sum(
+                change.lines.added
+                for change in changes
+                if isinstance(change.lines, MeasuredLineDelta)
+            ),
             deleted=sum(
-                change.lines.deleted for change in changes if change.lines.state == "measured"
+                change.lines.deleted
+                for change in changes
+                if isinstance(change.lines, MeasuredLineDelta)
             ),
         )
 
@@ -132,25 +145,25 @@ class HistoryStep(_Change):
     @property
     def added(self) -> int | None:
         totals = self.totals
-        return totals.added if totals.state == "measured" else None
+        return totals.added if isinstance(totals, MeasuredHistoryCounts) else None
 
     @computed_field
     @property
     def deleted(self) -> int | None:
         totals = self.totals
-        return totals.deleted if totals.state == "measured" else None
+        return totals.deleted if isinstance(totals, MeasuredHistoryCounts) else None
 
     @computed_field
     @property
     def churn(self) -> int | None:
         totals = self.totals
-        return totals.churn if totals.state == "measured" else None
+        return totals.churn if isinstance(totals, MeasuredHistoryCounts) else None
 
     @computed_field
     @property
     def net(self) -> int | None:
         totals = self.totals
-        return totals.net if totals.state == "measured" else None
+        return totals.net if isinstance(totals, MeasuredHistoryCounts) else None
 
 
 class HistoryReport(_Change):
@@ -175,7 +188,7 @@ class HistoryReport(_Change):
                 raise ValueError("history steps must form an ordered first-parent chain")
         if self.steps and self.steps[-1].commit != self.end.revision:
             raise ValueError("history steps must end at the pinned end revision")
-        if self.traversal.state == "complete":
+        if isinstance(self.traversal, CompleteHistory):
             anchor = self.steps[0].parent if self.steps else self.end.revision
             if anchor != self.start.revision:
                 raise ValueError("complete history must start at the pinned anchor")
