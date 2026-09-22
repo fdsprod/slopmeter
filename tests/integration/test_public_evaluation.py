@@ -9,10 +9,6 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.xfail(
-    strict=True, reason="Evaluation runner contract precedes implementation"
-)
-
 ROOT = Path(__file__).resolve().parents[2]
 RUNNER = ROOT / "tools" / "evaluate.py"
 ERROR = (
@@ -371,3 +367,25 @@ def test_explicit_manifest_inventory_preserves_generated_and_normally_excluded_s
     assert report["files"][0]["path"] == name
     assert report["files"][0]["cohort"] == ("test" if name.startswith("tests/") else "production")
     assert report["summary"]["findings"] == 1
+
+
+def test_change_report_parse_failure_cannot_pass_expected_unresolved_evidence(
+    tmp_path: Path,
+    cache: Path,
+) -> None:
+    case = _case(cache, after="def invalid(:\n")
+    case["runs"] = [
+        {
+            "id": "broken-change",
+            "kind": "changes",
+            "checks": [
+                {"pointer": "/error_summary/unresolved", "equals": 1},
+            ],
+        }
+    ]
+    run = _invoke(tmp_path, case)
+    assert run.returncode == 2, run.stdout + run.stderr
+    result = _result(tmp_path)
+    assert result["state"] == "incomplete"
+    assert result["jobs"][0]["state"] == "error"
+    assert _reports(tmp_path)[0]["diagnostics"]
