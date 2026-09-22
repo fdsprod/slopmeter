@@ -238,11 +238,29 @@ class MissingReview(_Record):
     reason: Literal["evidence-absent-or-unavailable"] = "evidence-absent-or-unavailable"
 
 
-ReviewResult = Annotated[CurrentReview | StaleReview | MissingReview, Field(discriminator="state")]
+class ReviewOutsideReport(_Record):
+    state: Literal["not-in-selected-report"] = "not-in-selected-report"
+    event: ReviewEvent
+    reason: Literal["review-family-not-in-selected-report"] = "review-family-not-in-selected-report"
+
+
+class LegacyReviewOutsideReport(_Record):
+    state: Literal["not-in-selected-report"] = "not-in-selected-report"
+    decision: CloneReviewDecision
+    reason: Literal["review-family-not-in-selected-report"] = "review-family-not-in-selected-report"
+
+
+ReviewResult = Annotated[
+    CurrentReview | StaleReview | MissingReview | ReviewOutsideReport,
+    Field(discriminator="state"),
+]
+LegacyReviewResult = Annotated[
+    CloneReviewResult | LegacyReviewOutsideReport, Field(discriminator="state")
+]
 
 
 class ReviewResolutionReport(_Record):
-    schema_version: Literal["2"] = "2"
+    schema_version: Literal["3"] = "3"
     results: tuple[ReviewResult, ...] = ()
-    legacy_results: tuple[CloneReviewResult, ...] = ()
+    legacy_results: tuple[LegacyReviewResult, ...] = ()
     events: tuple[ReviewEvent, ...] = ()

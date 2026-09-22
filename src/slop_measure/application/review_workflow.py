@@ -14,11 +14,14 @@ from slop_measure.domain.model_review import ModelReviewReport
 from slop_measure.domain.reports import AnalysisReport
 from slop_measure.domain.review_workflow import (
     CurrentReview,
+    LegacyReviewOutsideReport,
     MissingReview,
     ReviewCause,
     ReviewDecision,
     ReviewEvent,
+    ReviewKind,
     ReviewLedger,
+    ReviewOutsideReport,
     ReviewResolutionReport,
     ReviewResult,
     ReviewSubject,
@@ -27,7 +30,7 @@ from slop_measure.domain.review_workflow import (
     StaleReview,
     subject_key,
 )
-from slop_measure.domain.reviews import MissingCloneReview, ReviewDisposition, ReviewStore
+from slop_measure.domain.reviews import ReviewDisposition, ReviewStore
 from slop_measure.domain.variant_review import VariantReviewReport
 from slop_measure.errors import InputError
 
@@ -110,8 +113,12 @@ def _changes(event: ReviewEvent, candidate: ReviewTarget) -> ReviewTargetChange:
     return ReviewTargetChange(target_id=candidate.id, candidate=candidate, causes=tuple(causes))
 
 
-def _resolve(event: ReviewEvent, targets: tuple[ReviewTarget, ...]) -> ReviewResult:
+def _resolve(
+    event: ReviewEvent, targets: tuple[ReviewTarget, ...], kinds: frozenset[ReviewKind]
+) -> ReviewResult:
     anchor = event.decision.anchor
+    if anchor.subject.kind not in kinds:
+        return ReviewOutsideReport(event=event)
     candidates = tuple(
         item for item in targets if subject_key(_subject(item)) == subject_key(anchor.subject)
     )
@@ -123,18 +130,29 @@ def _resolve(event: ReviewEvent, targets: tuple[ReviewTarget, ...]) -> ReviewRes
     return MissingReview(event=event)
 
 
+def _report_kinds(report: SupportedReviewReport) -> frozenset[ReviewKind]:
+    if isinstance(report, AnalysisReport):
+        return frozenset((ReviewKind.CLONE, ReviewKind.COMPLEXITY, ReviewKind.PATTERN))
+    if isinstance(report, ModelReviewReport):
+        return frozenset((ReviewKind.MODEL,))
+    if isinstance(report, VariantReviewReport):
+        return frozenset((ReviewKind.VARIANT,))
+    return frozenset((ReviewKind.DERIVED,))
+
+
 def resolve_reviews(report: SupportedReviewReport, ledger: ReviewLedger) -> ReviewResolutionReport:
     """Resolve latest judgments against the selected saved report, not the filesystem."""
     targets = review_targets(report)
+    kinds = _report_kinds(report)
     latest = {event.review_id: event for event in ledger.events}
     if isinstance(report, AnalysisReport):
         legacy = apply_reviews(
             report, ReviewStore(decisions=ledger.legacy_decisions)
         ).review_results
     else:
-        legacy = tuple(MissingCloneReview(decision=item) for item in ledger.legacy_decisions)
+        legacy = tuple(LegacyReviewOutsideReport(decision=item) for item in ledger.legacy_decisions)
     return ReviewResolutionReport(
-        results=tuple(_resolve(latest[key], targets) for key in sorted(latest)),
+        results=tuple(_resolve(latest[key], targets, kinds) for key in sorted(latest)),
         legacy_results=legacy,
         events=ledger.events,
     )

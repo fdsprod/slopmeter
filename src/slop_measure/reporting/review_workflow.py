@@ -92,11 +92,19 @@ def render_review_resolution(report: ReviewResolutionReport) -> str:
                 lines.extend(_change_lines(decision.anchor, change))
         elif result.state == "missing":
             lines.append(f"    {result.reason}; missing evidence does not establish a fix.")
+        elif result.state == "not-in-selected-report":
+            lines.append(
+                "    This family is not assessed by the selected report, not absent from source."
+            )
     for result in report.legacy_results:
         lines.append(
             f"  Legacy {result.decision.id} | {result.state} | "
             f"{result.decision.disposition.value}: {result.decision.reason}"
         )
+        if result.state == "not-in-selected-report":
+            lines.append(
+                "    This family is not assessed by the selected report, not absent from source."
+            )
     lines.append(f"History ({len(report.events)} events):")
     for event in report.events:
         lines.append(
