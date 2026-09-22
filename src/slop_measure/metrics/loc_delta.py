@@ -40,6 +40,22 @@ def _byte_lines(document: SourceDocument | None) -> tuple[bytes, ...]:
     return tuple(lines)
 
 
+def _line_matcher(before: tuple[bytes, ...], after: tuple[bytes, ...]) -> SequenceMatcher:
+    return SequenceMatcher(None, before, after, autojunk=False)
+
+
+def aligned_line_pairs(
+    baseline: SourceDocument | None, current: SourceDocument | None
+) -> tuple[tuple[int, int], ...]:
+    """Map unchanged physical lines under the same alignment policy as SLOC deltas."""
+    matcher = _line_matcher(_byte_lines(baseline), _byte_lines(current))
+    return tuple(
+        (block.a + offset + 1, block.b + offset + 1)
+        for block in matcher.get_matching_blocks()
+        for offset in range(block.size)
+    )
+
+
 def _owned_lines(file: FileEvidence | None, line_count: int) -> set[int]:
     lines = set(file.sloc_lines) if file is not None else set()
     if lines and max(lines) > line_count:
@@ -52,9 +68,7 @@ def _changed_lines(
 ) -> tuple[tuple[int, ...], tuple[int, ...]]:
     added: set[int] = set()
     deleted: set[int] = set()
-    for kind, old_start, old_end, new_start, new_end in SequenceMatcher(
-        None, before, after, autojunk=False
-    ).get_opcodes():
+    for kind, old_start, old_end, new_start, new_end in _line_matcher(before, after).get_opcodes():
         if kind == "equal":
             for old_index, new_index in zip(
                 range(old_start + 1, old_end + 1), range(new_start + 1, new_end + 1), strict=True
