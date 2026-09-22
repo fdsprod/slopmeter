@@ -7,13 +7,14 @@ from slop_measure.domain.surface import (
     UnresolvedSymbols,
     symbol_sides,
 )
+from slop_measure.reporting.comparison import _identity
 
 
 def render_surface(report: SurfaceReviewReport) -> str:
     lines = [
         "Source declaration changes | unscored",
-        f"Baseline: {report.analysis.baseline.root}",
-        f"Current: {report.analysis.current.root}",
+        f"Baseline: {_identity(report.analysis.baseline)}",
+        f"Current: {_identity(report.analysis.current)}",
         "Files: " + ", ".join(f"{count} {kind}" for kind, count in report.file_summary.items()),
         "Declarations: " + ", ".join(f"{count} {state}" for state, count in report.summary.items()),
     ]

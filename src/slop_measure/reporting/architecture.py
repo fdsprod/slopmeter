@@ -1,12 +1,13 @@
 """Render source-located direct architecture evidence."""
 
 from slop_measure.domain.architecture import ArchitectureReport
+from slop_measure.reporting.comparison import _identity
 
 
 def render_architecture(report: ArchitectureReport) -> str:
     lines = [
         f"Architecture review | {report.experiment}",
-        f"Source: {report.source.root}",
+        f"Source: {_identity(report.source)}",
         f"Direct imports: {len(report.edges)} | Violations: {len(report.violations)} | "
         f"Unresolved: {len(report.unresolved)}",
     ]

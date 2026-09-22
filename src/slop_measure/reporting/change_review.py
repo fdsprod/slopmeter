@@ -25,6 +25,7 @@ from slop_measure.domain.state_dispatch import (
     RemovedStateDispatch,
     UnresolvedStateDispatch,
 )
+from slop_measure.reporting.comparison import _identity
 
 
 def _patterns(report: ChangeReviewReport) -> list[str]:
@@ -122,8 +123,8 @@ def _state_dispatch(report: ChangeReviewReport) -> list[str]:
 def render_change_review(report: ChangeReviewReport) -> str:
     lines = [
         "slop.measure  change review (unscored)",
-        f"Baseline: {report.analysis.baseline}",
-        f"Current: {report.analysis.current}",
+        f"Baseline: {_identity(report.analysis.baseline)}",
+        f"Current: {_identity(report.analysis.current)}",
         *_patterns(report),
         *_clones(report),
         *_errors(report),
