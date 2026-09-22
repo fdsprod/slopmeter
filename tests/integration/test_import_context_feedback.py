@@ -2,8 +2,10 @@
 
 import pytest
 from test_architecture_review import policy, project
+from typer.testing import CliRunner
 
 from slop_measure import api
+from slop_measure.cli import app
 
 
 @pytest.fixture(autouse=True)
@@ -212,3 +214,73 @@ def test_import_context_rejects_unknown_values_and_invented_legacy_guards(tmp_pa
             item["context"] = context
     with pytest.raises(ValueError):
         type(report).model_validate(wire)
+
+
+def test_function_definition_expressions_use_enclosing_execution_context(tmp_path):
+    source = (
+        "@decorate(__import__('decorator_pkg'))\n"
+        "def load(client=__import__('default_pkg')):\n"
+        "    return __import__('body_pkg')\n"
+    )
+    report = inspect(tmp_path, source)
+    imports = observations(report)
+    assert len(imports) == 3
+    for package, expected in (
+        ("decorator_pkg", "eager"),
+        ("default_pkg", "eager"),
+        ("body_pkg", "deferred"),
+    ):
+        occurrence = next(item for item in imports if package in item["expression"])
+        assert occurrence["context"] == {"execution": expected, "guards": []}
+
+
+def test_class_body_inside_function_remains_deferred(tmp_path):
+    report = inspect(tmp_path, "def factory():\n    class Local:\n        import sample.storage\n")
+    edge = next(item for item in observations(report) if item.get("imported") == "sample.storage")
+    assert edge["context"] == {"execution": "deferred", "guards": []}
+
+
+@pytest.mark.xfail(strict=True, reason="Pending generator outer iterable execution context")
+def test_generator_outer_iterable_is_eager_but_body_and_filters_are_deferred(tmp_path):
+    source = (
+        "items = (__import__('body_pkg') for item in __import__('outer_pkg')\n"
+        "         if __import__('filter_pkg'))\n"
+    )
+    report = inspect(tmp_path, source)
+    imports = observations(report)
+    assert len(imports) == 3
+    for package, expected in (
+        ("outer_pkg", "eager"),
+        ("body_pkg", "deferred"),
+        ("filter_pkg", "deferred"),
+    ):
+        occurrence = next(item for item in imports if package in item["expression"])
+        assert occurrence["context"]["execution"] == expected
+
+
+@pytest.mark.parametrize(
+    "guard", ["not TYPE_CHECKING", "TYPE_CHECKING or enabled", "TYPE_CHECKING and enabled"]
+)
+def test_negative_and_compound_type_checking_guards_remain_general_conditions(tmp_path, guard):
+    source = f"from typing import TYPE_CHECKING\nif {guard}:\n    import sample.storage\n"
+    report = inspect(tmp_path, source)
+    edge = next(item for item in observations(report) if item.get("imported") == "sample.storage")
+    assert edge["context"] == {"execution": "eager", "guards": ["conditional"]}
+
+
+def test_terminal_cycle_edges_show_owned_source_locations_and_execution_context(tmp_path):
+    inspect(
+        tmp_path,
+        "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    import sample.storage\n",
+        "def load():\n    import sample.controller\n",
+    )
+    policy_file = tmp_path / "architecture.toml"
+    policy_file.write_text('source_roots=["src"]\n', encoding="utf-8")
+    result = CliRunner().invoke(
+        app, ["architecture", "--root", str(tmp_path), "--policy", str(policy_file), "--lang", "py"]
+    )
+    assert result.exit_code == 0, result.output
+    lines = result.stdout.lower().splitlines()
+    assert any("controller.py:3" in line and "type-checking" in line for line in lines)
+    assert any("storage.py:2" in line and "deferred" in line for line in lines)
+    assert "cycle" in result.stdout.lower()
