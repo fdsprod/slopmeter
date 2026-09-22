@@ -214,7 +214,7 @@ def _remaining_members(report, old, new, inventories, evidence_sides):
             UnresolvedCloneMembers(
                 baseline=tuple(old),
                 current=tuple(new),
-                reason="Clone moves have no unique file correspondence.",
+                reason="Clone members lack unique supported source correspondence.",
             )
         )
     else:

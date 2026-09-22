@@ -30,19 +30,17 @@ class EditedMembers:
         paths = old.member.path.root, new.member.path.root
         if self.file_map.get(paths[0]) != paths[1]:
             return False, False
-        before, after = self._syntax(0, old), self._syntax(1, new)
-        if (
-            before is None
-            or after is None
-            or (before.owner, before.suite) != (after.owner, after.suite)
-        ):
-            return False, False
         if paths not in self.lines:
             self.lines[paths] = dict(
                 aligned_line_pairs(self.documents[0][paths[0]], self.documents[1][paths[1]])
             )
         line_map = self.lines[paths]
         if not _overlapping_runs(old, new, line_map):
+            return False, False
+        before, after = self._syntax(0, old), self._syntax(1, new)
+        if before is None or after is None:
+            return True, False
+        if (before.owner, before.suite) != (after.owner, after.suite):
             return False, False
         return True, anchored_run(before, after, line_map)
 

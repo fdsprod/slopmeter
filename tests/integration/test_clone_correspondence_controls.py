@@ -55,7 +55,6 @@ def test_two_groups_merging_do_not_get_an_arbitrary_predecessor(roots):
     assert clone_budget(report).state.value == "incomplete"
 
 
-@pytest.mark.xfail(strict=True, reason="duplicate declaration correspondence is not classified")
 def test_duplicate_qualified_declarations_cannot_establish_unique_changed_ownership(roots):
     copies(roots[0], ORIGINAL + "\n" + ORIGINAL)
     copies(roots[1], EDITED + "\n" + EDITED)
