@@ -90,3 +90,46 @@ workflow instead of dumping schema errors?
 
 **Validation:** Legacy score/review entry points, malformed inputs, unchanged
 schema-1 behavior, and no writes on rejection.
+
+## Completed validation: 2026-09-21
+
+| Slice | Implementation commit | Independent test commits |
+|---|---|---|
+| Report-family scope | `abdb98b` | `3d19046` |
+| Evidence filtering | `2af4612` | `17e6eda` |
+| Explicit supersession | `a77de11` | `bd7db8e`, `503e769`, `0d88102`, `bc7ee4a` |
+| Legacy command guidance | `6334376` | `8215a16` |
+
+- Full Windows Python 3.12 suite: **1,658 passed**, four installation cases run
+  separately. Branch-inclusive coverage: **95.40 percent**.
+- All **84 new cases** passed on Python 3.13 and Python 3.14.
+- Wheel/source builds and all four isolated installation checks passed.
+- Ruff lint/format, Pyright, and all five import contracts passed.
+- CLI inspection confirmed the superseded legacy entry, linking event, actor,
+  retained reason, and independently current replacement are visible together.
+- An independent source audit found no automatic reapproval or history rewrite.
+
+The released v0.5.0 code and updated code scanned the same final working tree.
+Parsed JSON matched exactly for `score`, `models`, `variants`, and `derived`,
+including summaries, diagnostics, hashes, and score values. No fields were removed
+for this comparison. Raw evidence is retained in `.tmp/review-feedback-20260921/`.
+The new resolution states and explicit history links are intentionally different
+review-workflow output, separate from those measurement reports.
+
+### Self-scan review
+
+The final scan has 76 complexity hotspots. Four are new and were independently
+source-reviewed. All four have a **no-change** disposition; none justifies a
+metric adjustment or score-driven rewrite.
+
+| Callable | Effective CC / SLOC | Rationale and remaining risk |
+|---|---:|---|
+| `select_review_targets` | 13 / 30 | Guards distinct selection rules and reuses saved current-side M4 evidence. Future M4 versions require explicit support. |
+| `render_review_resolution` | 11 / 37 | Presents distinct states, legacy relationships, and retained history. Future state additions need explicit rendering checks. |
+| `test_invalid_supersession_does_not_write` | 11 / 40 | Builds independent invalid link cases and verifies exact store-byte preservation. Broad exception assertions should be revisited if rejection causes become ambiguous. |
+| `test_ledger_validation_rejects_forged_supersession` | 14 / 43 | Builds hostile wire cases, first validates each without the link, then checks linked rejection. More cases may eventually warrant fixture reorganization. |
+
+The CC values correctly count branching and comprehensions. They are review
+signals, not established defects. Existing source-bound review records were not
+automatically refreshed to clear stale decisions. Changes are committed locally;
+this task does not publish a release or push commits.

@@ -763,6 +763,60 @@ This does not reapprove or weaken old decisions. Use the new workflow for that
 ledger afterward; the legacy `review` commands still use schema 1. Keep a copy if
 you need both workflows. Missing evidence means absent or unavailable, not fixed.
 
+### Review triage (source checkout)
+
+The following changes are available after v0.5.0 in this checkout.
+
+`review-report show` now distinguishes `not-in-selected-report` from `missing`.
+A score report can assess clone, complexity, and pattern reviews. Each experimental
+report can assess only its own family. Reviews from other families remain in the
+output and history, but are not placed in a missing-evidence queue. This also
+applies to retained legacy clone decisions. Within a supported family, `missing`
+still means absent or unavailable evidence, never proof of a fix.
+
+Select evidence from a saved report with list filters:
+
+```powershell
+slop review-report list --report snapshot.json --kind clone --kind pattern --cohort production
+slop review-report list --report snapshot.json --kind complexity --cohort test --hotspots-only
+```
+
+Repeated kinds are combined with OR; cohort selection is applied with AND.
+`--hotspots-only` selects callable complexity above the saved report's threshold.
+It uses full CC for M4 v1/v2 and the cohort-specific basis for v3. Reports without
+a known M4 basis and incompatible kind selections fail explicitly. The default
+list still includes all callables and analyzed variant handlers, even exhaustive
+handlers. Its size is a reviewable-evidence count, not a defect count. Filters do
+not change targets, IDs, reports, scores, or ledgers.
+
+To explicitly replace a legacy clone judgment, copy its ID from `show` and save
+a new decision with `--supersedes`:
+
+```powershell
+slop review-report set TARGET_ID --report snapshot.json --store decisions.json --actor reviewer-name --disposition no-change --reason "Reviewed the current ownership and source." --next-step "Retain contract checks." --supersedes LEGACY_ID
+```
+
+This records the relationship in the new attributed event. It requires the same
+clone language, cohort, and member paths; the reviewer must verify the semantic
+relationship. Source evidence may have changed. No link is inferred automatically.
+A legacy decision can have only one replacement history. Later decisions using
+`--review REVIEW_ID` retain the original link, even without repeating `--supersedes`.
+
+The legacy entry becomes `superseded` and points to the linking event and replacement
+history. The original decision stays intact. The replacement independently resolves
+as current, stale, missing, or outside the selected report. Superseded does not
+mean approved, fixed, or currently applicable.
+
+Resolution JSON now uses **schema 3** for these new states. Ledger storage stays
+**schema 2**, with an optional `supersedes_legacy_id` on explicit linking events.
+Existing ledgers load without migration; reads do not write them. Older versions
+cannot consume schema-3 resolutions or ledgers containing the new event field.
+Keep an unchanged copy if an older reader is still required.
+
+`score --reviews` and the original `review` commands remain schema-1-only. Passing
+a schema-2 ledger now gives instructions to generate a fresh saved report and use
+`review-report show --report ... --store ...`. No automatic conversion occurs.
+
 Callable explanations label the retained `mass` field as **full-CC mass**. They show
 the version-specific M4 basis, effective CC, effective mass, numerator, and threshold
 separately. File rankings include clone percentages at narrow and wide widths.
