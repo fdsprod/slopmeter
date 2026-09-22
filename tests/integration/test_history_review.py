@@ -6,6 +6,8 @@ import pytest
 from test_git_comparison import git
 from typer.testing import CliRunner
 
+from slop_measure.domain.history import KnownRework
+
 
 @pytest.fixture
 def history_repo(tmp_path: Path, monkeypatch):
@@ -142,6 +144,7 @@ def test_exact_file_rename_preserves_introduction_origin(history_repo):
     report = analyze(root, start, "HEAD", window_days=365)
     assert report.steps[1].churn == 0
     item = report.steps[-1].cohorts[0].rework[0]
+    assert isinstance(item, KnownRework)
     assert item.introduced_commit == introduced
     assert item.introduced_path.root == "app.py" and item.deleted_path.root == "renamed.py"
 

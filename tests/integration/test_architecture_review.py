@@ -115,7 +115,10 @@ def test_dynamic_and_missing_internal_imports_are_unresolved_and_parse_errors_su
 
     assert len(report.unresolved) >= 2
     assert all(item.reason for item in report.unresolved)
-    assert any(item.path.root == "src/sample/storage.py" for item in report.diagnostics)
+    assert any(
+        item.path is not None and item.path.root == "src/sample/storage.py"
+        for item in report.diagnostics
+    )
 
 
 @pytest.mark.parametrize("source_root", ["../outside", "/absolute", "C:/outside"])
