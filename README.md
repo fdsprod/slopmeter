@@ -7,8 +7,8 @@ revisions. It does not execute target code or apply fixes.
 
 The command is **`slop`**, the Python package is **`slop-measure`**, and the import
 name is **`slop_measure`**. Terminal reports use the internal name `slop.measure`.
-Only Python analysis is currently implemented. The package version is 0.5.0.
-The source checkout also includes the change-review features documented below.
+Only Python analysis is currently implemented. The package version is 0.6.0.
+This release includes the change-review features documented below.
 Scores are review signals, not defect probabilities or proof of AI authorship.
 
 ## Quick start
@@ -391,7 +391,7 @@ Git rename metadata can match edited renames. Missing revisions return exit code
 Analysis does not change the index or working tree, fetch objects, or run source
 files. Symbolic links and submodules are excluded.
 
-## Review introduced evidence (source checkout)
+## Review introduced evidence
 
 `changes` compares the existing detectors' evidence across two source states.
 It reports what appeared, persisted, changed, or disappeared. It keeps uncertain
@@ -490,7 +490,7 @@ JSON is the change report itself.
 `--enforce-budget` requires `--budget`. A missing or invalid policy cannot silently
 disable enforcement. Architecture and history commands remain advisory.
 
-## Measure declaration surface (source checkout)
+## Measure declaration surface
 
 ```text
 slop surface path/to/before path/to/after --lang py
@@ -516,7 +516,7 @@ move remains unresolved. Moves between production and test cohorts remain
 separate additions and removals. Failed or excluded counterpart source cannot
 prove that unmatched declarations were added or removed.
 
-## Check declared architecture (source checkout)
+## Check declared architecture
 
 Save a separate `architecture.toml` with roots relative to the analyzed repository:
 
@@ -546,7 +546,7 @@ missing internal modules, and ambiguous package members remain unresolved.
 The command does not enforce transitive layer rules or fail on a violation.
 Check coverage before interpreting an empty violation list.
 
-## Inspect observed history (source checkout)
+## Inspect observed history
 
 ```text
 slop history HEAD~20 HEAD --repo . --window-days 14 --max-commits 100
@@ -755,9 +755,9 @@ ran `models` and `variants` on pinned HTTPX, Rich, and Black snapshots. It found
 very limited supported coverage, with no qualifying positive cases. The results
 do not establish precision or recall. Synthetic controls are recorded separately.
 
-## Experimental exception fallback review (source checkout)
+## Experimental exception fallback review
 
-The `errors` command is available after v0.5.0 in this checkout:
+The `errors` command is available in v0.6.0:
 
 ```powershell
 slop errors --root . --lang py
@@ -924,7 +924,7 @@ slop review show --root . --config C:/review-config/service.toml --store C:/revi
 
 `--config` works on `score`, `scan`, `tree`, `compare`, `changes`, `surface`,
 `architecture`, `history`, `explain`, `findings`, `rules`, `models`, `variants`,
-`derived`, `errors` (source checkout), `review set`,
+`derived`, `errors`, `review set`,
 and `review show`.
 Put it after the command name. An explicit
 file replaces both local config files. Settings come from defaults, then that file,
@@ -998,7 +998,7 @@ model findings, analyzed variant handlers, and derived-state findings. Failed an
 unresolved experimental results are not reviewable targets. This workflow is
 available in v0.5.0.
 
-The source checkout also accepts `errors` reports and the `error` review kind.
+Version 0.6.0 also accepts `errors` reports and the `error` review kind.
 Only candidate exception fallbacks become review targets.
 
 Save JSON using UTF-8. For example, in PowerShell:
@@ -1035,9 +1035,9 @@ This does not reapprove or weaken old decisions. Use the new workflow for that
 ledger afterward; the legacy `review` commands still use schema 1. Keep a copy if
 you need both workflows. Missing evidence means absent or unavailable, not fixed.
 
-### Review triage (source checkout)
+### Review triage
 
-The following changes are available after v0.5.0 in this checkout.
+The following changes are available in v0.6.0.
 
 `review-report show` now distinguishes `not-in-selected-report` from `missing`.
 A score report can assess clone, complexity, and pattern reviews. Each experimental
