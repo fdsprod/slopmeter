@@ -12,12 +12,7 @@ def isolate_source_inventory(tmp_path, monkeypatch):
 @pytest.mark.parametrize(
     "mutation",
     [
-        pytest.param(
-            "t.TYPE_CHECKING = True",
-            marks=pytest.mark.xfail(
-                strict=True, reason="Pending shared typing module mutation invalidation"
-            ),
-        ),
+        "t.TYPE_CHECKING = True",
         "setattr(t, 'TYPE_CHECKING', True)",
     ],
 )

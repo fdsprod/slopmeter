@@ -609,6 +609,10 @@ using an unshadowed module-level `typing.TYPE_CHECKING` import or alias receive
 the type-checking label. Other conditions remain conditional. Shadowing checks are
 conservative and do not execute code or resolve runtime mutation.
 
+Annotation and lazy type-alias expressions retain `unknown` timing. Their
+evaluation depends on Python version and annotation policy. Observed dynamic
+namespace writes or mutation of a typing alias prevent a type-checking claim.
+
 Cycle output includes edge paths and contexts. Type-checking and deferred edges
 remain in the static graph and in declared-rule checks; their presence alone
 does not prove an import-time failure. Old reports without context load as unknown.

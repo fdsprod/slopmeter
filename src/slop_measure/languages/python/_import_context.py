@@ -16,7 +16,10 @@ def _typing_bindings(tree: ast.Module) -> dict[str, tuple[str, int]]:
     bindings = Counter(name for node in ast.walk(tree) for name in bound_names(node))
     if any(
         (isinstance(node, ast.ImportFrom) and any(a.name == "*" for a in node.names))
-        or (isinstance(node, ast.Name) and node.id in {"exec", "eval", "globals"})
+        or (
+            isinstance(node, ast.Name)
+            and node.id in {"exec", "eval", "globals", "setattr", "delattr", "vars"}
+        )
         for node in ast.walk(tree)
     ):
         return {}
@@ -37,6 +40,8 @@ def _typing_bindings(tree: ast.Module) -> dict[str, tuple[str, int]]:
         and isinstance(node.ctx, (ast.Store, ast.Del))
         and isinstance(node.value, ast.Name)
     }
+    if mutated.intersection(candidates):
+        return {}
     return {
         name: value
         for name, value in candidates.items()
@@ -62,8 +67,16 @@ def _guard(node: ast.If, bindings: dict[str, tuple[str, int]]) -> Guard:
 
 
 def _guarded(context: ImportContext, guard: Guard) -> ImportContext:
+    if context.execution == "unknown":
+        return context
     return ImportContext(
         execution=context.execution, guards=tuple(sorted({*context.guards, guard}))
+    )
+
+
+def _annotation(node: ast.AST, field: str) -> bool:
+    return field in {"annotation", "returns", "type_params"} or (
+        isinstance(node, ast.TypeAlias) and field == "value"
     )
 
 
@@ -81,7 +94,9 @@ def import_contexts(tree: ast.Module) -> dict[ast.AST, ImportContext]:
             outer_iterators[node.generators[0].iter] = context
         for field, value in ast.iter_fields(node):
             selected = context
-            if (
+            if _annotation(node, field) or context.execution == "unknown":
+                selected = ImportContext()
+            elif (
                 isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda))
                 and field == "body"
             ):

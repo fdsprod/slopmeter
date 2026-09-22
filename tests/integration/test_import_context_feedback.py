@@ -282,7 +282,6 @@ def test_terminal_cycle_edges_show_owned_source_locations_and_execution_context(
 @pytest.mark.parametrize(
     "binding,receiver", [("import typing", "typing"), ("import typing as t", "t")]
 )
-@pytest.mark.xfail(strict=True, reason="Pending conservative mutation and annotation contexts")
 def test_mutating_type_checking_through_setattr_does_not_prove_a_type_only_guard(
     tmp_path, binding, receiver
 ):
@@ -296,7 +295,6 @@ def test_mutating_type_checking_through_setattr_does_not_prove_a_type_only_guard
 
 
 @pytest.mark.parametrize("future", [False, True])
-@pytest.mark.xfail(strict=True, reason="Pending conservative mutation and annotation contexts")
 def test_annotation_import_expressions_do_not_claim_eager_execution_or_execute_source(
     tmp_path, future
 ):
