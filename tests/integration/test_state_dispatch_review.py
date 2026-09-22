@@ -305,14 +305,18 @@ def test_multiple_rewritten_comparisons_in_one_scope_remain_ambiguous(roots):
         roots[0],
         "flow.py",
         (
-            'def inspect(item):\n    assert item.state == "ready"\n    assert item.state == "failed"\n'
+            "def inspect(item):\n"
+            '    assert item.state == "ready"\n'
+            '    assert item.state == "failed"\n'
         ),
     )
     write(
         roots[1],
         "flow.py",
         (
-            'def inspect(item):\n    assert other.state != "queued"\n    assert another.state != "gone"\n'
+            "def inspect(item):\n"
+            '    assert other.state != "queued"\n'
+            '    assert another.state != "gone"\n'
         ),
     )
 
