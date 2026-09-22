@@ -80,7 +80,6 @@ def observations(report):
         ),
     ],
 )
-@pytest.mark.xfail(strict=True, reason="Pending import execution contexts")
 def test_internal_edges_retain_orthogonal_execution_and_guard_context(
     tmp_path, source, execution, guards
 ):
@@ -114,14 +113,12 @@ def test_internal_edges_retain_orthogonal_execution_and_guard_context(
         "if TYPE_CHECKING:\n    import sample.storage\n",
     ],
 )
-@pytest.mark.xfail(strict=True, reason="Pending import execution contexts")
 def test_shadowed_or_unbound_type_checking_names_remain_general_conditions(tmp_path, source):
     report = inspect(tmp_path, source)
     edge = next(item for item in observations(report) if item.get("imported") == "sample.storage")
     assert edge["context"]["guards"] == ["conditional"]
 
 
-@pytest.mark.xfail(strict=True, reason="Pending import execution contexts")
 def test_external_and_dynamic_imports_retain_the_same_deferred_type_only_context(tmp_path):
     source = (
         "from typing import TYPE_CHECKING\n"
@@ -139,7 +136,6 @@ def test_external_and_dynamic_imports_retain_the_same_deferred_type_only_context
     )
 
 
-@pytest.mark.xfail(strict=True, reason="Pending import execution contexts")
 def test_type_only_and_deferred_edges_still_form_source_cycles(tmp_path):
     source = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    import sample.storage\n"
     back_edge = "def load():\n    import sample.controller\n"
@@ -152,7 +148,6 @@ def test_type_only_and_deferred_edges_still_form_source_cycles(tmp_path):
     assert contexts["sample.storage"] == {"execution": "deferred", "guards": []}
 
 
-@pytest.mark.xfail(strict=True, reason="Pending import execution contexts")
 def test_old_reports_default_missing_import_context_to_unknown(tmp_path):
     report = inspect(
         tmp_path, "import sample.storage\nimport remote_vendor\n__import__('dynamic')\n"
@@ -171,7 +166,6 @@ def test_old_reports_default_missing_import_context_to_unknown(tmp_path):
     assert restored.fan_out == report.fan_out
 
 
-@pytest.mark.xfail(strict=True, reason="Pending import execution contexts")
 def test_full_old_report_with_computed_edges_and_violations_loads_unknown_context(tmp_path):
     report = inspect(tmp_path, "import sample.storage\n", "import sample.controller\n")
     wire = report.model_dump(mode="json")
@@ -240,7 +234,6 @@ def test_class_body_inside_function_remains_deferred(tmp_path):
     assert edge["context"] == {"execution": "deferred", "guards": []}
 
 
-@pytest.mark.xfail(strict=True, reason="Pending generator outer iterable execution context")
 def test_generator_outer_iterable_is_eager_but_body_and_filters_are_deferred(tmp_path):
     source = (
         "items = (__import__('body_pkg') for item in __import__('outer_pkg')\n"
