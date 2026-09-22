@@ -11,6 +11,11 @@ from slop_measure.api import AnalysisConfig, DirectorySourceReference, SnapshotR
 from slop_measure.cli import app
 
 
+@pytest.fixture(autouse=True)
+def isolate_source_inventory(tmp_path, monkeypatch):
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+
+
 def project(tmp_path: Path, files: dict[str, str]) -> SnapshotRequest:
     for name, source in files.items():
         path = tmp_path / name
@@ -23,7 +28,7 @@ def project(tmp_path: Path, files: dict[str, str]) -> SnapshotRequest:
 
 
 def policy(**overrides):
-    from slop_measure.domain.architecture import ArchitecturePolicy
+    from slop_measure.domain.architecture import ArchitecturePolicy  # noqa: PLC0415
 
     return ArchitecturePolicy.model_validate(
         {
@@ -152,3 +157,30 @@ def test_cli_loads_explicit_policy_and_emits_the_same_owned_report(tmp_path):
     assert json.loads(result.stdout) == api.inspect_architecture(selected, policy()).model_dump(
         mode="json"
     )
+
+
+def test_package_attribute_prevents_proof_of_child_module_import(tmp_path):
+    selected = project(
+        tmp_path,
+        {
+            "src/sample/__init__.py": "storage = object()\n",
+            "src/sample/controller.py": "from sample import storage\n",
+            "src/sample/storage.py": "value = 1\n",
+        },
+    )
+    report = api.inspect_architecture(selected, policy())
+    assert not any(
+        edge.importer == "sample.controller" and edge.imported == "sample.storage"
+        for edge in report.edges
+    )
+    assert any(item.path.root == "src/sample/controller.py" for item in report.unresolved)
+
+
+def test_architecture_report_roundtrips_and_rejects_false_projections(tmp_path):
+    selected = project(tmp_path, {"src/sample/__init__.py": ""})
+    report = api.inspect_architecture(selected, policy())
+    assert type(report).model_validate_json(report.model_dump_json()) == report
+    wire = report.model_dump(mode="json")
+    wire["fan_out"] = {"invented": 15}
+    with pytest.raises(ValueError):
+        type(report).model_validate(wire)
