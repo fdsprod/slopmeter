@@ -2,7 +2,11 @@
 
 from dataclasses import dataclass
 
-from slop_measure.application._clone_continuity import EditedMembers, connected_groups
+from slop_measure.application._clone_continuity import (
+    EditedMembers,
+    MemberRelation,
+    connected_groups,
+)
 from slop_measure.application.change_review import _skipped
 from slop_measure.domain.changes import AddedFile, DeletedFile
 from slop_measure.domain.clone_changes import (
@@ -56,7 +60,11 @@ def _group_edges(populations: tuple[_Population, ...], matcher: EditedMembers):
             same = old_index == new_index
             related = same or (
                 old.group.language == "python"
-                and any(matcher.relation(x, y)[0] for x in old.baseline for y in new.current)
+                and any(
+                    matcher.relation(x, y) is not MemberRelation.UNRELATED
+                    for x in old.baseline
+                    for y in new.current
+                )
             )
             if related:
                 edges[0, old_index].add((1, new_index))
@@ -67,7 +75,9 @@ def _group_edges(populations: tuple[_Population, ...], matcher: EditedMembers):
 def _modified_members(
     old, new, matcher: EditedMembers
 ) -> tuple[list[CloneMemberChange], list[CloneOccurrence], list[CloneOccurrence]]:
-    candidates = [(x, y) for x in old for y in new if matcher.relation(x, y)[1]]
+    candidates = [
+        (x, y) for x in old for y in new if matcher.relation(x, y) is MemberRelation.ANCHORED
+    ]
     pairs = [
         (x, y)
         for x, y in candidates
