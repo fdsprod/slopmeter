@@ -1,8 +1,7 @@
 # Change-specific engineering evidence
 
 Status on 2026-09-21: the implementation slices below are available in the source
-checkout. Integrated tests, static checks, and distribution checks passed. The
-final working-tree check follows the documentation commit. This is not a release or
+checkout. Integrated tests, static checks, and distribution checks passed. All implementation and documentation changes are committed locally. This is not a release or
 a validation of defect probabilities.
 
 The work extends existing source discovery, comparisons, detectors, and report
@@ -13,14 +12,14 @@ have separate authors from the implementations they specify.
 
 | Slice | Delivered behavior | State |
 |---|---|---|
-| TB-1: Pattern continuity | `review_change(ComparisonRequest)` and `slop changes` preserve introduced, removed, persisted, changed, and unresolved pattern evidence. | Implemented; final validation underway |
-| TB-2: Clone and fallback changes | Clone member continuity exposes expanded/contracted groups. Existing exception-fallback candidates retain change relationships and handler coverage. | Implemented; final validation underway |
-| TB-3: Advisory budgets | Explicit caps on introduced patterns, added clone members, and introduced fallback candidates. Enforced pass, exceeded, and incomplete outcomes remain distinct. | Implemented; final validation underway |
-| TB-4: Novel surface | Source-bound Python declarations, file counts, conservative moves, and a derived novel declaration ratio. | Implemented; final validation underway |
-| TB-5: Declared architecture | Static direct imports, forbidden module relationships, fan-out, and strongly connected components. | Implemented; final validation underway |
-| TB-6: History and rework | Bounded first-parent Git history, exact source churn, recent line rework, and explicit partial traversal. | Implemented; final validation underway |
-| TB-7: Evaluation and delivery | Independent controls, bounded HTTPX/Rich/Black observations, user documentation, and integrated checks. | Evaluation record and final commit review underway |
-| User extension: Raw state dispatch | Source evidence for literal-string `.state` tests, with continuity and no score contribution. Shared enum outcome vocabulary and concrete variant dispatch in the new implementation. | Implemented; final validation underway |
+| TB-1: Pattern continuity | `review_change(ComparisonRequest)` and `slop changes` preserve introduced, removed, persisted, changed, and unresolved pattern evidence. | Implemented and validated |
+| TB-2: Clone and fallback changes | Clone member continuity exposes expanded/contracted groups. Existing exception-fallback candidates retain change relationships and handler coverage. | Implemented and validated |
+| TB-3: Advisory budgets | Explicit caps on introduced patterns, added clone members, and introduced fallback candidates. Enforced pass, exceeded, and incomplete outcomes remain distinct. | Implemented and validated |
+| TB-4: Novel surface | Source-bound Python declarations, file counts, conservative moves, and a derived novel declaration ratio. | Implemented and validated |
+| TB-5: Declared architecture | Static direct imports, forbidden module relationships, fan-out, and strongly connected components. | Implemented and validated |
+| TB-6: History and rework | Bounded first-parent Git history, exact source churn, recent line rework, and explicit partial traversal. | Implemented and validated |
+| TB-7: Evaluation and delivery | Independent controls, bounded HTTPX/Rich/Black observations, user documentation, and integrated checks. | Bounded evaluation recorded; Black timed out |
+| User extension: Raw state dispatch | Source evidence for literal-string `.state` tests, with continuity and no score contribution. Shared enum outcome vocabulary and concrete variant dispatch in the new implementation. | Implemented and validated |
 
 ```mermaid
 flowchart LR
