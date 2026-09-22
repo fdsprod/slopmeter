@@ -106,6 +106,38 @@ def test_adding_another_occurrence_preserves_multiplicity(roots) -> None:
     assert introduced["current"]["finding"]["span"]["start_line"] == 5
 
 
+def test_line_insertion_preserves_repeated_identical_findings_in_one_scope(roots) -> None:
+    source = 'def labels():\n    value = f"hello"\n    value = f"hello"\n    return value\n'
+    write(roots[0], "labels.py", source)
+    write(roots[1], "labels.py", "# Heading\n" + source)
+
+    changes = findings(api.review_change(request(roots)), "literal-fstring")
+
+    assert len(changes) == 2 and all(change["state"] == "persisted" for change in changes)
+    locations = {
+        (
+            change["baseline"]["finding"]["span"]["start_line"],
+            change["current"]["finding"]["span"]["start_line"],
+        )
+        for change in changes
+    }
+    assert locations == {(2, 3), (3, 4)}
+
+
+@pytest.mark.parametrize("excluded_side", [0, 1])
+def test_generated_marker_exclusion_is_missing_evidence_not_a_fix(roots, excluded_side) -> None:
+    write(roots[1 - excluded_side], "label.py", LITERAL_SOURCE)
+    write(roots[excluded_side], "label.py", "# @generated\n" + LITERAL_SOURCE)
+
+    report = api.review_change(request(roots))
+
+    changes = findings(report, "literal-fstring")
+    assert len(changes) == 1 and changes[0]["state"] == "unresolved"
+    assert report.summary["introduced"] == report.summary["removed"] == 0
+    assert report.limitations
+    assert any(item.detail.state.value == "excluded" for item in report.coverage)
+
+
 def test_changed_literal_at_unique_callable_rule_site_is_changed(roots) -> None:
     write(roots[0], "label.py", LITERAL_SOURCE)
     write(roots[1], "label.py", LITERAL_SOURCE.replace("hello", "goodbye"))
@@ -169,7 +201,7 @@ def test_unsupported_and_failed_files_remain_visible_when_no_findings_exist(root
     report = api.review_change(request(roots))
 
     assert report.patterns == ()
-    assert any(item.language == "typescript" for item in report.limitations)
+    assert any(item.language == "ts" for item in report.limitations)
     assert any(
         item.path is not None and item.path.root == "broken.py" for item in report.limitations
     )

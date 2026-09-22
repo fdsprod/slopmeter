@@ -115,6 +115,26 @@ def test_supplied_summary_must_match_owned_evidence() -> None:
         ChangeReviewReport.model_validate(altered)
 
 
+def test_boolean_summary_cannot_impersonate_an_integer_count() -> None:
+    imported = ChangeReviewReport.model_validate(payload()).model_dump(mode="json")
+    imported["summary"]["introduced"] = True
+    with pytest.raises(ValidationError):
+        ChangeReviewReport.model_validate(imported)
+
+
+@pytest.mark.parametrize("state", ["introduced", "unresolved"])
+def test_each_source_occurrence_belongs_to_only_one_change(state: str) -> None:
+    values = payload()
+    duplicated = (
+        {"state": "introduced", "current": occurrence()}
+        if state == "introduced"
+        else {"state": "unresolved", "current": [occurrence()], "reason": "Unknown"}
+    )
+    values["patterns"].append(duplicated)
+    with pytest.raises(ValidationError):
+        ChangeReviewReport.model_validate(values)
+
+
 @pytest.mark.parametrize("field,value", [("schema_version", "2"), ("score", 42)])
 def test_report_rejects_unknown_schema_and_score_fields(field, value) -> None:
     with pytest.raises(ValidationError):
