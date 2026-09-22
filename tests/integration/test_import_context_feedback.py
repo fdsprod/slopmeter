@@ -277,3 +277,47 @@ def test_terminal_cycle_edges_show_owned_source_locations_and_execution_context(
     assert any("controller.py:3" in line and "type-checking" in line for line in lines)
     assert any("storage.py:2" in line and "deferred" in line for line in lines)
     assert "cycle" in result.stdout.lower()
+
+
+@pytest.mark.parametrize(
+    "binding,receiver", [("import typing", "typing"), ("import typing as t", "t")]
+)
+@pytest.mark.xfail(strict=True, reason="Pending conservative mutation and annotation contexts")
+def test_mutating_type_checking_through_setattr_does_not_prove_a_type_only_guard(
+    tmp_path, binding, receiver
+):
+    source = (
+        f"{binding}\nsetattr({receiver}, 'TYPE_CHECKING', True)\n"
+        f"if {receiver}.TYPE_CHECKING:\n    import sample.storage\n"
+    )
+    report = inspect(tmp_path, source)
+    edge = next(item for item in observations(report) if item.get("imported") == "sample.storage")
+    assert edge["context"] == {"execution": "eager", "guards": ["conditional"]}
+
+
+@pytest.mark.parametrize("future", [False, True])
+@pytest.mark.xfail(strict=True, reason="Pending conservative mutation and annotation contexts")
+def test_annotation_import_expressions_do_not_claim_eager_execution_or_execute_source(
+    tmp_path, future
+):
+    marker = tmp_path / "source-executed"
+    source = (
+        ("from __future__ import annotations\n" if future else "")
+        + "from pathlib import Path\n"
+        + f"Path({str(marker)!r}).touch()\n"
+        + "module_value: __import__('module_annotation_pkg')\n"
+        + "class Contract:\n"
+        + "    value: __import__('class_annotation_pkg')\n"
+        + "def convert(value: __import__('parameter_annotation_pkg')) "
+        + "-> __import__('return_annotation_pkg'):\n"
+        + "    local: __import__('local_annotation_pkg')\n"
+        + "    return value\n"
+    )
+    report = inspect(tmp_path, source)
+    imports = [
+        item for item in observations(report) if "annotation_pkg" in item.get("expression", "")
+    ]
+    assert len(imports) == 5
+    assert all(item["context"] == {"execution": "unknown", "guards": []} for item in imports)
+    assert not marker.exists()
+    assert type(report).model_validate_json(report.model_dump_json()) == report
