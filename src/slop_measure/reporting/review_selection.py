@@ -1,6 +1,7 @@
 """Select saved review evidence without changing its identity or measured population."""
 
 from slop_measure.domain.derived_review import DerivedReviewReport
+from slop_measure.domain.error_review import ErrorReviewReport
 from slop_measure.domain.model_review import ModelReviewReport
 from slop_measure.domain.reports import AnalysisReport, SourceSide
 from slop_measure.domain.review_workflow import ReviewKind, ReviewTarget, fingerprint
@@ -27,7 +28,11 @@ def _hotspot_evidence(report: AnalysisReport) -> frozenset[tuple[str, Cohort, st
 
 
 def select_review_targets(
-    report: AnalysisReport | ModelReviewReport | VariantReviewReport | DerivedReviewReport,
+    report: AnalysisReport
+    | ModelReviewReport
+    | VariantReviewReport
+    | DerivedReviewReport
+    | ErrorReviewReport,
     targets: tuple[ReviewTarget, ...],
     *,
     kinds: frozenset[ReviewKind] = frozenset(),

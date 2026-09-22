@@ -10,6 +10,7 @@ from pathlib import Path
 from slop_measure.application._review_targets import SupportedReviewReport, review_targets
 from slop_measure.application.reviews import apply_reviews
 from slop_measure.domain.derived_review import DerivedReviewReport
+from slop_measure.domain.error_review import ErrorReviewReport
 from slop_measure.domain.model_review import ModelReviewReport
 from slop_measure.domain.reports import AnalysisReport
 from slop_measure.domain.review_workflow import (
@@ -65,6 +66,8 @@ def load_review_report(path: Path) -> SupportedReviewReport:
                 return VariantReviewReport.model_validate(payload)
             case "py-derived-state-1":
                 return DerivedReviewReport.model_validate(payload)
+            case "py-error-fallback-1":
+                return ErrorReviewReport.model_validate(payload)
             case _:
                 raise ValueError("unsupported saved report experiment")
     except (OSError, ValueError) as error:
@@ -139,7 +142,9 @@ def _report_kinds(report: SupportedReviewReport) -> frozenset[ReviewKind]:
         return frozenset((ReviewKind.MODEL,))
     if isinstance(report, VariantReviewReport):
         return frozenset((ReviewKind.VARIANT,))
-    return frozenset((ReviewKind.DERIVED,))
+    if isinstance(report, DerivedReviewReport):
+        return frozenset((ReviewKind.DERIVED,))
+    return frozenset((ReviewKind.ERROR,))
 
 
 def _legacy_results(

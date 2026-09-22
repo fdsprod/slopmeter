@@ -24,7 +24,7 @@ app = typer.Typer(
     help="Retain attributed decisions against saved native reports.", no_args_is_help=True
 )
 _Report = Annotated[
-    Path, typer.Option("--report", help="Saved score/models/variants/derived JSON.")
+    Path, typer.Option("--report", help="Saved score/models/variants/derived/errors JSON.")
 ]
 _Store = Annotated[Path, typer.Option("--store", help="One explicit review ledger per project.")]
 _Json = Annotated[bool, typer.Option("--json", help="Write complete JSON evidence.")]

@@ -40,6 +40,7 @@ class ReviewKind(StrEnum):
     MODEL = "model"
     VARIANT = "variant"
     DERIVED = "derived"
+    ERROR = "error"
 
 
 class ReviewLocation(_Record):

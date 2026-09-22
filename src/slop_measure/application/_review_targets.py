@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from slop_measure.domain.boundaries import clone_boundary_context
 from slop_measure.domain.derived_review import DerivedReviewReport
+from slop_measure.domain.error_review import ErrorReviewReport
 from slop_measure.domain.model_review import ModelReviewReport
 from slop_measure.domain.reports import AnalysisReport, SourceSide
 from slop_measure.domain.review_workflow import (
@@ -28,7 +29,11 @@ from slop_measure.domain.source import Cohort, ProjectPath
 from slop_measure.domain.variant_review import VariantReviewReport
 
 SupportedReviewReport = (
-    AnalysisReport | ModelReviewReport | VariantReviewReport | DerivedReviewReport
+    AnalysisReport
+    | ModelReviewReport
+    | VariantReviewReport
+    | DerivedReviewReport
+    | ErrorReviewReport
 )
 
 
@@ -233,6 +238,29 @@ def _derived_subjects(report: DerivedReviewReport) -> Iterator[ReviewSubject]:
                 )
 
 
+def _error_subjects(report: ErrorReviewReport) -> Iterator[ReviewSubject]:
+    for file in report.files:
+        if file.state != "analyzed":
+            continue
+        for handler in file.handlers:
+            if handler.state != "analyzed":
+                continue
+            for finding in handler.findings:
+                spans = (
+                    finding.protected,
+                    finding.fallback.span,
+                    *(item.span for item in finding.normal_returns),
+                )
+                yield _subject(
+                    ReviewKind.ERROR,
+                    "python",
+                    file.cohort,
+                    handler.symbol,
+                    tuple(ReviewLocation(path=file.path, span=span) for span in spans),
+                    finding,
+                )
+
+
 def review_targets(report: SupportedReviewReport) -> tuple[ReviewTarget, ...]:
     """List exact owned evidence without applying thresholds or changing the report."""
     if isinstance(report, AnalysisReport):
@@ -243,8 +271,10 @@ def review_targets(report: SupportedReviewReport) -> tuple[ReviewTarget, ...]:
             subjects = _model_subjects(report)
         elif isinstance(report, VariantReviewReport):
             subjects = _variant_subjects(report)
-        else:
+        elif isinstance(report, DerivedReviewReport):
             subjects = _derived_subjects(report)
+        else:
+            subjects = _error_subjects(report)
         targets = tuple(
             _target(subject, sources, fingerprint(report.experiment)) for subject in subjects
         )

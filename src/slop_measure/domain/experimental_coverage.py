@@ -8,7 +8,7 @@ from typing import Annotated, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, ModelWrapValidatorHandler, model_validator
 
 _Count = Annotated[int, Field(ge=0, strict=True)]
-CoverageUnit = Literal["class-declarations", "match-handlers", "functions"]
+CoverageUnit = Literal["class-declarations", "match-handlers", "functions", "exception-handlers"]
 
 
 class UnresolvedReasonCount(BaseModel):
