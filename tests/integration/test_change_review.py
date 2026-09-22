@@ -286,9 +286,7 @@ def test_git_cli_pins_rename_evidence_without_changing_dirty_checkout(tmp_path, 
     status = git(root, "status", "--porcelain=v1")
     contents = {path: path.read_bytes() for path in root.glob("*.py")}
 
-    result = CliRunner().invoke(
-        app, ["changes", "HEAD~1", "HEAD", "--repo", str(root), "--json"]
-    )
+    result = CliRunner().invoke(app, ["changes", "HEAD~1", "HEAD", "--repo", str(root), "--json"])
 
     assert result.exit_code == 0, result.output
     wire = json.loads(result.stdout)

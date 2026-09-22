@@ -72,7 +72,10 @@ def test_unresolved_clone_member_retains_known_baseline_without_claiming_removal
 def test_clone_member_states_are_explicit_and_empty_uncertainty_is_invalid() -> None:
     adapter = TypeAdapter(CloneMemberChange)
     assert set(adapter.json_schema()["discriminator"]["mapping"]) == {
-        "introduced", "removed", "persisted", "unresolved"
+        "introduced",
+        "removed",
+        "persisted",
+        "unresolved",
     }
     with pytest.raises(ValidationError):
         adapter.validate_python({"state": "unresolved", "reason": "Unknown"})
@@ -96,9 +99,7 @@ def error_occurrence() -> dict:
             ],
             "fallback": expression,
             "fallback_kind": "empty-list",
-            "normal_returns": [
-                {"span": {"start_line": 6, "end_line": 6}, "expression": "result"}
-            ],
+            "normal_returns": [{"span": {"start_line": 6, "end_line": 6}, "expression": "result"}],
         },
     }
 
@@ -106,7 +107,11 @@ def error_occurrence() -> dict:
 def test_error_change_union_retains_existing_finding_and_explicit_states() -> None:
     adapter = TypeAdapter(ErrorChange)
     assert set(adapter.json_schema()["discriminator"]["mapping"]) == {
-        "introduced", "removed", "persisted", "changed", "unresolved"
+        "introduced",
+        "removed",
+        "persisted",
+        "changed",
+        "unresolved",
     }
     changed = adapter.validate_python({"state": "introduced", "current": error_occurrence()})
     assert adapter.validate_json(changed.model_dump_json()) == changed

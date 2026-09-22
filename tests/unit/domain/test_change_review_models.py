@@ -44,7 +44,11 @@ def test_pattern_change_union_has_closed_evidence_owned_states() -> None:
     schema = TypeAdapter(PatternChange).json_schema()
     assert schema["discriminator"]["propertyName"] == "state"
     assert set(schema["discriminator"]["mapping"]) == {
-        "introduced", "removed", "persisted", "changed", "unresolved"
+        "introduced",
+        "removed",
+        "persisted",
+        "changed",
+        "unresolved",
     }
 
 

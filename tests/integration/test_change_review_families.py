@@ -49,7 +49,9 @@ def test_new_copy_expands_existing_group_by_one_member(roots) -> None:
     assert member_paths(group["baseline"]) == {"a.py", "b.py"}
     assert member_paths(group["current"]) == {"a.py", "b.py", "c.py"}
     assert sorted(member["state"] for member in group["members"]) == [
-        "introduced", "persisted", "persisted"
+        "introduced",
+        "persisted",
+        "persisted",
     ]
 
 
@@ -236,9 +238,7 @@ def test_git_error_comparison_uses_committed_source_and_preserves_worktree(tmp_p
     index = (root / ".git/index").read_bytes()
     status = git(root, "status", "--porcelain=v1")
 
-    result = CliRunner().invoke(
-        app, ["changes", "HEAD~1", "HEAD", "--repo", str(root), "--json"]
-    )
+    result = CliRunner().invoke(app, ["changes", "HEAD~1", "HEAD", "--repo", str(root), "--json"])
 
     assert result.exit_code == 0, result.output
     wire = json.loads(result.stdout)
