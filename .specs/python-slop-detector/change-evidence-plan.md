@@ -18,7 +18,7 @@ have separate authors from the implementations they specify.
 | TB-4: Novel surface | Source-bound Python declarations, file counts, conservative moves, and a derived novel declaration ratio. | Implemented and validated |
 | TB-5: Declared architecture | Static direct imports, forbidden module relationships, fan-out, and strongly connected components. | Implemented and validated |
 | TB-6: History and rework | Bounded first-parent Git history, exact source churn, recent line rework, and explicit partial traversal. | Implemented and validated |
-| TB-7: Evaluation and delivery | Independent controls, bounded HTTPX/Rich/Black observations, user documentation, and integrated checks. | Bounded evaluation recorded; Black timed out |
+| TB-7: Evaluation and delivery | Independent controls, bounded HTTPX/Rich/Black observations, user documentation, and integrated checks. | Recorded; Black exceeded the time target and history was not completed |
 | User extension: Raw state dispatch | Source evidence for literal-string `.state` tests, with continuity and no score contribution. Shared enum outcome vocabulary and concrete variant dispatch in the new implementation. | Implemented and validated |
 
 ```mermaid

@@ -2,8 +2,8 @@
 
 Updated 2026-09-21 after the user resumed work with unrestricted filesystem
 permissions. The earlier pause has ended. The implementation is in the source
-checkout. Integrated tests, static checks, and distribution checks passed. The
-final working-tree check follows this documentation commit. No push or release is claimed.
+checkout. Integrated tests, static checks, and distribution checks passed.
+Implementation changes are committed locally. No push or release is claimed.
 
 ## Implemented scope
 
@@ -89,9 +89,11 @@ The broader whole-project comparison withheld introduction/removal claims where
 aggregate exclusion counts made correspondence incomplete. The source-only run
 does not erase that limit or establish complete counts for the broader scan.
 
-Final working-tree and commit checks remain for root orchestration after this
-documentation commit. A separate format-only
-commit reflows one learning-test call without changing assertions.
+Presentation follow-up `a5ab475` reuses existing path/revision labels in the new
+reports. Another 92 relevant tests and the static checks passed after that display
+change. Detector evidence and JSON did not change. A separate format-only commit
+reflows one learning-test call without changing assertions. Unrelated pre-existing
+untracked files remain outside this delivery.
 
 Do not replace a failed or unavailable check with a completion claim. Keep the
 command, runtime, outcome, and any justified limit with the final validation note.
