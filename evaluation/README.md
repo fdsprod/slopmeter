@@ -25,17 +25,49 @@ install their dependencies, or run their tests. Downloaded source stays in the
 ignored cache. Each source entry has a SHA-256 hash. A cached or downloaded file
 must match that hash before analysis.
 
-The manifest uses the raw profile (`__raw__`) and disables generated-file markers
-for this explicit selection. It does not change application defaults. Paths keep
+The runner uses the raw profile (`__raw__`) and disables configured exclusions,
+Git discovery, and generated-file markers for this explicit selection. It checks
+the analyzed inventory against the manifest. It does not change application
+defaults. Paths keep
 their original relative names. Each snapshot contains only its listed files,
 not the complete repository. These cases therefore do not establish cross-file
 resolution, repository-wide clone coverage, architecture coverage, or runtime
 behavior. In particular, source imports are parsed rather than resolved by
 importing the target.
 
-Keep the analyzer revision and source hashes with each result. A run that changes
-the analyzer while work is in progress is not a frozen baseline. An incomplete,
-timed-out, or mismatched run does not establish absence of findings.
+`--timeout` is a wall-clock limit for each analysis or download worker. It is not
+a limit for the whole evaluation. A timed-out worker is stopped, and its task
+remains incomplete. The fetch worker also uses a 30-second network timeout.
+
+Exit codes distinguish results:
+
+| Exit | Meaning |
+|---|---|
+| `0` | All jobs completed and every expectation passed. |
+| `1` | Jobs completed, but at least one expectation did not match. |
+| `2` | Invalid input, incomplete evidence, source mismatch, timeout, or another operational failure. |
+
+`result.json` separates completion from expectation results. A top-level
+`complete` state alone does not mean that all checks passed. Inspect job states,
+checks, and the process exit code. Input validation can fail before this file is
+created.
+
+The output directory retains the manifest, raw reports, worker inputs and logs,
+selected source snapshots, expected and final source hashes, and runtime metadata.
+Keep these artifacts together. The runner requires a new output directory and
+does not overwrite earlier results.
+
+Provenance identifies the installed analyzer path and hashes its Python and JSON
+files together with the runner files. The analysis worker verifies that it uses
+the same installed package path. Optional Git metadata records the analyzer
+checkout revision, relevant working-tree status, and tracked-diff hash when that
+checkout is available. A checkout commit alone does not identify installed code:
+use the actual file hashes and runtime metadata as well. Dependencies are recorded
+by installed distribution name and version, not rebuilt from a lock file.
+
+A run that changes the analyzer while work is in progress is not a frozen
+baseline. The runner checks for analyzer, manifest, and materialized-source drift.
+An incomplete, timed-out, or mismatched run does not establish absence of findings.
 
 ## Cases and expected interpretations
 
