@@ -338,3 +338,51 @@ def test_imported_report_rejects_duplicate_comparison_ownership(roots):
 
     with pytest.raises(ValueError):
         type(report).model_validate(wire)
+
+
+def test_identical_comparisons_on_one_line_have_distinct_column_locations(roots):
+    source = 'assert item.state != "bad" and item.state != "bad"\n'
+    write(roots[1], "flow.py", source)
+    selected = request(roots, languages=("python",))
+
+    report = api.review_change(selected)
+
+    changes = dispatch(report)
+    assert len(changes) == 2 and all(item["state"] == "introduced" for item in changes)
+    occurrences = [item["current"] for item in changes]
+    assert {(item["start_column"], item["end_column"]) for item in occurrences} == {
+        (7, 26),
+        (31, 50),
+    }
+    assert all(item["span"] == {"start_line": 1, "end_line": 1} for item in occurrences)
+    assert all(item["values"] == ["bad"] for item in occurrences)
+    assert report.model_dump_json() == api.review_change(selected).model_dump_json()
+    assert type(report).model_validate_json(report.model_dump_json()) == report
+
+
+def test_identical_same_line_sites_across_snapshots_do_not_duplicate_correspondence(roots):
+    source = 'assert item.state != "bad" and item.state != "bad"\n'
+    for root in roots:
+        write(root, "flow.py", source)
+    selected = request(roots, languages=("python",))
+
+    report = api.review_change(selected)
+
+    changes = dispatch(report)
+    assert changes and all(item["state"] in {"persisted", "unresolved"} for item in changes)
+    for side in ("baseline", "current"):
+        occurrences = [
+            occurrence
+            for item in changes
+            for occurrence in (item[side] if item["state"] == "unresolved" else [item[side]])
+        ]
+        assert len(occurrences) == 2
+        assert {(item["start_column"], item["end_column"]) for item in occurrences} == {
+            (7, 26),
+            (31, 50),
+        }
+    assert (
+        report.state_dispatch_summary["introduced"] == report.state_dispatch_summary["removed"] == 0
+    )
+    assert report.model_dump_json() == api.review_change(selected).model_dump_json()
+    assert type(report).model_validate_json(report.model_dump_json()) == report
