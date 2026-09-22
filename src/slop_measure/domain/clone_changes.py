@@ -1,5 +1,6 @@
 """Clone relationships derive from source-owned member continuity."""
 
+from collections.abc import Mapping
 from enum import StrEnum
 from typing import Annotated, Literal, Self
 
@@ -46,6 +47,12 @@ class PersistedCloneMember(_Change):
     current: CloneOccurrence
 
 
+class ChangedCloneMember(_Change):
+    state: Literal[FindingChangeState.CHANGED] = FindingChangeState.CHANGED
+    baseline: CloneOccurrence
+    current: CloneOccurrence
+
+
 class UnresolvedCloneMembers(_Change):
     state: Literal[FindingChangeState.UNRESOLVED] = FindingChangeState.UNRESOLVED
     baseline: tuple[CloneOccurrence, ...] = ()
@@ -60,7 +67,11 @@ class UnresolvedCloneMembers(_Change):
 
 
 CloneMemberChange = Annotated[
-    IntroducedCloneMember | RemovedCloneMember | PersistedCloneMember | UnresolvedCloneMembers,
+    IntroducedCloneMember
+    | RemovedCloneMember
+    | PersistedCloneMember
+    | ChangedCloneMember
+    | UnresolvedCloneMembers,
     Field(discriminator="state"),
 ]
 
@@ -70,7 +81,24 @@ class CloneGroupChange(_Change):
     cohort: Cohort
     normalization_version: _Text
     fingerprint: _Hash
+    baseline_fingerprint: _Hash | None = None
+    current_fingerprint: _Hash | None = None
     members: tuple[CloneMemberChange, ...]
+
+    @model_validator(mode="before")
+    @classmethod
+    def legacy_fingerprints(cls, value: object) -> object:
+        """Old reports describe one normalization on both observed sides."""
+        if not isinstance(value, Mapping):
+            return value
+        fields = dict(value)
+        for side in ("baseline", "current"):
+            present = any(
+                bool(item.get(side)) if isinstance(item, Mapping) else bool(getattr(item, side, ()))
+                for item in fields.get("members", ())
+            )
+            fields.setdefault(f"{side}_fingerprint", fields.get("fingerprint") if present else None)
+        return fields
 
     def _side(self, side: str) -> tuple[CloneOccurrence, ...]:
         result = []
@@ -101,6 +129,11 @@ class CloneGroupChange(_Change):
 
     @computed_field
     @property
+    def modified(self) -> int:
+        return sum(isinstance(item, ChangedCloneMember) for item in self.members)
+
+    @computed_field
+    @property
     def state(self) -> CloneGroupState:
         if any(isinstance(item, UnresolvedCloneMembers) for item in self.members):
             return CloneGroupState.UNRESOLVED
@@ -111,7 +144,25 @@ class CloneGroupChange(_Change):
             return CloneGroupState.REMOVED
         if after != before:
             return CloneGroupState.EXPANDED if after > before else CloneGroupState.CONTRACTED
-        return CloneGroupState.CHANGED if self.added or self.removed else CloneGroupState.PERSISTED
+        return (
+            CloneGroupState.CHANGED
+            if self.added or self.removed or self.modified
+            else CloneGroupState.PERSISTED
+        )
+
+    @model_validator(mode="after")
+    def fingerprint_ownership(self) -> Self:
+        for side in ("baseline", "current"):
+            if bool(getattr(self, side)) != (getattr(self, f"{side}_fingerprint") is not None):
+                raise ValueError("clone side fingerprint requires observed side members")
+        if self.fingerprint != (self.current_fingerprint or self.baseline_fingerprint):
+            raise ValueError("clone fingerprint must name current or remaining baseline evidence")
+        same = self.baseline_fingerprint == self.current_fingerprint
+        if self.modified and same:
+            raise ValueError("changed clone members require different fingerprints")
+        if not same and any(isinstance(item, PersistedCloneMember) for item in self.members):
+            raise ValueError("persisted clone members require the same fingerprint")
+        return self
 
     @model_validator(mode="after")
     def ownership(self) -> Self:

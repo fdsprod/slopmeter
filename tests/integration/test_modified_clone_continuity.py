@@ -24,7 +24,6 @@ EDITED = ORIGINAL.replace(
     "producer.produce(topic, encoded)",
     "producer.produce(topic, encoded, headers=[*headers.items()])",
 )
-PENDING = pytest.mark.xfail(strict=True, reason="modified clone continuity is not implemented")
 
 
 @pytest.fixture
@@ -67,7 +66,6 @@ def clone_budget(report):
     )
 
 
-@PENDING
 def test_coordinated_edit_is_changed_duplication_and_not_four_new_copies(roots):
     copies(roots[0], ORIGINAL)
     copies(roots[1], EDITED)
@@ -88,7 +86,6 @@ def test_coordinated_edit_is_changed_duplication_and_not_four_new_copies(roots):
     assert type(report).model_validate_json(report.model_dump_json()) == report
 
 
-@PENDING
 def test_coordinated_edit_plus_fifth_copy_counts_only_the_new_copy(roots):
     copies(roots[0], ORIGINAL)
     copies(roots[1], EDITED, count=5)
@@ -102,7 +99,6 @@ def test_coordinated_edit_plus_fifth_copy_counts_only_the_new_copy(roots):
     assert budget.checks[0].evidence[0].path.root == "publisher_4.py"
 
 
-@PENDING
 def test_line_shift_does_not_destroy_modified_member_correspondence(roots):
     copies(roots[0], ORIGINAL)
     copies(roots[1], "# Header added during the edit.\n\n" + EDITED)
@@ -116,7 +112,6 @@ def test_line_shift_does_not_destroy_modified_member_correspondence(roots):
         )
 
 
-@PENDING
 def test_group_split_retains_uncertainty_instead_of_inventing_copy_additions(roots):
     copies(roots[0], ORIGINAL)
     copies(roots[1], EDITED)
@@ -150,7 +145,6 @@ def test_unrelated_replacements_in_same_paths_do_not_establish_modified_continui
     assert clone_budget(report).state.value != "pass"
 
 
-@PENDING
 def test_git_rename_with_coordinated_edit_keeps_existing_copy_identity(tmp_path, monkeypatch):
     monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
     root = tmp_path / "repo"

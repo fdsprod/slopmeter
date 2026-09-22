@@ -60,7 +60,13 @@ def _clones(report: ChangeReviewReport) -> list[str]:
             continue
         lines.append(
             f"  {group.state}: {group.fingerprint[:12]} +{group.added} / -{group.removed} members"
+            f"; modified {group.modified}"
         )
+        if group.baseline_fingerprint and group.current_fingerprint and group.modified:
+            lines.append(
+                f"    normalization: {group.baseline_fingerprint[:12]}"
+                f" -> {group.current_fingerprint[:12]}"
+            )
         for occurrence in (*group.baseline, *group.current):
             lines.append(f"    {occurrence.member.path.root}:{occurrence.member.span.start_line}")
     return lines

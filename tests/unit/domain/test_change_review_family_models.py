@@ -69,7 +69,6 @@ def test_unresolved_clone_member_retains_known_baseline_without_claiming_removal
     assert len(group.baseline) == 2 and len(group.current) == 1
 
 
-@pytest.mark.xfail(strict=True, reason="modified clone continuity is not implemented")
 def test_clone_member_states_are_explicit_and_empty_uncertainty_is_invalid() -> None:
     adapter = TypeAdapter(CloneMemberChange)
     assert set(adapter.json_schema()["discriminator"]["mapping"]) == {
@@ -83,7 +82,6 @@ def test_clone_member_states_are_explicit_and_empty_uncertainty_is_invalid() -> 
         adapter.validate_python({"state": "unresolved", "reason": "Unknown"})
 
 
-@pytest.mark.xfail(strict=True, reason="modified clone continuity is not implemented")
 def test_modified_clone_keeps_two_fingerprints_and_rejects_forged_counts() -> None:
     payload = group_payload()
     payload["baseline_fingerprint"] = "a" * 64

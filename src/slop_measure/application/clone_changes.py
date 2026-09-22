@@ -1,8 +1,12 @@
 """Compare retained clone candidates without another detector pass."""
 
+from dataclasses import dataclass
+
+from slop_measure.application._clone_continuity import EditedMembers, connected_groups
 from slop_measure.application.change_review import _skipped
 from slop_measure.domain.changes import AddedFile, DeletedFile
 from slop_measure.domain.clone_changes import (
+    ChangedCloneMember,
     CloneGroupChange,
     CloneMemberChange,
     CloneOccurrence,
@@ -21,6 +25,93 @@ from slop_measure.domain.evidence import (
 from slop_measure.domain.inventory import SourceInventory
 from slop_measure.domain.reports import AnalysisReport, ComparisonCohortReport, SourceSide
 from slop_measure.metrics.loc_delta import aligned_line_pairs
+
+
+@dataclass(frozen=True)
+class _Population:
+    group: CloneGroup
+    baseline: tuple[CloneOccurrence, ...]
+    current: tuple[CloneOccurrence, ...]
+
+
+def _compatible(old: _Population, new: _Population) -> bool:
+    return (old.group.language, old.group.cohort, old.group.normalization_version) == (
+        new.group.language,
+        new.group.cohort,
+        new.group.normalization_version,
+    )
+
+
+def _group_edges(populations: tuple[_Population, ...], matcher: EditedMembers):
+    edges = {
+        (side, index): set()
+        for index, population in enumerate(populations)
+        for side, items in enumerate((population.baseline, population.current))
+        if items
+    }
+    for old_index, old in enumerate(populations):
+        for new_index, new in enumerate(populations):
+            if not old.baseline or not new.current or not _compatible(old, new):
+                continue
+            same = old_index == new_index
+            related = same or (
+                old.group.language == "python"
+                and any(matcher.relation(x, y)[0] for x in old.baseline for y in new.current)
+            )
+            if related:
+                edges[0, old_index].add((1, new_index))
+                edges[1, new_index].add((0, old_index))
+    return edges
+
+
+def _modified_members(
+    old, new, matcher: EditedMembers
+) -> tuple[list[CloneMemberChange], list[CloneOccurrence], list[CloneOccurrence]]:
+    candidates = [(x, y) for x in old for y in new if matcher.relation(x, y)[1]]
+    pairs = [
+        (x, y)
+        for x, y in candidates
+        if sum(a == x for a, _ in candidates) == sum(b == y for _, b in candidates) == 1
+    ]
+    return (
+        [ChangedCloneMember(baseline=x, current=y) for x, y in pairs],
+        [x for x in old if not any(x == a for a, _ in pairs)],
+        [y for y in new if not any(y == b for _, b in pairs)],
+    )
+
+
+def _result(old: _Population | None, new: _Population | None, members) -> CloneGroupChange:
+    population = new if new is not None else old
+    if population is None:
+        raise ValueError("clone continuity requires an observed population")
+    group = population.group
+    return CloneGroupChange(
+        language=group.language,
+        cohort=group.cohort,
+        normalization_version=group.normalization_version,
+        fingerprint=group.fingerprint,
+        baseline_fingerprint=old.group.fingerprint if old is not None else None,
+        current_fingerprint=new.group.fingerprint if new is not None else None,
+        members=tuple(members),
+    )
+
+
+def _ambiguous(populations, component):
+    for index in sorted({index for _, index in component}):
+        population = populations[index]
+        old = population if (0, index) in component else None
+        new = population if (1, index) in component else None
+        yield _result(
+            old,
+            new,
+            (
+                UnresolvedCloneMembers(
+                    baseline=old.baseline if old else (),
+                    current=new.current if new else (),
+                    reason="Edited clone groups have ambiguous split or merge correspondence.",
+                ),
+            ),
+        )
 
 
 def _candidate_occurrences(group: CloneGroup, evidence: tuple[LanguageEvidence, ...], documents):
@@ -132,6 +223,30 @@ def _remaining_members(report, old, new, inventories, evidence_sides):
     return result
 
 
+def _paired_members(old, new, matcher):
+    old_items = old.baseline if old else ()
+    new_items = new.current if new else ()
+    if old and new and old.group.fingerprint != new.group.fingerprint:
+        return _modified_members(old_items, new_items, matcher)
+    return _match_members(old_items, new_items, matcher.file_map, *matcher.documents)
+
+
+def _resolve_groups(populations, matcher, report, inventories, evidence_sides):
+    for component in connected_groups(_group_edges(populations, matcher)):
+        old = [populations[index] for side, index in component if side == 0]
+        new = [populations[index] for side, index in component if side == 1]
+        if len(old) > 1 or len(new) > 1:
+            yield from _ambiguous(populations, component)
+            continue
+        before = old[0] if old else None
+        after = new[0] if new else None
+        members, old_remaining, new_remaining = _paired_members(before, after, matcher)
+        members.extend(
+            _remaining_members(report, old_remaining, new_remaining, inventories, evidence_sides)
+        )
+        yield _result(before, after, members)
+
+
 def compare_clones(
     report: AnalysisReport,
     baseline: SourceInventory,
@@ -158,27 +273,20 @@ def compare_clones(
         ): g.detail
         for g in report.clone_groups
     }
-    result = []
-    for key, group in sorted(groups.items()):
-        old = _candidate_occurrences(group, old_evidence, before)
-        new = _candidate_occurrences(group, new_evidence, after)
-        members, old_remaining, new_remaining = _match_members(old, new, file_map, before, after)
-        members.extend(
-            _remaining_members(
-                report,
-                old_remaining,
-                new_remaining,
-                (baseline, current),
-                (old_evidence, new_evidence),
-            )
+    populations = tuple(
+        _Population(
+            group,
+            _candidate_occurrences(group, old_evidence, before),
+            _candidate_occurrences(group, new_evidence, after),
         )
-        result.append(
-            CloneGroupChange(
-                language=key[0],
-                cohort=key[1],
-                normalization_version=key[2],
-                fingerprint=key[3],
-                members=tuple(members),
-            )
+        for _, group in sorted(groups.items())
+    )
+    return tuple(
+        _resolve_groups(
+            populations,
+            EditedMembers(file_map, before, after),
+            report,
+            (baseline, current),
+            (old_evidence, new_evidence),
         )
-    return tuple(result)
+    )
