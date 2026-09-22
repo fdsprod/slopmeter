@@ -7,11 +7,17 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from slop_measure.api import AnalysisConfig, DirectorySourceReference, SnapshotRequest, scan
+from slop_measure.api import (
+    AnalysisConfig,
+    DirectorySourceReference,
+    GitSourceReference,
+    SnapshotRequest,
+    scan,
+)
 from slop_measure.application.error_review import inspect_errors
 from slop_measure.cli import app
 from slop_measure.domain.error_review import ErrorReviewReport
-from slop_measure.errors import AnalysisFailure
+from slop_measure.errors import AnalysisFailure, InputError
 
 SOURCE = """def fetch(client):
     try:
@@ -185,3 +191,84 @@ def test_error_cli_rejects_unsupported_languages(project, language: str) -> None
     root, _ = project
     result = CliRunner().invoke(app, ["errors", "--root", str(root), "--lang", language, "--json"])
     assert result.exit_code == 2 and result.stderr
+
+
+def test_error_api_rejects_git_source_reference(project) -> None:
+    root, _ = project
+    selected = SnapshotRequest(
+        target=GitSourceReference(root=root, revision="HEAD"), config=AnalysisConfig()
+    )
+    with pytest.raises(InputError):
+        inspect_errors(selected)
+
+
+def test_unexpected_error_detector_failure_is_owned_and_strict_fails(
+    project, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, marker = project
+
+    def fail(document):
+        raise RuntimeError("detector fixture failure")
+
+    monkeypatch.setattr("slop_measure.application.error_review.analyze_errors", fail)
+    wire = inspect_errors(request(root)).model_dump(mode="json")
+    assert len(wire["files"]) == 2
+    for file in wire["files"]:
+        assert file["state"] == "failed" and "handlers" not in file
+        diagnostic = file["diagnostic"]
+        assert diagnostic["path"] == file["path"] and diagnostic["severity"] == "error"
+        assert diagnostic in wire["diagnostics"]
+        assert (
+            file["source_sha256"] == hashlib.sha256((root / file["path"]).read_bytes()).hexdigest()
+        )
+    assert wire["summary"]["files_failed"] == 2
+    assert wire["summary"]["encountered"] == 0 and wire["summary"]["assessed"] == 0
+    with pytest.raises(AnalysisFailure):
+        inspect_errors(request(root, strict=True))
+    strict = CliRunner().invoke(app, ["errors", "--root", str(root), "--strict", "--json"])
+    assert strict.exit_code == 3 and strict.stderr
+    assert not marker.exists()
+
+
+def test_unreadable_error_inventory_file_retains_diagnostic_without_handler_count(
+    project, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, marker = project
+    blocked = root / "fallback.py"
+    original = Path.read_bytes
+
+    def read_bytes(path: Path) -> bytes:
+        if path == blocked:
+            raise PermissionError("inventory fixture cannot read source")
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", read_bytes)
+    wire = inspect_errors(request(root)).model_dump(mode="json")
+    failed = next(file for file in wire["files"] if file["path"] == "fallback.py")
+    assert failed["state"] == "failed" and "handlers" not in failed
+    assert failed.get("source_sha256") is None
+    assert failed["diagnostic"]["severity"] == "error"
+    assert failed["diagnostic"]["path"] == "fallback.py"
+    assert failed["diagnostic"] in wire["diagnostics"]
+    assert wire["summary"]["files_failed"] == 1 and wire["summary"]["files_analyzed"] == 1
+    assert wire["summary"]["encountered"] == 0 and wire["summary"]["findings"] == 0
+    with pytest.raises(AnalysisFailure):
+        inspect_errors(request(root, strict=True))
+    assert not marker.exists()
+
+
+@pytest.mark.parametrize("contents", ["[malformed", "strict = []\n"])
+def test_invalid_explicit_error_config_is_rejected_without_default_fallback(
+    project, contents: str
+) -> None:
+    root, marker = project
+    (root / "slop.toml").write_text("strict = false\n", encoding="utf-8")
+    config = root.parent / "invalid.toml"
+    config.write_text(contents, encoding="utf-8")
+    before = config.read_bytes()
+    result = CliRunner().invoke(
+        app, ["errors", "--root", str(root), "--config", str(config), "--json"]
+    )
+    assert result.exit_code == 2 and result.stderr
+    assert result.stdout == ""
+    assert config.read_bytes() == before and not marker.exists()
