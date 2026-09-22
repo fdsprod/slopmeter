@@ -105,6 +105,11 @@ def test_internal_edges_retain_orthogonal_execution_and_guard_context(
         "    if t.TYPE_CHECKING:\n        import sample.storage\n",
         "from typing import TYPE_CHECKING\nclass Controller:\n    TYPE_CHECKING = True\n"
         "    if TYPE_CHECKING:\n        import sample.storage\n",
+        "import typing\ntyping.TYPE_CHECKING = custom\n"
+        "if typing.TYPE_CHECKING:\n    import sample.storage\n",
+        "if TYPE_CHECKING:\n    import sample.storage\nfrom typing import TYPE_CHECKING\n",
+        "if enabled:\n    from typing import TYPE_CHECKING\n"
+        "if TYPE_CHECKING:\n    import sample.storage\n",
     ],
 )
 @pytest.mark.xfail(strict=True, reason="Pending import execution contexts")
@@ -162,6 +167,31 @@ def test_old_reports_default_missing_import_context_to_unknown(tmp_path):
         item["context"] == {"execution": "unknown", "guards": []} for item in observations(restored)
     )
     assert restored.fan_out == report.fan_out
+
+
+@pytest.mark.xfail(strict=True, reason="Pending import execution contexts")
+def test_full_old_report_with_computed_edges_and_violations_loads_unknown_context(tmp_path):
+    report = inspect(tmp_path, "import sample.storage\n", "import sample.controller\n")
+    wire = report.model_dump(mode="json")
+
+    def remove_context(value):
+        if isinstance(value, dict):
+            value.pop("context", None)
+            for child in value.values():
+                remove_context(child)
+        elif isinstance(value, list):
+            for child in value:
+                remove_context(child)
+
+    remove_context(wire)
+    assert wire["edges"] and wire["violations"] and wire["cycles"]
+    restored = type(report).model_validate(wire)
+    assert all(
+        item["context"] == {"execution": "unknown", "guards": []} for item in observations(restored)
+    )
+    assert restored.cycles == report.cycles
+    assert restored.fan_out == report.fan_out
+    assert len(restored.violations) == 1
 
 
 @pytest.mark.parametrize(
