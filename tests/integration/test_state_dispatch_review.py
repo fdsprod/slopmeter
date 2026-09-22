@@ -5,9 +5,11 @@ from hashlib import sha256
 
 import pytest
 from test_change_review import request, roots as shared_roots, write
+from test_git_comparison import git
 from typer.testing import CliRunner
 
 from slop_measure import api
+from slop_measure.api import AnalysisConfig, ComparisonRequest, GitSourceReference
 from slop_measure.cli import app
 
 roots = shared_roots
@@ -206,3 +208,129 @@ def test_existing_changes_json_command_includes_the_same_review_evidence(roots):
     wire = json.loads(result.stdout)
     assert len(wire["state_dispatch"]) == 1
     assert wire == api.review_change(request(roots, languages=("python",))).model_dump(mode="json")
+
+
+def test_distinct_comparisons_on_one_line_retain_separate_occurrence_ownership(roots):
+    write(roots[1], "flow.py", 'assert item.state == "ready" or item.state == "done"\n')
+
+    report = api.review_change(request(roots, languages=("python",)))
+
+    changes = dispatch(report)
+    assert len(changes) == 2 and all(item["state"] == "introduced" for item in changes)
+    assert {tuple(item["current"]["values"]) for item in changes} == {("ready",), ("done",)}
+    assert all(item["current"]["span"]["start_line"] == 1 for item in changes)
+    assert report.state_dispatch_summary["introduced"] == 2
+    assert type(report).model_validate_json(report.model_dump_json()) == report
+
+
+def test_repeated_signatures_keep_existing_sites_when_another_occurrence_is_added(roots):
+    source = (
+        "def inspect(item):\n"
+        '    assert item.state != "unknown"\n'
+        "    audit()\n"
+        '    assert item.state != "unknown"\n'
+    )
+    write(roots[0], "flow.py", source)
+    write(roots[1], "flow.py", source + '    finalize()\n    assert item.state != "unknown"\n')
+
+    report = api.review_change(request(roots, languages=("python",)))
+
+    changes = dispatch(report)
+    assert sorted(item["state"] for item in changes) == ["introduced", "persisted", "persisted"]
+    persisted = [item for item in changes if item["state"] == "persisted"]
+    assert {
+        (item["baseline"]["span"]["start_line"], item["current"]["span"]["start_line"])
+        for item in persisted
+    } == {(2, 2), (4, 4)}
+    added = next(item for item in changes if item["state"] == "introduced")
+    assert added["current"]["span"]["start_line"] == 6
+
+
+def test_git_renamed_failed_counterpart_does_not_prove_comparison_removal(tmp_path, monkeypatch):
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init")
+    git(repo, "config", "user.name", "Dispatch test")
+    git(repo, "config", "user.email", "dispatch@example.invalid")
+    source = (
+        "def inspect(item):\n"
+        "    first = 1\n"
+        "    second = first + 2\n"
+        "    third = second + 3\n"
+        "    fourth = third + 4\n"
+        '    assert item.state != "unresolved"\n'
+        "    return fourth\n"
+    )
+    write(repo, "old.py", source)
+    git(repo, "add", ".")
+    git(repo, "commit", "-m", "baseline")
+    git(repo, "mv", "old.py", "new.py")
+    write(repo, "new.py", source.replace("def inspect(item):", "def inspect(item:"))
+    git(repo, "add", ".")
+    git(repo, "commit", "-m", "rename and introduce syntax error")
+    assert git(repo, "diff", "--name-status", "-M", "HEAD~1", "HEAD").startswith(b"R")
+
+    report = api.review_change(
+        ComparisonRequest(
+            baseline=GitSourceReference(root=repo, revision="HEAD~1"),
+            current=GitSourceReference(root=repo, revision="HEAD"),
+            config=AnalysisConfig(languages=frozenset({"python"})),
+        )
+    )
+
+    changes = dispatch(report)
+    assert len(changes) == 1 and changes[0]["state"] == "unresolved"
+    assert changes[0]["baseline"][0]["path"] == "old.py"
+    assert changes[0]["reason"].strip()
+    assert report.state_dispatch_summary["removed"] == 0
+
+
+def test_excluded_counterpart_does_not_prove_comparison_removal(roots):
+    source = 'assert item.state != "unresolved"\n'
+    write(roots[0], "flow.py", source)
+    write(roots[1], "flow.py", "# @generated\n" + source)
+
+    report = api.review_change(request(roots, languages=("python",)))
+
+    changes = dispatch(report)
+    assert len(changes) == 1 and changes[0]["state"] == "unresolved"
+    assert (
+        report.state_dispatch_summary["introduced"] == report.state_dispatch_summary["removed"] == 0
+    )
+
+
+def test_multiple_rewritten_comparisons_in_one_scope_remain_ambiguous(roots):
+    write(
+        roots[0],
+        "flow.py",
+        (
+            'def inspect(item):\n    assert item.state == "ready"\n    assert item.state == "failed"\n'
+        ),
+    )
+    write(
+        roots[1],
+        "flow.py",
+        (
+            'def inspect(item):\n    assert other.state != "queued"\n    assert another.state != "gone"\n'
+        ),
+    )
+
+    report = api.review_change(request(roots, languages=("python",)))
+
+    changes = dispatch(report)
+    assert changes and all(item["state"] == "unresolved" for item in changes)
+    assert sum(len(item["baseline"]) for item in changes) == 2
+    assert sum(len(item["current"]) for item in changes) == 2
+    assert all(item["reason"].strip() for item in changes)
+
+
+def test_imported_report_rejects_duplicate_comparison_ownership(roots):
+    write(roots[1], "flow.py", 'assert item.state != "unresolved"\n')
+    report = api.review_change(request(roots, languages=("python",)))
+    wire = report.model_dump(mode="json")
+    wire.pop("state_dispatch_summary")
+    wire["state_dispatch"].append(wire["state_dispatch"][0])
+
+    with pytest.raises(ValueError):
+        type(report).model_validate(wire)
