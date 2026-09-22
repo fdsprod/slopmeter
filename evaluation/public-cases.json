@@ -1,0 +1,874 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "astrbot-fix",
+      "repository": "AstrBotDevs/AstrBot",
+      "label": "supported-positive",
+      "rationale": "Upstream rerank failure returned an empty list and replaced valid retrieval results. The fix propagates the exception. The exception fallback is a supported candidate; removal is evidence disappearance, not an independent proof of correctness.",
+      "evidence_url": "https://github.com/AstrBotDevs/AstrBot/pull/10051",
+      "snapshots": {
+        "before": {
+          "revision": "8492df45e0f5a3360cc0532cce40246cbd501e16",
+          "files": [
+            {
+              "path": "astrbot/core/provider/sources/xinference_rerank_source.py",
+              "sha256": "768ec66058718077de8f8b4823113981282335831fdb58a352b07727d5277877"
+            }
+          ]
+        },
+        "after": {
+          "revision": "081261664caead53312d30118801eed384d86b80",
+          "files": [
+            {
+              "path": "astrbot/core/provider/sources/xinference_rerank_source.py",
+              "sha256": "339baca9a2badd67218f68399377099baf72905d680c3387508e909fabcb58b0"
+            }
+          ]
+        }
+      },
+      "runs": [
+        {
+          "id": "before",
+          "kind": "snapshot",
+          "command": "errors",
+          "snapshot": "before",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 1
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 3
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 3
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 1
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            },
+            {
+              "pointer": "/files/0/handlers/1/symbol",
+              "equals": "XinferenceRerankProvider.rerank"
+            },
+            {
+              "pointer": "/files/0/handlers/1/state",
+              "equals": "analyzed"
+            },
+            {
+              "pointer": "/files/0/handlers/1/findings/0/fallback_kind",
+              "equals": "empty-list"
+            },
+            {
+              "pointer": "/files/0/handlers/1/findings/0/caught",
+              "equals": "Exception"
+            }
+          ]
+        },
+        {
+          "id": "after",
+          "kind": "snapshot",
+          "command": "errors",
+          "snapshot": "after",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 1
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 3
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 3
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 0
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            },
+            {
+              "pointer": "/files/0/handlers/1/symbol",
+              "equals": "XinferenceRerankProvider.rerank"
+            },
+            {
+              "pointer": "/files/0/handlers/1/state",
+              "equals": "analyzed"
+            },
+            {
+              "pointer": "/files/0/handlers/1/findings",
+              "equals": []
+            }
+          ]
+        },
+        {
+          "id": "changes",
+          "kind": "changes",
+          "checks": [
+            {
+              "pointer": "/error_summary",
+              "equals": {
+                "introduced": 0,
+                "removed": 1,
+                "persisted": 0,
+                "changed": 0,
+                "unresolved": 0
+              }
+            },
+            {
+              "pointer": "/errors/0/state",
+              "equals": "removed"
+            },
+            {
+              "pointer": "/errors/0/baseline/symbol",
+              "equals": "XinferenceRerankProvider.rerank"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pyrit-fix",
+      "repository": "microsoft/PyRIT",
+      "label": "coverage-gap",
+      "rationale": "A missing JSON response path returned an empty string. The fix raises for missing paths but preserves valid null responses. This selected module contains no exception handlers, so the errors detector cannot assess this contract.",
+      "evidence_url": "https://github.com/microsoft/PyRIT/pull/2621",
+      "snapshots": {
+        "before": {
+          "revision": "0ef3ecee6c80b96aa0c2e07bb122801bc273bfba",
+          "files": [
+            {
+              "path": "pyrit/prompt_target/http_target/http_target_callback_functions.py",
+              "sha256": "04110f1e1286fe5db9eb75db885f8a324b35b68bbd6fa887428ff00d16afdaf1"
+            }
+          ]
+        },
+        "after": {
+          "revision": "4cafa2006e9d813761e19cddb297dfa8f3b905f0",
+          "files": [
+            {
+              "path": "pyrit/prompt_target/http_target/http_target_callback_functions.py",
+              "sha256": "1122d0e28a31062b643e2ab3bf03a0a117a326782ec993a78ea10c7aa45db564"
+            }
+          ]
+        }
+      },
+      "runs": [
+        {
+          "id": "before",
+          "kind": "snapshot",
+          "command": "errors",
+          "snapshot": "before",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 1
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 0
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            }
+          ]
+        },
+        {
+          "id": "after",
+          "kind": "snapshot",
+          "command": "errors",
+          "snapshot": "after",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 1
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 0
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            }
+          ]
+        },
+        {
+          "id": "changes",
+          "kind": "changes",
+          "checks": [
+            {
+              "pointer": "/error_summary",
+              "equals": {
+                "introduced": 0,
+                "removed": 0,
+                "persisted": 0,
+                "changed": 0,
+                "unresolved": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "werkzeug-641",
+      "repository": "pallets/werkzeug",
+      "label": "coverage-gap",
+      "rationale": "Appending response bytes leaves Content-Length stale until the fix removes the header. The current derived detector cannot connect object fields across methods, dictionary entries, byte lengths, and conditional recomputation.",
+      "evidence_url": "https://github.com/pallets/werkzeug/pull/641",
+      "snapshots": {
+        "before": {
+          "revision": "80d674429f3ea76a706e6dc2419a3cecf7b2a33b",
+          "files": [
+            {
+              "path": "werkzeug/wrappers.py",
+              "sha256": "2814a51ba94a3dcef69d9adeb249dd047c41244e7d9ac0950113e276137e8e98"
+            }
+          ]
+        },
+        "after": {
+          "revision": "7dc1a447a838cebf4077a9e5c2a3cdd8052f6da5",
+          "files": [
+            {
+              "path": "werkzeug/wrappers.py",
+              "sha256": "9bbfca3c75a34e31b3b24835383bccc43cb44b6aeb3b657d05288e6a5c617e19"
+            }
+          ]
+        }
+      },
+      "runs": [
+        {
+          "id": "before",
+          "kind": "snapshot",
+          "command": "derived",
+          "snapshot": "before",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 1
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 112
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 112
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 0
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            },
+            {
+              "pointer": "/files/0/functions/47/symbol",
+              "equals": "set_data"
+            },
+            {
+              "pointer": "/files/0/functions/47/state",
+              "equals": "unresolved"
+            },
+            {
+              "pointer": "/files/0/functions/47/reason",
+              "equals": "Only undecorated top-level synchronous functions are supported."
+            },
+            {
+              "pointer": "/files/0/functions/60/symbol",
+              "equals": "get_wsgi_headers"
+            },
+            {
+              "pointer": "/files/0/functions/60/state",
+              "equals": "unresolved"
+            },
+            {
+              "pointer": "/files/0/functions/60/reason",
+              "equals": "Only undecorated top-level synchronous functions are supported."
+            },
+            {
+              "pointer": "/files/0/functions/88/symbol",
+              "equals": "write"
+            },
+            {
+              "pointer": "/files/0/functions/88/state",
+              "equals": "unresolved"
+            },
+            {
+              "pointer": "/files/0/functions/88/reason",
+              "equals": "Only undecorated top-level synchronous functions are supported."
+            }
+          ]
+        },
+        {
+          "id": "after",
+          "kind": "snapshot",
+          "command": "derived",
+          "snapshot": "after",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 1
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 112
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 112
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 0
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            },
+            {
+              "pointer": "/files/0/functions/47/symbol",
+              "equals": "set_data"
+            },
+            {
+              "pointer": "/files/0/functions/47/state",
+              "equals": "unresolved"
+            },
+            {
+              "pointer": "/files/0/functions/47/reason",
+              "equals": "Only undecorated top-level synchronous functions are supported."
+            },
+            {
+              "pointer": "/files/0/functions/60/symbol",
+              "equals": "get_wsgi_headers"
+            },
+            {
+              "pointer": "/files/0/functions/60/state",
+              "equals": "unresolved"
+            },
+            {
+              "pointer": "/files/0/functions/60/reason",
+              "equals": "Only undecorated top-level synchronous functions are supported."
+            },
+            {
+              "pointer": "/files/0/functions/88/symbol",
+              "equals": "write"
+            },
+            {
+              "pointer": "/files/0/functions/88/state",
+              "equals": "unresolved"
+            },
+            {
+              "pointer": "/files/0/functions/88/reason",
+              "equals": "Only undecorated top-level synchronous functions are supported."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "networkx-5894",
+      "repository": "networkx/networkx",
+      "label": "coverage-gap",
+      "rationale": "Replacing the node dictionary leaves a cached node view bound to the old dictionary. The fix invalidates the view through a descriptor. Descriptor, cached-property, and alias semantics remain unsupported. NetworkX is already a calibration lineage, not an independent holdout.",
+      "evidence_url": "https://github.com/networkx/networkx/pull/5894",
+      "snapshots": {
+        "before": {
+          "revision": "98060487ad192918cfc2415fc0b5c309ff2d3565",
+          "files": [
+            {
+              "path": "networkx/classes/graph.py",
+              "sha256": "c291b93fa6a0766a4fc692875f9503d2fbe573cb5722f300e7a3dc471e580af8"
+            },
+            {
+              "path": "networkx/classes/reportviews.py",
+              "sha256": "1fd04222e81676802c02c40ed45d280db8cd09021dc88e0996d41ba9573c31be"
+            }
+          ]
+        },
+        "after": {
+          "revision": "8f04f3927cca4ff1cbbedd2fac16e4a0c80881ad",
+          "files": [
+            {
+              "path": "networkx/classes/graph.py",
+              "sha256": "b843b247fd9010ab4ab2cf151cad00b74720f7254f92e7283498b14b61ac879e"
+            },
+            {
+              "path": "networkx/classes/reportviews.py",
+              "sha256": "1fd04222e81676802c02c40ed45d280db8cd09021dc88e0996d41ba9573c31be"
+            }
+          ]
+        }
+      },
+      "runs": [
+        {
+          "id": "before",
+          "kind": "snapshot",
+          "command": "derived",
+          "snapshot": "before",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 2
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 144
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 144
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 0
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            },
+            {
+              "pointer": "/files/0/functions/16/symbol",
+              "equals": "nodes"
+            },
+            {
+              "pointer": "/files/0/functions/16/state",
+              "equals": "unresolved"
+            },
+            {
+              "pointer": "/files/0/functions/16/reason",
+              "equals": "Only undecorated top-level synchronous functions are supported."
+            }
+          ]
+        },
+        {
+          "id": "after",
+          "kind": "snapshot",
+          "command": "derived",
+          "snapshot": "after",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 2
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 145
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 145
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 0
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            },
+            {
+              "pointer": "/files/0/functions/17/symbol",
+              "equals": "nodes"
+            },
+            {
+              "pointer": "/files/0/functions/17/state",
+              "equals": "unresolved"
+            },
+            {
+              "pointer": "/files/0/functions/17/reason",
+              "equals": "Only undecorated top-level synchronous functions are supported."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "httpx-known-encoding",
+      "repository": "encode/httpx",
+      "label": "intentional",
+      "rationale": "_is_known_encoding returns False when codec lookup rejects an unknown encoding. The fallback implements the documented predicate contract. Keep the raw candidate and its persisted state; it is not an actionable defect label. Other handlers in the same module remain in scope.",
+      "evidence_url": "https://github.com/encode/httpx/blob/89599a9541af14bcf906fc4ed58ccbdf403802ba/httpx/_models.py",
+      "snapshots": {
+        "before": {
+          "revision": "8ecb86f0d74ffc52d4663214fae9526bee89358d",
+          "files": [
+            {
+              "path": "httpx/_models.py",
+              "sha256": "e3ffc6bb2bf580bc6e6428708a6f247d036220e709f5a72b785392babbd97e6b"
+            }
+          ]
+        },
+        "after": {
+          "revision": "89599a9541af14bcf906fc4ed58ccbdf403802ba",
+          "files": [
+            {
+              "path": "httpx/_models.py",
+              "sha256": "e3ffc6bb2bf580bc6e6428708a6f247d036220e709f5a72b785392babbd97e6b"
+            }
+          ]
+        }
+      },
+      "runs": [
+        {
+          "id": "before",
+          "kind": "snapshot",
+          "command": "errors",
+          "snapshot": "before",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 1
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 9
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 4
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 5
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 2
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            },
+            {
+              "pointer": "/files/0/handlers/0/symbol",
+              "equals": "_is_known_encoding"
+            },
+            {
+              "pointer": "/files/0/handlers/0/state",
+              "equals": "analyzed"
+            },
+            {
+              "pointer": "/files/0/handlers/0/findings/0/fallback_kind",
+              "equals": "false"
+            },
+            {
+              "pointer": "/files/0/handlers/0/findings/0/caught",
+              "equals": "LookupError"
+            }
+          ]
+        },
+        {
+          "id": "after",
+          "kind": "snapshot",
+          "command": "errors",
+          "snapshot": "after",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 1
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 9
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 4
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 5
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 2
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            },
+            {
+              "pointer": "/files/0/handlers/0/symbol",
+              "equals": "_is_known_encoding"
+            },
+            {
+              "pointer": "/files/0/handlers/0/state",
+              "equals": "analyzed"
+            },
+            {
+              "pointer": "/files/0/handlers/0/findings/0/fallback_kind",
+              "equals": "false"
+            },
+            {
+              "pointer": "/files/0/handlers/0/findings/0/caught",
+              "equals": "LookupError"
+            }
+          ]
+        },
+        {
+          "id": "changes",
+          "kind": "changes",
+          "checks": [
+            {
+              "pointer": "/error_summary",
+              "equals": {
+                "introduced": 0,
+                "removed": 0,
+                "persisted": 2,
+                "changed": 0,
+                "unresolved": 0
+              }
+            },
+            {
+              "pointer": "/errors/1/state",
+              "equals": "persisted"
+            },
+            {
+              "pointer": "/errors/1/current/symbol",
+              "equals": "_is_known_encoding"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "astrbot-introduction",
+      "repository": "AstrBotDevs/AstrBot",
+      "label": "supported-positive",
+      "rationale": "The original provider addition introduces an except Exception handler that returns an empty list. The parent has no file at this path. This is a genuine forward history pair, not a reversed fix. It establishes introduction of fallback evidence; the later fix does not independently prove the caller contract at this earlier revision.",
+      "evidence_url": "https://github.com/AstrBotDevs/AstrBot/commit/90a65c35c16187864a4829cdec04535b8ab234c5",
+      "snapshots": {
+        "before": {
+          "revision": "3d88827a95da5a863f062232ad34b3c529a2fb50",
+          "files": []
+        },
+        "after": {
+          "revision": "90a65c35c16187864a4829cdec04535b8ab234c5",
+          "files": [
+            {
+              "path": "astrbot/core/provider/sources/xinference_rerank_source.py",
+              "sha256": "541eb01e47569457b12a043cb9d142d4b5c358f33e15d015b1511fab4fedc304"
+            }
+          ]
+        }
+      },
+      "runs": [
+        {
+          "id": "before",
+          "kind": "snapshot",
+          "command": "errors",
+          "snapshot": "before",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 0
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            }
+          ]
+        },
+        {
+          "id": "after",
+          "kind": "snapshot",
+          "command": "errors",
+          "snapshot": "after",
+          "checks": [
+            {
+              "pointer": "/summary/files_analyzed",
+              "equals": 1
+            },
+            {
+              "pointer": "/summary/files_failed",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/encountered",
+              "equals": 3
+            },
+            {
+              "pointer": "/summary/assessed",
+              "equals": 3
+            },
+            {
+              "pointer": "/summary/unresolved",
+              "equals": 0
+            },
+            {
+              "pointer": "/summary/findings",
+              "equals": 1
+            },
+            {
+              "pointer": "/diagnostics",
+              "equals": []
+            },
+            {
+              "pointer": "/files/0/handlers/1/symbol",
+              "equals": "XinferenceRerankProvider.rerank"
+            },
+            {
+              "pointer": "/files/0/handlers/1/state",
+              "equals": "analyzed"
+            },
+            {
+              "pointer": "/files/0/handlers/1/findings/0/fallback_kind",
+              "equals": "empty-list"
+            },
+            {
+              "pointer": "/files/0/handlers/1/findings/0/caught",
+              "equals": "Exception"
+            }
+          ]
+        },
+        {
+          "id": "changes",
+          "kind": "changes",
+          "checks": [
+            {
+              "pointer": "/error_summary",
+              "equals": {
+                "introduced": 1,
+                "removed": 0,
+                "persisted": 0,
+                "changed": 0,
+                "unresolved": 0
+              }
+            },
+            {
+              "pointer": "/errors/0/state",
+              "equals": "introduced"
+            },
+            {
+              "pointer": "/errors/0/current/symbol",
+              "equals": "XinferenceRerankProvider.rerank"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
