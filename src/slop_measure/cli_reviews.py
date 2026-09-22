@@ -93,6 +93,12 @@ def set_review(  # noqa: PLR0913 - independent source, identity, attribution, an
     review: Annotated[
         str | None, typer.Option("--review", help="Existing compatible history ID.")
     ] = None,
+    supersedes: Annotated[
+        str | None,
+        typer.Option(
+            "--supersedes", help="Legacy clone decision ID explicitly replaced by this judgment."
+        ),
+    ] = None,
 ) -> None:
     """Append an explicit decision. Preserve earlier decisions and measured facts."""
     try:
@@ -105,6 +111,7 @@ def set_review(  # noqa: PLR0913 - independent source, identity, attribution, an
             reason=reason,
             next_step=next_step,
             review_id=review,
+            supersedes_legacy_id=supersedes,
         )
     except (ValueError, OSError) as error:
         _fail(error)

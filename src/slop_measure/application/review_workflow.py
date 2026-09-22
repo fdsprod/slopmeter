@@ -15,6 +15,7 @@ from slop_measure.domain.reports import AnalysisReport
 from slop_measure.domain.review_workflow import (
     CurrentReview,
     LegacyReviewOutsideReport,
+    LegacyReviewResult,
     MissingReview,
     ReviewCause,
     ReviewDecision,
@@ -28,6 +29,7 @@ from slop_measure.domain.review_workflow import (
     ReviewTarget,
     ReviewTargetChange,
     StaleReview,
+    SupersededLegacyReview,
     subject_key,
 )
 from slop_measure.domain.reviews import ReviewDisposition, ReviewStore
@@ -140,20 +142,37 @@ def _report_kinds(report: SupportedReviewReport) -> frozenset[ReviewKind]:
     return frozenset((ReviewKind.DERIVED,))
 
 
-def resolve_reviews(report: SupportedReviewReport, ledger: ReviewLedger) -> ReviewResolutionReport:
-    """Resolve latest judgments against the selected saved report, not the filesystem."""
-    targets = review_targets(report)
-    kinds = _report_kinds(report)
-    latest = {event.review_id: event for event in ledger.events}
+def _legacy_results(
+    report: SupportedReviewReport, ledger: ReviewLedger
+) -> tuple[LegacyReviewResult, ...]:
     if isinstance(report, AnalysisReport):
         legacy = apply_reviews(
             report, ReviewStore(decisions=ledger.legacy_decisions)
         ).review_results
     else:
         legacy = tuple(LegacyReviewOutsideReport(decision=item) for item in ledger.legacy_decisions)
+    links: dict[str, ReviewEvent] = {}
+    for event in ledger.events:
+        if event.supersedes_legacy_id is not None:
+            links.setdefault(event.supersedes_legacy_id, event)
+    return tuple(
+        SupersededLegacyReview(
+            decision=result.decision, review_id=event.review_id, sequence=event.sequence
+        )
+        if (event := links.get(result.decision.id)) is not None
+        else result
+        for result in legacy
+    )
+
+
+def resolve_reviews(report: SupportedReviewReport, ledger: ReviewLedger) -> ReviewResolutionReport:
+    """Resolve latest judgments against the selected saved report, not the filesystem."""
+    targets = review_targets(report)
+    kinds = _report_kinds(report)
+    latest = {event.review_id: event for event in ledger.events}
     return ReviewResolutionReport(
         results=tuple(_resolve(latest[key], targets, kinds) for key in sorted(latest)),
-        legacy_results=legacy,
+        legacy_results=_legacy_results(report, ledger),
         events=ledger.events,
     )
 
@@ -199,6 +218,7 @@ def write_review(  # noqa: PLR0913
     reason: str,
     next_step: str = "",
     review_id: str | None = None,
+    supersedes_legacy_id: str | None = None,
 ) -> ReviewLedger:
     """Append one explicit judgment atomically, preserving every preceding event."""
     lock = path.with_name(path.name + ".lock")
@@ -218,6 +238,7 @@ def write_review(  # noqa: PLR0913
             decision=ReviewDecision(
                 anchor=target.anchor, disposition=disposition, reason=reason, next_step=next_step
             ),
+            supersedes_legacy_id=supersedes_legacy_id,
         )
         path.parent.mkdir(parents=True, exist_ok=True)
         with lock.open("x", encoding="utf-8"):

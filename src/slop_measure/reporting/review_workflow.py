@@ -1,6 +1,7 @@
 """Saved review state, attribution, and precise anchor differences."""
 
 from slop_measure.domain.review_workflow import (
+    LegacyReviewResult,
     ReviewAnchor,
     ReviewResolutionReport,
     ReviewSubject,
@@ -75,6 +76,23 @@ def _change_lines(previous: ReviewAnchor, change: ReviewTargetChange) -> list[st
     return lines
 
 
+def _legacy_lines(result: LegacyReviewResult) -> list[str]:
+    lines = [
+        f"  Legacy {result.decision.id} | {result.state} | "
+        f"{result.decision.disposition.value}: {result.decision.reason}"
+    ]
+    if result.state == "not-in-selected-report":
+        lines.append(
+            "    This family is not assessed by the selected report, not absent from source."
+        )
+    elif result.state == "superseded":
+        lines.append(
+            f"    Replaced by history {result.review_id} at event {result.sequence}; "
+            "check the replacement's current applicability above."
+        )
+    return lines
+
+
 def render_review_resolution(report: ReviewResolutionReport) -> str:
     lines = ["Saved-report review decisions", _SAVED_NOTICE]
     for result in report.results:
@@ -101,14 +119,7 @@ def render_review_resolution(report: ReviewResolutionReport) -> str:
                 "    This family is not assessed by the selected report, not absent from source."
             )
     for result in report.legacy_results:
-        lines.append(
-            f"  Legacy {result.decision.id} | {result.state} | "
-            f"{result.decision.disposition.value}: {result.decision.reason}"
-        )
-        if result.state == "not-in-selected-report":
-            lines.append(
-                "    This family is not assessed by the selected report, not absent from source."
-            )
+        lines.extend(_legacy_lines(result))
     lines.append(f"History ({len(report.events)} events):")
     for event in report.events:
         lines.append(
@@ -116,4 +127,6 @@ def render_review_resolution(report: ReviewResolutionReport) -> str:
             f"{event.recorded_at.isoformat()} | {event.decision.disposition.value}: "
             f"{event.decision.reason} | Next: {event.decision.next_step or 'not supplied'}"
         )
+        if event.supersedes_legacy_id is not None:
+            lines.append(f"    Explicitly supersedes legacy decision {event.supersedes_legacy_id}.")
     return "\n".join(lines) + "\n"

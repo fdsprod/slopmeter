@@ -159,12 +159,23 @@ class ReviewEvent(_Record):
     actor: _Text
     recorded_at: datetime
     decision: ReviewDecision
+    supersedes_legacy_id: _Text | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     def validate_time(self) -> Self:
         if self.recorded_at.tzinfo is None or self.recorded_at.utcoffset() != timedelta(0):
             raise ValueError("review timestamps must be timezone-aware UTC")
         return self
+
+
+def _legacy_family_matches(decision: CloneReviewDecision, subject: ReviewSubject) -> bool:
+    detail = decision.anchor.detail
+    return (
+        subject.kind is ReviewKind.CLONE
+        and subject.language == detail.language
+        and subject.cohort is detail.cohort
+        and subject_paths(subject) == tuple(sorted({item.path.root for item in detail.members}))
+    )
 
 
 class ReviewLedger(_Record):
@@ -174,7 +185,7 @@ class ReviewLedger(_Record):
 
     @model_validator(mode="after")
     def validate_history(self) -> Self:
-        legacy = {item.id for item in self.legacy_decisions}
+        legacy = {item.id: item for item in self.legacy_decisions}
         if len(legacy) != len(self.legacy_decisions):
             raise ValueError("legacy review IDs must be unique")
         histories = {}
@@ -187,7 +198,24 @@ class ReviewLedger(_Record):
             if event.review_id in histories and histories[event.review_id] != key:
                 raise ValueError("review history cannot change its subject family")
             histories[event.review_id] = key
+        self._validate_supersession(legacy)
         return self
+
+    def _validate_supersession(self, legacy: dict[str, CloneReviewDecision]) -> None:
+        claims: dict[str, str] = {}
+        for event in self.events:
+            identifier = event.supersedes_legacy_id
+            if identifier is None:
+                continue
+            decision = legacy.get(identifier)
+            if decision is None or not _legacy_family_matches(
+                decision, event.decision.anchor.subject
+            ):
+                raise ValueError(
+                    "supersession must identify a legacy clone in the same subject family"
+                )
+            if claims.setdefault(identifier, event.review_id) != event.review_id:
+                raise ValueError("a legacy decision can be superseded by only one review history")
 
 
 class CurrentReview(_Record):
@@ -250,12 +278,20 @@ class LegacyReviewOutsideReport(_Record):
     reason: Literal["review-family-not-in-selected-report"] = "review-family-not-in-selected-report"
 
 
+class SupersededLegacyReview(_Record):
+    state: Literal["superseded"] = "superseded"
+    decision: CloneReviewDecision
+    review_id: _Text
+    sequence: Annotated[int, Field(gt=0, strict=True)]
+
+
 ReviewResult = Annotated[
     CurrentReview | StaleReview | MissingReview | ReviewOutsideReport,
     Field(discriminator="state"),
 ]
 LegacyReviewResult = Annotated[
-    CloneReviewResult | LegacyReviewOutsideReport, Field(discriminator="state")
+    CloneReviewResult | LegacyReviewOutsideReport | SupersededLegacyReview,
+    Field(discriminator="state"),
 ]
 
 
