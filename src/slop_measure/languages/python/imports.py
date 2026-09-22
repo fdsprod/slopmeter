@@ -18,6 +18,7 @@ from slop_measure.domain.architecture import (
 )
 from slop_measure.domain.evidence import Diagnostic, DiagnosticSeverity
 from slop_measure.domain.source import SourceDocument
+from slop_measure.languages.python._import_context import import_contexts
 from slop_measure.languages.python.rules._shared import bound_names, scope_nodes, span
 
 
@@ -212,17 +213,20 @@ def _parse(
             ),
         )
     imports: list[ImportObservation] = []
+    contexts = import_contexts(tree)
     dynamic_modules, dynamic_functions = _dynamic_names(tree)
     for node in sorted(
         ast.walk(tree),
         key=lambda item: (getattr(item, "lineno", 0), getattr(item, "col_offset", 0)),
     ):
+        observations: list[ImportObservation] = []
         if isinstance(node, ast.Import):
-            imports.extend(_target(module, node, alias.name, index) for alias in node.names)
+            observations.extend(_target(module, node, alias.name, index) for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
-            imports.extend(_from_import(module, node, index, package_members))
+            observations.extend(_from_import(module, node, index, package_members))
         elif isinstance(node, ast.Call) and _is_dynamic(node, dynamic_modules, dynamic_functions):
-            imports.append(_unresolved(module, node, "dynamic-import"))
+            observations.append(_unresolved(module, node, "dynamic-import"))
+        imports.extend(item.model_copy(update={"context": contexts[node]}) for item in observations)
     return AnalyzedArchitectureFile(
         path=module.document.path,
         module=module.name,

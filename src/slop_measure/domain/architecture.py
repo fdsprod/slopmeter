@@ -51,7 +51,24 @@ class ArchitecturePolicy(_ArchitectureEvidence):
         return normalized
 
 
-class ImportEdge(_ArchitectureEvidence):
+class ImportContext(_ArchitectureEvidence):
+    execution: Literal["eager", "deferred", "unknown"] = "unknown"
+    guards: tuple[Literal["type-checking", "conditional"], ...] = ()
+
+    @model_validator(mode="after")
+    def distinct_guards(self) -> Self:
+        if self.execution == "unknown" and self.guards:
+            raise ValueError("unknown import context cannot assert guards")
+        if len(set(self.guards)) != len(self.guards):
+            raise ValueError("import guards must be unique")
+        return self
+
+
+class _LocatedImport(_ArchitectureEvidence):
+    context: ImportContext = ImportContext()
+
+
+class ImportEdge(_LocatedImport):
     state: Literal["internal"] = "internal"
     importer: _Text
     imported: _Text
@@ -59,7 +76,7 @@ class ImportEdge(_ArchitectureEvidence):
     span: SourceSpan
 
 
-class UnresolvedImport(_ArchitectureEvidence):
+class UnresolvedImport(_LocatedImport):
     state: Literal["unresolved"] = "unresolved"
     importer: _Text
     path: ProjectPath
@@ -75,7 +92,7 @@ class UnresolvedImport(_ArchitectureEvidence):
     ]
 
 
-class ExternalImport(_ArchitectureEvidence):
+class ExternalImport(_LocatedImport):
     state: Literal["external"] = "external"
     importer: _Text
     imported: _Text
@@ -118,6 +135,18 @@ ArchitectureFile = Annotated[
 class ArchitectureViolation(_ArchitectureEvidence):
     edge: ImportEdge
     rule: ForbiddenDependency
+
+
+def _legacy_context(value: object) -> object:
+    """Old projections omitted context; hydrate only that absent field as unknown."""
+    if isinstance(value, list):
+        return [_legacy_context(item) for item in value]
+    if isinstance(value, Mapping):
+        fields = {key: _legacy_context(item) for key, item in value.items()}
+        if "importer" in fields and "span" in fields and "context" not in fields:
+            fields["context"] = ImportContext().model_dump(mode="json")
+        return fields
+    return value
 
 
 def _within(module: str, boundary: str) -> bool:
@@ -184,6 +213,9 @@ class ArchitectureReport(_ArchitectureEvidence):
         "missing internal targets remain unresolved.",
         "Conditional imports are included as source relationships, not proof of runtime execution. "
         "No findings does not prove architectural conformance.",
+        "Import context separates eager or deferred syntax from conditional and type-checking "
+        "guards. All edges still contribute to source cycles and declared-rule checks. "
+        "Old reports without context remain unknown.",
     )
 
     @model_validator(mode="wrap")
@@ -195,7 +227,9 @@ class ArchitectureReport(_ArchitectureEvidence):
         supplied = {name: fields.pop(name) for name in cls.model_computed_fields if name in fields}
         result = handler(fields)
         expected = result.model_dump(mode="json")
-        if any(projection != expected[name] for name, projection in supplied.items()):
+        if any(
+            _legacy_context(projection) != expected[name] for name, projection in supplied.items()
+        ):
             raise ValueError("architecture projections must match source evidence")
         return result
 

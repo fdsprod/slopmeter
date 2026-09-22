@@ -460,6 +460,15 @@ uses the existing normalized syntax vocabulary. It does not prove equivalent
 behavior between different implementations. Group splits and competing matches
 can remain unresolved.
 
+For edited Python clone runs, correspondence requires a mapped file, a unique
+declaration and statement suite, and a majority of unchanged complete statements
+with at least two distinct anchors. A matching file or function name alone is
+insufficient. Supported edits become `changed` members, counted in `modified`,
+with separate `baseline_fingerprint` and `current_fingerprint` fields. Editing
+four existing copies can therefore report four modifications and zero additions;
+adding a fifth copy still reports one addition. Weak matches and competing group
+relationships remain unresolved. This does not renew a stale review.
+
 Excluded files can appear only as aggregate language/cohort counts in the existing
 inventory. Without their paths, an exclusion can make all unmatched additions
 and removals in that population unresolved. Matched source relationships remain
@@ -592,6 +601,19 @@ resolved against installed packages or registries. Dynamic imports, star imports
 missing internal modules, and ambiguous package members remain unresolved.
 The command does not enforce transitive layer rules or fail on a violation.
 Check coverage before interpreting an empty violation list.
+
+Each import observation has a `context` with `execution` (`eager`, `deferred`, or
+legacy `unknown`) and `guards` (`conditional` and/or `type-checking`). Function
+bodies are deferred; class bodies use their enclosing context. Positive guards
+using an unshadowed module-level `typing.TYPE_CHECKING` import or alias receive
+the type-checking label. Other conditions remain conditional. Shadowing checks are
+conservative and do not execute code or resolve runtime mutation.
+
+Cycle output includes edge paths and contexts. Type-checking and deferred edges
+remain in the static graph and in declared-rule checks; their presence alone
+does not prove an import-time failure. Old reports without context load as unknown.
+New context, clone-continuity, and budget-detail fields are additive; older strict
+report readers can reject them. Snapshot score reports and calibration are unchanged.
 
 ## Inspect observed history
 
