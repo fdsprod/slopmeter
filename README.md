@@ -13,6 +13,47 @@ Scores are review signals, not defect probabilities or proof of AI authorship.
 
 ## Quick start
 
+Install the released command once with [uv](https://docs.astral.sh/uv/getting-started/installation/):
+
+```text
+uv tool install --python 3.12 https://github.com/fdsprod/slopmeter/releases/download/v0.6.0/slop_measure-0.6.0-py3-none-any.whl
+uv tool update-shell
+```
+
+If uv updates your `PATH`, open a new terminal. Then run `slop` from any project
+directory:
+
+```text
+slop score . --lang py --top 10
+slop score /path/to/another-project --lang py --json
+slop --help
+```
+
+No Slopmeter checkout or environment activation is needed. `uv tool install`
+keeps the tool and its dependencies in a separate environment and exposes `slop`
+on your user `PATH`. See [uv's tool guide](https://docs.astral.sh/uv/guides/tools/).
+
+The wheel URL pins v0.6.0. To install a later release, repeat `uv tool install`
+with that release's wheel URL from [GitHub Releases](https://github.com/fdsprod/slopmeter/releases).
+`uv tool upgrade slop-measure` does not select a newer version from a different
+pinned release URL. To uninstall, use `uv tool uninstall slop-measure`.
+
+### Install with pip
+
+The same wheel is installable with pip into your chosen Python environment:
+
+```text
+python -m pip install https://github.com/fdsprod/slopmeter/releases/download/v0.6.0/slop_measure-0.6.0-py3-none-any.whl
+```
+
+Use Python 3.12 or later. With pip, activate that environment or put its scripts
+directory on `PATH` to run `slop` directly. The user-level uv installation above
+handles this separately from your project environments. Official releases are
+currently distributed through GitHub; these instructions do not claim a PyPI
+publication under `slop-measure`.
+
+### Install from source
+
 Use Python 3.12 or later; the test matrix covers Python 3.12, 3.13, and 3.14.
 Clone this repository and install into a virtual environment.
 
@@ -61,8 +102,7 @@ After pulling updates, repeat `pip install .` or `uv sync --all-groups --locked`
 
 Git must be on `PATH` for revision analysis and Git ignore discovery. Directory
 analysis works without Git, using configured exclusions. Calibration profiles
-are packaged with the tool; normal scans require no network access. Installation
-here is from source, not a claimed PyPI release.
+are packaged with the tool; normal scans require no network access.
 
 ## Commands
 
