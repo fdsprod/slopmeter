@@ -581,6 +581,11 @@ conservative and do not execute code or resolve runtime mutation.
 Annotation and lazy type-alias expressions retain `unknown` timing. Their
 evaluation depends on Python version and annotation policy. Observed dynamic
 namespace writes or mutation of a typing alias prevent a type-checking claim.
+Storing or passing the typing module itself, or exposing its mutable namespace,
+also removes that claim across imported module aliases. This is conservative:
+an alias can become conditional even when no mutation is visible. Ordinary
+attribute reads and direct flag imports remain supported. The analyzer does not
+trace arbitrary aliases or prove that escaped objects remain unchanged.
 
 Cycle output includes edge paths and contexts. Type-checking and deferred edges
 remain in the static graph and in declared-rule checks; their presence alone

@@ -10,6 +10,28 @@ from slop_measure.languages.python.rules._shared import bound_names
 Guard = Literal["type-checking", "conditional"]
 
 
+def _module_escapes(tree: ast.Module, module_names: set[str]) -> bool:
+    """A stored or passed module/namespace can be mutated through another receiver."""
+    if not module_names:
+        return False
+    for parent in ast.walk(tree):
+        for node in ast.iter_child_nodes(parent):
+            if not (
+                isinstance(node, ast.Name)
+                and isinstance(node.ctx, ast.Load)
+                and node.id in module_names
+            ):
+                continue
+            if not (
+                isinstance(parent, ast.Attribute)
+                and parent.value is node
+                and isinstance(parent.ctx, ast.Load)
+                and not parent.attr.startswith("__")
+            ):
+                return True
+    return False
+
+
 def _typing_bindings(tree: ast.Module) -> dict[str, tuple[str, int]]:
     # A module import is trusted only when no competing binding exists anywhere.
     # This deliberately leaves some harmless shadowing unresolved as conditional.
@@ -33,6 +55,7 @@ def _typing_bindings(tree: ast.Module) -> dict[str, tuple[str, int]]:
             for alias in node.names:
                 if alias.name == "TYPE_CHECKING":
                     candidates[alias.asname or alias.name] = ("flag", node.lineno)
+    module_names = {name for name, (kind, _) in candidates.items() if kind == "module"}
     mutated = {
         node.value.id
         for node in ast.walk(tree)
@@ -40,7 +63,7 @@ def _typing_bindings(tree: ast.Module) -> dict[str, tuple[str, int]]:
         and isinstance(node.ctx, (ast.Store, ast.Del))
         and isinstance(node.value, ast.Name)
     }
-    if mutated.intersection(candidates):
+    if mutated.intersection(candidates) or _module_escapes(tree, module_names):
         return {}
     return {
         name: value

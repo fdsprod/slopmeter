@@ -16,11 +16,6 @@ def isolate_source_inventory(tmp_path, monkeypatch):
     monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="Pending conservative typing module escape invalidation; confirmed behavioral RED",
-)
 @pytest.mark.parametrize("receiver", ["t", "typing"])
 @pytest.mark.parametrize(
     "escape",
@@ -83,11 +78,6 @@ def test_unescaped_typing_guards_keep_type_checking_context(tmp_path, source):
     assert edge["context"] == {"execution": "eager", "guards": ["type-checking"]}
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="Pending conservative typing module escape invalidation; confirmed behavioral RED",
-)
 def test_escaped_module_report_matches_cli_without_executing_or_changing_snapshot(tmp_path):
     marker = tmp_path / "target-executed"
     selected = project(
