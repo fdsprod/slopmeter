@@ -355,3 +355,19 @@ def test_unresolved_subject_can_pass_explicit_coverage_gap_expectation(
     run = _invoke(tmp_path, case)
     assert run.returncode == 0, run.stdout + run.stderr
     assert _result(tmp_path)["jobs"][0]["state"] == "passed"
+
+
+@pytest.mark.parametrize("name", ["build/subject.py", "tests/test_subject.py"])
+def test_explicit_manifest_inventory_preserves_generated_and_normally_excluded_source(
+    tmp_path: Path,
+    cache: Path,
+    name: str,
+) -> None:
+    case = _case(cache)
+    case["snapshots"]["before"] = _snapshot(cache, "a", {name: "# @generated\n" + ERROR})
+    run = _invoke(tmp_path, case)
+    assert run.returncode == 0, run.stdout + run.stderr
+    report = _reports(tmp_path)[0]
+    assert report["files"][0]["path"] == name
+    assert report["files"][0]["cohort"] == ("test" if name.startswith("tests/") else "production")
+    assert report["summary"]["findings"] == 1
