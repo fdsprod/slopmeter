@@ -113,8 +113,9 @@ class ChangeReviewReport(_Record):
     errors: tuple[ErrorChange, ...] = ()
     state_dispatch: tuple[StateDispatchChange, ...] = ()
     state_dispatch_interpretation: tuple[str, ...] = (
-        "Raw string state tests are syntax evidence; receiver types and defects are not inferred.",
-        "Review enum members or concrete variant checks when the value selects behavior.",
+        "Literal state-field comparisons are syntax evidence; their semantic domain is unknown.",
+        "A state field can hold geographic, lifecycle, or other values. Inspect the receiver "
+        "and caller contract before recommending a type or behavior change.",
     )
     error_coverage: tuple[ErrorCoverage, ...] = ()
     error_experiment: Literal["py-error-fallback-1"] = "py-error-fallback-1"

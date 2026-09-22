@@ -95,7 +95,7 @@ def _errors(report: ChangeReviewReport) -> list[str]:
 
 def _state_dispatch(report: ChangeReviewReport) -> list[str]:
     lines = [
-        "Raw state comparisons: "
+        "Literal state-field comparisons: "
         + ", ".join(f"{key} {value}" for key, value in report.state_dispatch_summary.items())
     ]
     for change in report.state_dispatch:

@@ -474,10 +474,10 @@ caller contract before changing an intentional predicate or sentinel return.
 The raw state check supports `==`, `!=`, `in`, and `not in` with literal strings.
 It includes boolean combinations in the supported test contexts. Enum member
 comparisons and concrete variant checks are outside this candidate pattern.
-The report does not infer receiver types. When reviewing a result union, use a
-concrete check such as `isinstance(result, ReadyResult)` to select its payload.
-For a shared outcome vocabulary, an enum member such as `Outcome.READY` gives
-the state a defined type. A raw comparison is review evidence, not proof of a bug.
+The report does not infer receiver types or the semantic domain. A `.state` field
+can contain geographic values, lifecycle values, or another vocabulary. Inspect
+the receiver and caller contract before recommending a type or behavior change.
+A literal comparison is review evidence, not proof of a bug.
 
 Finding continuity and review validity serve different purposes. Exact file
 changes can invalidate a saved review even when its finding persists. These new

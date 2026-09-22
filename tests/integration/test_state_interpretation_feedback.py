@@ -8,7 +8,6 @@ from slop_measure import api
 from slop_measure.cli import app
 
 roots = shared_roots
-pytestmark = pytest.mark.xfail(strict=True, reason="Pending semantic-neutral state interpretation")
 
 
 @pytest.mark.parametrize("value", ["OH", "IL", "ready"])
