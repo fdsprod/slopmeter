@@ -36,17 +36,22 @@ Python is the supported analysis language. New change, architecture, history,
 and experimental findings remain separate from calibrated snapshot scores.
 See the [reference](docs/reference.md) for each detector's supported scope.
 
+Version 0.7 distinguishes supported edits to existing clones from new copies,
+locates incomplete-budget evidence, and shows import execution context. Snapshot
+scores and calibration are unchanged. See the [release notes](.specs/python-slop-detector/release-v0.7.0.md).
+
 ## Quick start
 
-Install the [v0.6.0 release](https://github.com/fdsprod/slopmeter/releases/tag/v0.6.0)
+Install the [v0.7.0 release](https://github.com/fdsprod/slopmeter/releases/tag/v0.7.0)
 with [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
 ```sh
-uv tool install --python 3.12 https://github.com/fdsprod/slopmeter/releases/download/v0.6.0/slop_measure-0.6.0-py3-none-any.whl
+uv tool install --upgrade --python 3.12 https://github.com/fdsprod/slopmeter/releases/download/v0.7.0/slop_measure-0.7.0-py3-none-any.whl
 uv tool update-shell
 ```
 
-If your `PATH` changes, open a new terminal. Then run `slop` **from the project you
+This command installs or upgrades the pinned release. If your `PATH` changes,
+open a new terminal. Then run `slop` **from the project you
 want to review**:
 
 ```sh
@@ -82,7 +87,7 @@ limits. Finding records stay visible when an agent decides to keep the code.
 | Agent need | Slopmeter support |
 |---|---|
 | Read evidence without parsing terminal tables | Native JSON from analysis commands and typed Python reports. |
-| Separate a new regression from existing debt | Finding continuity across directories, commits, and local work. |
+| Separate new findings from existing debt | Finding continuity across directories, commits, and local work. |
 | Avoid treating missing analysis as a clean result | Diagnostics, excluded scope, and explicit unresolved or unavailable outcomes. |
 | Leave a review that another person or agent can assess | Saved-report targets and attributed decisions with reasons and next steps. |
 | Recheck a decision after an edit | Source-bound review applicability and retained decision history. |

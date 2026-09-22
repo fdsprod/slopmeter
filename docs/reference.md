@@ -27,8 +27,8 @@ Start with the [quick start](../README.md#quick-start) for a first scan.
 ## Installation options
 
 For a command available across projects, follow the
-[release quick start](../README.md#quick-start). The wheel URL pins v0.6.0.
-To install a later release, repeat `uv tool install` with that release's wheel URL
+[release quick start](../README.md#quick-start). The wheel URL pins v0.7.0.
+To install a later release, repeat `uv tool install --upgrade` with that release's wheel URL
 from [GitHub Releases](https://github.com/fdsprod/slopmeter/releases).
 `uv tool upgrade slop-measure` does not select a new URL for a pinned wheel.
 To uninstall, run `uv tool uninstall slop-measure`.
@@ -38,7 +38,7 @@ To uninstall, run `uv tool uninstall slop-measure`.
 The same wheel is installable with pip into your chosen Python environment:
 
 ```text
-python -m pip install https://github.com/fdsprod/slopmeter/releases/download/v0.6.0/slop_measure-0.6.0-py3-none-any.whl
+python -m pip install --upgrade https://github.com/fdsprod/slopmeter/releases/download/v0.7.0/slop_measure-0.7.0-py3-none-any.whl
 ```
 
 Use Python 3.12 or later. With pip, activate that environment or put its scripts
