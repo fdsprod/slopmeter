@@ -1,197 +1,207 @@
 # Change-specific engineering evidence
 
-The implementation extends existing source discovery, evidence, comparisons, and
-review contracts. New measurements remain separate from calibrated scores.
+Status on 2026-09-21: the implementation slices below are available in the source
+checkout. Integrated tests and distribution checks passed. The final static and
+working-tree checks follow the documentation commit. This is not a release or
+a validation of defect probabilities.
 
-The slices below define the delivery order and their owners. Each slice must pass
-its independent behavior tests before dependent work starts.
+The work extends existing source discovery, comparisons, detectors, and report
+contracts. New evidence stays separate from calibrated snapshot scores. Tests
+have separate authors from the implementations they specify.
 
-| Slice | Architectural question | Size budget | Owner | State |
-|---|---|---|---|---|
-| TB-1 | Can existing pattern evidence retain continuity across two source states? | One finding family, directory and pinned Git input, one CLI command | Root + independent test author | In progress |
-| TB-2 | Can comparisons expose new clone members and exception fallbacks? | Existing detectors only, member-level clone accounting | Assigned after TB-1 | Planned |
-| TB-3 | Can explicit budgets evaluate introduced evidence without failing unchanged debt? | Raw count budgets, advisory default, explicit enforce flag | Assigned after TB-2 | Planned |
-| TB-4 | Can source changes distinguish added symbols from edits and moves? | Python functions/classes, raw counts and ratios | Assigned after TB-1 | Planned |
-| TB-5 | Can declared dependency rules produce source-bound violations safely? | Direct imports and declared forbidden relationships first | Architecture research agent, then separate test/implementation authors | Research |
-| TB-6 | Can pinned Git history expose rework with an honest observation window? | One defined history policy, no predicted defect probability | History research agent, then separate test/implementation authors | Research |
-| TB-7 | Can independent examples establish useful evidence and limits? | Reviewed positive/keep cases, coverage and review effort | Independent evaluation author | Planned |
+## Delivery status
 
-The dependency graph keeps research parallel while implementation builds on
-validated comparisons.
+| Slice | Delivered behavior | State |
+|---|---|---|
+| TB-1: Pattern continuity | `review_change(ComparisonRequest)` and `slop changes` preserve introduced, removed, persisted, changed, and unresolved pattern evidence. | Implemented; final validation underway |
+| TB-2: Clone and fallback changes | Clone member continuity exposes expanded/contracted groups. Existing exception-fallback candidates retain change relationships and handler coverage. | Implemented; final validation underway |
+| TB-3: Advisory budgets | Explicit caps on introduced patterns, added clone members, and introduced fallback candidates. Enforced pass, exceeded, and incomplete outcomes remain distinct. | Implemented; final validation underway |
+| TB-4: Novel surface | Source-bound Python declarations, file counts, conservative moves, and a derived novel declaration ratio. | Implemented; final validation underway |
+| TB-5: Declared architecture | Static direct imports, forbidden module relationships, fan-out, and strongly connected components. | Implemented; final validation underway |
+| TB-6: History and rework | Bounded first-parent Git history, exact source churn, recent line rework, and explicit partial traversal. | Implemented; final validation underway |
+| TB-7: Evaluation and delivery | Independent controls, a public fix-pair pilot, user documentation, and integrated checks. | Pilot and focused checks available; final validation underway |
+| User extension: Raw state dispatch | Source evidence for literal-string `.state` tests, with continuity and no score contribution. Shared enum outcome vocabulary and concrete variant dispatch in the new implementation. | Implemented; final validation underway |
 
 ```mermaid
 flowchart LR
-  P[Pattern lineage] --> C[Clone and fallback changes]
-  C --> B[Advisory budgets]
-  P --> S[Symbol surface]
-  AR[Architecture learning tests] --> A[Declared import rules]
+  P[Pattern continuity] --> C[Clone and fallback changes]
+  C --> B[Explicit advisory budgets]
+  P --> S[Declaration surface]
+  AR[Import learning tests] --> A[Declared import rules]
   HR[Git learning tests] --> H[History and rework]
-  B --> E[Independent evaluation]
+  P --> D[Raw state dispatch evidence]
+  B --> E[Evaluation and validation]
   S --> E
   A --> E
   H --> E
+  D --> E
 ```
 
-## TB-1: Pattern continuity
+## Scope and acceptance boundaries
 
-**Question answered:** Can a source change retain the identity of a pattern
-finding while keeping exact-source review validity independent?
+### TB-1 and TB-2: Changes in existing evidence
 
-**Layers touched:** Existing providers and analyzer -> application comparison ->
-owned change evidence -> public API -> CLI and JSON.
+`slop changes BASELINE CURRENT` uses the directory, pinned Git, `WORKTREE`,
+language, and configuration semantics of `compare`. It retains source hashes,
+locations, population ownership, diagnostics, and uncertainty. Exact-source
+review validity remains independent of finding continuity.
 
-**Scope:** Add `review_change(ComparisonRequest)` and `slop changes BASELINE CURRENT`
-with existing directory, `--repo`, `WORKTREE`, configuration, and language selection
-semantics. Preserve ordinary scan/compare output. Use file pairs, source
-correspondence, rule identity, and conservative matching. Ambiguous edits and
-missing evidence remain unresolved.
+The report owns `patterns`, `clones`, `errors`, and `state_dispatch` separately.
+Pattern and error outcomes are introduced, removed, persisted, changed, or
+unresolved. Clone group outcomes additionally distinguish expanded and contracted
+groups. Member evidence makes an added third copy visible even when the original
+clone group persists. Existing clone normalization remains authoritative.
 
-The change union prevents a removed finding from carrying current evidence and
-prevents an introduced finding from carrying baseline evidence. Counts derive
-from the owned records. Source-bound review IDs remain unchanged.
+Line shifts and supported syntax correspondence can preserve findings. Missing
+or excluded source cannot establish a fix. Ambiguous identities, group changes,
+and competing matches retain unresolved outcomes. Exception evidence comes from
+the existing narrow literal-fallback detector. It does not infer the caller's
+success contract or classify all fallback cascades.
 
-```datamodel
-name: PatternChange
-store: immutable report
-summary: Records one supported continuity relationship or unresolved candidates.
-fields:
-  - { name: state, type: "introduced | removed | persisted | changed | unresolved", required: true }
-  - { name: occurrence ownership, type: tagged union, required: true, description: "Current only; baseline only; both; or candidate sets and reason" }
-relationships:
-  - { relation: owns, target: PatternOccurrence, cardinality: "1:N", description: Native finding plus language/cohort and source hash }
-```
+The existing inventory reports some excluded files as aggregate language/cohort
+counts without paths. An exclusion can therefore make all unmatched additions
+and removals in that population unresolved. Supported matched relationships remain
+comparable. These reports must not imply complete change counts when a population
+has that coverage limit.
 
-Validation criteria define completion.
+### TB-3: Explicit budgets
 
-- [ ] Added/deleted occurrences produce introduced/removed evidence.
-- [ ] Line shifts, exact-content renames, and formatting-only edits preserve findings.
-- [ ] Added duplicate occurrences retain multiplicity.
-- [ ] Failed analysis, exclusions, and uncertain matches cannot manufacture fixes.
-- [ ] JSON is deterministic, validates projections, and retains source identities.
-- [ ] Git scans preserve checkout/index state and never execute target code.
-- [ ] Existing scan/compare metrics and review validity are unchanged.
+`slop changes ... --budget budget.toml` is advisory. Add `--enforce-budget` to
+request an exit status based on the declared policy. The policy contains
+`[[limits]]` entries with `metric` and nonnegative integer `maximum` fields.
+Supported metrics are `introduced-patterns`, `added-clone-members`, and
+`introduced-errors`. Each check keeps the source evidence behind its count.
 
-**Dependencies:** None.
+Only declared metrics have caps. Unchanged debt does not consume an introduction
+budget. Incomplete evidence takes precedence over a pass or exceeded result.
+Exit codes are 0 for advisory completion or enforced pass, 1 for enforced exceeded,
+2 for invalid input, and 3 for enforced incomplete or strict analysis failure.
+`--enforce-budget` requires an explicit policy. Budgets do not score architecture,
+history, declaration surface, or raw state dispatch.
 
-## TB-2: Clone members and exception fallbacks
+### TB-4: Declaration surface
 
-**Question answered:** Can existing detectors expose change-specific relationships
-without repeating their detection logic?
+`slop surface BASELINE CURRENT` and `review_surface(ComparisonRequest)` count
+classes, functions, async functions, methods, and nested declarations. Each source
+occurrence owns a qualified name, kind, span, file hash, and exact AST fingerprint.
+Names, literals, decorators, and annotations remain significant. Comments and
+formatting do not change that fingerprint.
 
-**Layers touched:** Retained snapshots/source -> existing clone/error detectors ->
-change evidence -> API/CLI.
+Outcomes are added, removed, modified, moved, unchanged, and unresolved. The novel
+ratio is `added / (added + modified)`. It is unavailable for an empty denominator
+or incomplete correspondence. Counts include nested declarations, so a method
+change can also modify its containing class AST.
 
-**Scope:** Compare clone members as well as groups. Run the existing error detector
-against retained Python documents, including pinned Git blobs. Preserve handler
-coverage. New clone membership must remain visible when the group already existed.
+Unique exact syntax moves and Git rename hints support limited continuity.
+Duplicate names, competing moves, possible declaration renames, and moves with
+edits but no rename evidence remain unresolved. Failed or excluded counterpart
+source cannot prove an addition or removal. Production/test moves stay separate
+within their respective populations. No historical surface percentile is added.
 
-- [ ] Adding a third copy reports one added member of an existing group.
-- [ ] Copying a previously unique implementation creates a group with clear evidence.
-- [ ] Removing one copy differs from removing all duplication.
-- [ ] Error fallbacks retain supported/unsupported distinctions on both sides.
-- [ ] Group splits, ambiguous moves, and normalization changes stay explicit.
+### TB-5: Declared architecture
 
-**Dependencies:** TB-1.
+`slop architecture --root PATH --policy architecture.toml` uses explicit
+`source_roots` and `[[forbidden]]` rules with dotted `source` and `target` module
+names. Rules include descendants and apply to direct import edges. The same
+graph supplies fan-out and cycles as strongly connected components.
 
-## TB-3: Advisory budgets
+The implementation parses source without importing target packages or executing
+target configuration. Import Linter/Grimp learning tests identified execution
+hazards in arbitrary target configurations and dotted package roots. Those paths
+are outside this implementation. Clone ownership labels remain separate from
+dependency permissions.
 
-**Question answered:** Can a policy act on introduced evidence while preserving
-incomplete analysis as its own outcome?
+External packages are not resolved. Dynamic and star imports, ambiguous modules,
+missing internal targets, and unresolved package members stay visible. Conditional
+imports describe static source relationships. The command does not prove runtime
+paths, enforce transitive layering, or fail because a violation is present.
 
-**Layers touched:** Change report -> budget evaluation -> CLI exit status/JSON.
+### TB-6: Observed history
 
-**Scope:** Explicit nonnegative count budgets for introduced patterns, added clone
-members, and introduced fallback candidates. Default output is advisory. Explicit
-enforcement returns documented success, exceeded, and incomplete outcomes.
+`slop history START END --repo PATH` reads the pinned first-parent range
+`(start, end]`. Defaults are a 14-day recent-age window and a 100-commit limit.
+Each step compares a commit with its first parent. Merged work counts once as
+integration history. Added/deleted SLOC, churn, and net growth remain separate.
 
-- [ ] Unchanged debt does not exceed an introduced-evidence budget.
-- [ ] Each exceeded budget links to the source findings used in its count.
-- [ ] Incomplete assessment cannot return a clean enforced result.
-- [ ] No new metric weight, percentile, or score formula is introduced.
+The line ledger records introductions inside the observed range. A later removal
+can be recent, outside the age window, or unresolved. Anchor lines have unknown
+introduction ages. Negative timestamp ages remain unresolved. Exact file renames
+preserve known origins. Formatting and block moves can contribute to line churn.
 
-**Dependencies:** TB-2.
+Missing parents and commit limits produce partial traversal. Missing source
+objects raise an input error. Failed parses preserve unavailable counts and
+diagnostics. A shallow repository can still contain a complete requested range.
+There is no overall rework percentage, future defect prediction, or churn score.
+See [history research](history-evidence-research.md) for the observed Git behavior.
 
-## TB-4: Novel surface
+### User extension: Enum and raw state comparisons
 
-**Question answered:** Can Python symbol changes distinguish new surface from
-extension of existing code using the same selected sources?
+`changes.state_dispatch` records direct raw-string tests against `.state` in
+assertions, `if`, and `while` conditions. Supported operators are equality,
+inequality, and membership/nonmembership in literal string collections.
+Boolean combinations in those test expressions are included.
 
-**Layers touched:** Python AST -> symbol evidence -> file matching -> change report.
+The detector does not infer receiver types. It excludes enum member comparisons
+and concrete variant checks from this syntax candidate pattern. Review an enum
+when values form one shared outcome vocabulary. Use a concrete variant check
+when selecting payload fields from a union. Raw state evidence stays unscored
+and outside the three budget metrics.
 
-**Scope:** Count functions, async functions, and classes, with explicit nested-scope
-identity. Report added/modified/deleted/moved/unchanged/unresolved symbols, added and
-modified files, and a defined novel-symbol ratio. Keep counts unscored.
+The new implementations use closed tagged unions for different payload shapes.
+Shared outcome names use `StrEnum` members. Concrete payload dispatch uses type
+checks where appropriate. Existing JSON strings remain unchanged. Pydantic
+learning tests establish the `Literal[StrEnum member]` wire behavior.
 
-- [ ] Formatting and comments do not count as changed behavior-bearing AST.
-- [ ] Exact structural moves and ambiguous matching have explicit outcomes.
-- [ ] Empty populations produce an unavailable ratio, not invented zero evidence.
-- [ ] Failed files and unsupported languages retain coverage limits.
+## Evaluation and final validation
 
-**Dependencies:** TB-1.
+Independent tests cover positive controls, intentional keep cases, uncertain
+matching, parser failures, provenance, imported-report checks, and CLI behavior.
+Focused passing suites do not replace the full integrated validation gate.
 
-## TB-5: Declared architecture
+The [GitHub example pilot](github-example-pilot-2026-09.md) inspected four public
+fix/test pairs. One AstrBot exception-fallback case is supported. PyRIT, Werkzeug,
+and NetworkX expose broader coverage gaps. Historical target tests were read,
+not executed. These selected cases do not estimate precision or recall. NetworkX
+is already a calibration project and is not a new holdout repository.
 
-**Question answered:** Can existing tools supply safe source-located dependency
-evidence, or does a bounded source-only resolver fill a demonstrated gap?
+Delivery checks:
 
-**Layers touched:** Source inventory -> import evidence -> declared policy -> report.
+- [x] Full regression suite and required coverage threshold: 1,962 passed,
+  four skipped, 93.25% coverage on Windows Python 3.12.14.
+- [x] Learning and performance checks: 69 passed, one skipped.
+- [x] Distribution checks: four tests passed for wheel and source distribution.
+  Isolated installed command smoke checks passed for both artifacts.
+- [x] Pyright and all five import contracts passed. Source/test Ruff passed.
+- [x] Source-only self-review and explicit report limits recorded in the checkpoint.
+- [ ] Final whole-repository Ruff/formatting and working-tree check after docs commit.
 
-**Scope:** Research Import Linter/Grimp first. Never import target packages. Keep
-ownership labels distinct from dependency permissions. First implementation
-supports explicit source roots, direct imports, and forbidden module relationships.
-Unsupported dynamic relationships remain unresolved.
+The [checkpoint](change-evidence-checkpoint.md) records validation details and
+the deliberate source-selection limits of the self-review.
 
-- [ ] Learning tests settle source execution, module resolution, and locations.
-- [ ] Allowed and forbidden fixtures exercise real declarations and source paths.
-- [ ] Relative imports, unknown imports, and excluded modules have defined treatment.
-- [ ] Cycles and fan-out derive from one graph where supported.
-- [ ] No online resolution is added to normal scans.
+## Original research: implemented and remaining
 
-**Dependencies:** Architecture research, independent test contract.
+This delivery implements the bounded slices above. It does not implement every
+detector or inference proposed in the original research.
 
-## TB-6: History and rework
+| Research area | Current status | Remaining work |
+|---|---|---|
+| Introduced duplication | Clone member and group changes implemented. | Broader structural/semantic similarity and calibrated actionability. |
+| Repository reimplementation | Conservative clone evidence only. | Semantic purpose, type, call-context, and reuse inference. No probability model. |
+| Architecture inconsistency | Declared direct import rules, fan-out, and cycles implemented. | Transitive/layer policy, lifecycle/configuration/schema coherence, richer coupling. |
+| Solution surface | Raw Python declaration/file changes and novel ratio implemented. | Historical change baselines, config/dependency surface, comparable change classes. |
+| Error masking | Existing narrow literal exception fallback experiment now has change evidence. | Indirect cascades, success constructors, caller-contract analysis, wider control flow. |
+| Abstraction inflation | Existing local trivial-wrapper rules remain. | Repository-wide single observed implementations, factories, strategies, adapters, and wrapper ratios. |
+| Test quality and coupling | Existing cohorts/assertion complexity facts remain. | Mock/collaborator counts, interaction assertions, internal assertions, independent behavioral adequacy and mutation-result import. |
+| Churn and rework | Bounded first-parent source churn and known-origin rework implemented. | Full-window survival analysis, block moves, longer history, calibrated maintenance associations. |
+| Dependency/API anomalies | Not implemented. | Offline manifest/lock/import checks, version-specific APIs and deprecations, optional registry verification. |
+| Dead or unused code | No new repository-wide detector. | Scope-aware static analysis or imported tool evidence. |
+| Unnecessary configuration | No new detector. | Observed use/value counts and contextual review. |
+| Coupled and derived state | Existing narrow experiments remain. Raw state-dispatch evidence added. | Cross-file weak-model repairs, Pydantic/TypedDict/alias support, richer invalidation semantics. |
+| Cognitive complexity | Existing M4 remains cyclomatic-complexity based. | Separate nesting/cognitive erosion measure and calibration. |
+| Model cohesion | Not implemented. | Field/method usage relationships and independently reviewed low-cohesion cases. |
+| Change locality and maintenance coupling | File/declaration surface and bounded history supply partial facts. | Reuse relationships, files changing together, hotspots and historical baselines. |
+| Comments, names, authorship style | Not added as new primary signals. | Keep weak stylistic evidence separate from engineering judgments. |
 
-**Question answered:** Can reproducible Git evidence distinguish churn, recent
-rework, and unavailable history?
-
-**Layers touched:** Pinned Git objects -> historical line evidence -> API/CLI.
-
-**Scope:** Establish a bounded observation policy before implementation. Record
-resolved endpoints, window, merge policy, rename handling, and completeness. Treat
-later rework as observed history, never as knowledge available at the original PR.
-
-- [ ] Zero net growth can still have nonzero churn.
-- [ ] Recent changed/deleted additions count under the documented window.
-- [ ] Formatting and renames cannot silently inflate semantic claims.
-- [ ] Shallow or unavailable history is explicitly incomplete.
-- [ ] Target source never executes and the checkout remains unchanged.
-
-**Dependencies:** Git research, independent test contract.
-
-## TB-7: Evaluation and delivery
-
-**Question answered:** Do the new reports identify actionable review work with
-visible uncertainty outside their implementation fixtures?
-
-**Layers touched:** Reproducible cases -> reports -> independent review -> documentation.
-
-**Scope:** Separate synthetic controls, self-review, and held-out public changes.
-Retain positive and intentional keep cases. Do not infer precision/recall from
-zero findings. Report supported coverage, unresolved reasons, label provenance,
-and reviewer effort before considering score calibration.
-
-- [ ] Independent tests precede each implementation and remain separately authored.
-- [ ] Focused tests, full suite, Ruff, Pyright, and architecture contracts pass.
-- [ ] Distribution checks cover new public entry points.
-- [ ] User documentation states commands, output meanings, limits, and exit codes.
-- [ ] Final review checks reuse, state shapes, source safety, and change size.
-
-**Dependencies:** TB-1 through TB-6.
-
-## Deferred scoring and semantic claims
-
-Semantic reimplementation probabilities, arbitrary aggregate weights, and
-historical percentiles remain research work. This delivery establishes the
-deterministic evidence and evaluation needed to justify them. Single observed
-implementations, broad catches, and large changes are measurements whose quality
-interpretation depends on context.
+Semantic probabilities, arbitrary aggregate weights, and historical percentiles
+remain research work. New scores require a broader independent labeled sample
+and an evaluation split that was not used to tune the detectors.

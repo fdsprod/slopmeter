@@ -7,8 +7,9 @@ revisions. It does not execute target code or apply fixes.
 
 The command is **`slop`**, the Python package is **`slop-measure`**, and the import
 name is **`slop_measure`**. Terminal reports use the internal name `slop.measure`.
-Only Python analysis is currently implemented. This is an early 0.4.0 project;
-scores are review signals, not defect probabilities or proof of AI authorship.
+Only Python analysis is currently implemented. The package version is 0.5.0.
+The source checkout also includes the change-review features documented below.
+Scores are review signals, not defect probabilities or proof of AI authorship.
 
 ## Quick start
 
@@ -78,6 +79,11 @@ here is from source, not a claimed PyPI release.
 | Compare two directories | `slop compare BEFORE AFTER` |
 | Compare Git revisions | `slop compare HEAD~1 HEAD --repo PATH` |
 | Compare a commit with local work | `slop compare HEAD WORKTREE --repo PATH` |
+| Review introduced findings and clone members | `slop changes HEAD~1 HEAD --repo PATH` |
+| Apply an explicit advisory budget | `slop changes HEAD~1 HEAD --repo PATH --budget budget.toml` |
+| Count new, edited, and moved declarations | `slop surface HEAD~1 HEAD --repo PATH` |
+| Check declared direct import boundaries | `slop architecture --root PATH --policy architecture.toml` |
+| Inspect observed churn and recent rework | `slop history HEAD~20 HEAD --repo PATH --window-days 14` |
 
 Run `slop --help` or `slop COMMAND --help` for all options. `scan` is an alias for
 `score`. `--top` limits displayed rows, not analysis work. `--lang` filters files
@@ -91,7 +97,7 @@ selected calibration profile. A high score is a reason to inspect source, not an
 instruction to refactor it. A low score does not prove correctness. Raw percentages
 and calibrated points are different measurements.
 
-Every successful report includes **How to read this report**. Use `--verbose` for
+Snapshot and ordinary comparison reports include **How to read this report**. Use `--verbose` for
 the full guide or `--json` to give an agent structured measurements, provenance,
 and interpretation together. Findings JSON also retains diagnostics, coverage,
 and excluded directories, so empty findings do not conceal incomplete analysis.
@@ -132,8 +138,9 @@ uv run slop score . --strict
 ```
 
 The default scan continues after file errors. `--strict` stops with exit code 3.
-Invalid arguments or configuration return exit code 2. Findings do not cause a
-failure. `scan` remains an alias for the same snapshot analysis. `--scope` and
+Invalid arguments or configuration return exit code 2. Snapshot findings do not
+cause a failure. Explicit change-budget enforcement has separate outcomes below.
+`scan` remains an alias for the same snapshot analysis. `--scope` and
 `--top` select terminal results. JSON always contains the complete report.
 
 Use `--lang py` to select Python before files are read or analyzed. `--langs` is
@@ -210,7 +217,8 @@ rule-selection, and report-selection errors inherit `slop_measure.errors.InputEr
 Invalid API configuration or request models raise Pydantic `ValidationError`.
 Strict analysis failures raise
 `AnalysisFailure`. CLI input errors return 2, analysis failures return 3, and
-completed analyses return 0 even when findings are present.
+completed advisory analyses return 0 even when findings are present. An explicit
+`changes --enforce-budget` request can also return 1 for an exceeded budget.
 
 M2 measures the fraction of source lines flagged by the twenty Python pattern rules.
 Overlapping findings count each line once. Rules cover redundant expressions,
@@ -290,8 +298,8 @@ pinned reference projects as earlier profiles. Both cohorts were rebuilt from so
 Historical `py-2026.1` and `py-2026.2` resources remain unchanged, but their
 erosion distributions cannot score version 3 measurements. Do not directly compare scores across those profiles.
 
-Every successful analysis command and rules listing includes **How to read this
-report**. The compact guide explains score direction, common overstatements and
+Snapshot and ordinary comparison views include **How to read this report**.
+The compact guide explains score direction, common overstatements and
 understatements, coverage limits, and an evidence-based review format. `--verbose`
 adds metric definitions and review steps. JSON includes the full versioned
 `interpretation` object; API reports and rule catalogs own the same guidance.
@@ -383,6 +391,204 @@ Git rename metadata can match edited renames. Missing revisions return exit code
 Analysis does not change the index or working tree, fetch objects, or run source
 files. Symbolic links and submodules are excluded.
 
+## Review introduced evidence (source checkout)
+
+`changes` compares the existing detectors' evidence across two source states.
+It reports what appeared, persisted, changed, or disappeared. It keeps uncertain
+matches unresolved. It does not alter snapshot scores or saved review validity.
+
+```text
+slop changes path/to/before path/to/after --lang py
+slop changes HEAD~1 HEAD --repo . --lang py --json
+slop changes HEAD WORKTREE --repo . --config review-config.toml
+```
+
+Directory, Git, `WORKTREE`, and configuration selection follow `compare`.
+The JSON report contains these independent evidence families:
+
+| Field | Meaning and supported scope |
+|---|---|
+| `patterns` / `summary` | Introduced, removed, persisted, changed, or unresolved occurrences from the existing Python pattern rules. |
+| `clones` | Clone member relationships and group outcomes: introduced, removed, persisted, changed, expanded, contracted, or unresolved. Adding a third copy remains visible when a group already existed. |
+| `errors` / `error_summary` | Changes in the existing literal exception-fallback candidates. `error_coverage` retains analyzed and unresolved handlers on both sides. |
+| `state_dispatch` / `state_dispatch_summary` | Changes in direct raw-string comparisons against `.state` in assertions, `if`, and `while` conditions. |
+
+Source hashes, spans, populations, diagnostics, and matching limits remain in the
+report. A line shift can preserve a finding. A failed parse, excluded counterpart,
+or ambiguous match cannot establish that an old finding was fixed. Clone matching
+uses the existing normalized syntax vocabulary. It does not prove equivalent
+behavior between different implementations. Group splits and competing matches
+can remain unresolved.
+
+Excluded files can appear only as aggregate language/cohort counts in the existing
+inventory. Without their paths, an exclusion can make all unmatched additions
+and removals in that population unresolved. Matched source relationships remain
+usable. Do not read the remaining counts as complete change counts when these
+limits are present.
+
+The exception check retains its narrow scope. It finds supported handlers that
+return literal defaults where another return provides a different result.
+It does not infer whether the caller treats that value as success. Inspect the
+caller contract before changing an intentional predicate or sentinel return.
+
+The raw state check supports `==`, `!=`, `in`, and `not in` with literal strings.
+It includes boolean combinations in the supported test contexts. Enum member
+comparisons and concrete variant checks are outside this candidate pattern.
+The report does not infer receiver types. When reviewing a result union, use a
+concrete check such as `isinstance(result, ReadyResult)` to select its payload.
+For a shared outcome vocabulary, an enum member such as `Outcome.READY` gives
+the state a defined type. A raw comparison is review evidence, not proof of a bug.
+
+Finding continuity and review validity serve different purposes. Exact file
+changes can invalidate a saved review even when its finding persists. These new
+reports do not automatically approve, suppress, or migrate review decisions.
+
+### Explicit change budgets
+
+Save a separate policy file, for example `budget.toml`:
+
+```toml
+[[limits]]
+metric = "introduced-patterns"
+maximum = 0
+
+[[limits]]
+metric = "added-clone-members"
+maximum = 0
+
+[[limits]]
+metric = "introduced-errors"
+maximum = 0
+```
+
+These are the three supported budget metrics. Limits must be nonnegative integers
+and each metric can occur once. Omitted metrics have no cap. The values above are
+an example policy, not calibrated recommendations. Budgets do not currently cover
+raw state tests, symbol surface, architecture violations, or history.
+
+```text
+slop changes HEAD~1 HEAD --repo . --budget budget.toml
+slop changes HEAD~1 HEAD --repo . --budget budget.toml --enforce-budget --json
+```
+
+Budget output links observed introductions to source evidence. Existing unchanged
+debt does not consume an introduction budget. Unsupported or unresolved evidence
+can make a check incomplete. An incomplete budget takes precedence over an
+exceeded result, while each check still exposes its observed count and cap.
+
+Without `--enforce-budget`, a completed budget report is advisory and returns 0.
+With `--budget --json`, output has `report` and `budget` objects. Without a budget,
+JSON is the change report itself.
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Completed advisory report, or an enforced budget passed. |
+| `1` | Explicitly enforced budget exceeded. |
+| `2` | Invalid input, policy, source selection, or missing required option. |
+| `3` | Enforced budget incomplete, or strict analysis failed. |
+
+`--enforce-budget` requires `--budget`. A missing or invalid policy cannot silently
+disable enforcement. Architecture and history commands remain advisory.
+
+## Measure declaration surface (source checkout)
+
+```text
+slop surface path/to/before path/to/after --lang py
+slop surface HEAD~1 HEAD --repo . --json
+```
+
+`surface` reports added, removed, modified, moved, unchanged, and unresolved Python
+declarations. It includes classes, synchronous and asynchronous functions, methods,
+and nested declarations. Each occurrence retains its qualified name, source span,
+file hash, and AST fingerprint. Comments and formatting do not change that
+fingerprint. Names, literals, annotations, and decorators remain significant.
+
+The novel declaration ratio is `added / (added + modified)`. Removed, moved, and
+unchanged declarations are outside its denominator. Empty denominators and
+incomplete correspondence produce an unavailable ratio. This is a structural
+count, not a historical percentile or a judgment that a change is too large.
+Changing a method can count both the method and its containing class as modified.
+
+Unique exact syntax moves can preserve declarations across files. Git rename
+evidence can support a renamed-and-edited file. A possible declaration rename,
+move with edits without that evidence, duplicate qualified name, or competing
+move remains unresolved. Moves between production and test cohorts remain
+separate additions and removals. Failed or excluded counterpart source cannot
+prove that unmatched declarations were added or removed.
+
+## Check declared architecture (source checkout)
+
+Save a separate `architecture.toml` with roots relative to the analyzed repository:
+
+```toml
+source_roots = ["src"]
+
+[[forbidden]]
+source = "app.controllers"
+target = "app.storage"
+```
+
+```text
+slop architecture --root . --policy architecture.toml --lang py
+slop architecture --root . --rev HEAD --policy architecture.toml --json
+```
+
+Rules forbid direct imports between the named modules and their descendants.
+The report includes source-located internal edges, violations, module fan-out,
+and cycles as strongly connected components. Ownership boundaries used for clone
+review do not establish import permissions.
+
+This resolver reads selected Python source. It does not run Import Linter target
+configuration or import target packages. Conditional imports describe possible
+source relationships, not guaranteed runtime execution. External imports are not
+resolved against installed packages or registries. Dynamic imports, star imports,
+missing internal modules, and ambiguous package members remain unresolved.
+The command does not enforce transitive layer rules or fail on a violation.
+Check coverage before interpreting an empty violation list.
+
+## Inspect observed history (source checkout)
+
+```text
+slop history HEAD~20 HEAD --repo . --window-days 14 --max-commits 100
+slop history BASE_COMMIT END_COMMIT --repo . --lang py --json
+```
+
+History pins both endpoints and reads the first-parent range `(start, end]`.
+Each step compares a commit with its first parent. A merge counts integrated
+source once. The report keeps source-line additions, deletions, churn
+(`added + deleted`), and net growth separate. It does not execute target code,
+check out a revision, or fetch missing history.
+
+Rework means a source line introduced in the observed range was later removed
+or replaced. Its introduction and removal timestamps determine whether its age
+falls within `--window-days`. Anchor lines have unknown introduction ages.
+Backdated removal timestamps remain unresolved. Exact file renames preserve
+known origins. Formatting and block moves can contribute to line churn, so the
+count is not a measure of semantic rewriting.
+
+The default limit is 100 commits and the default recent-age window is 14 days.
+A commit limit or missing parent produces explicit partial traversal. Missing
+source objects raise an input error. Parse failures retain unavailable counts
+and diagnostics. A complete requested range can exist inside a shallow repository.
+No overall rework percentage, future defect prediction, or history score is added.
+
+### New Python entry points
+
+The CLI and API use the same reports. Import these functions from `slop_measure.api`:
+
+| Function | Inputs |
+|---|---|
+| `review_change` | Existing `ComparisonRequest` |
+| `review_surface` | Existing `ComparisonRequest` |
+| `evaluate_budget` | Change report and `domain.budgets.BudgetPolicy` |
+| `inspect_architecture` | Existing `SnapshotRequest` and `domain.architecture.ArchitecturePolicy` |
+| `analyze_history` | `domain.history.HistoryRequest` with `root`, `start`, `end`, `config`, `window_days`, and `max_commits` |
+
+API callers supply resolved configuration. Source, budget, and architecture
+policies do not load implicitly. All new evidence stays separate from calibrated
+snapshot scores. The [delivery plan](.specs/python-slop-detector/change-evidence-plan.md)
+records the implemented slices and the remaining research backlog.
+
 ## Follow the evidence
 
 ```text
@@ -445,7 +651,7 @@ reporting changes first appear in v0.5.0.
 
 ### Coupled-state evidence
 
-Version 0.4.0 includes an experimental coupled-state check. It is separate
+The `models` command includes an experimental coupled-state check. It is separate
 from calibrated scores:
 
 ```powershell
@@ -485,7 +691,7 @@ these experimental findings yet.
 
 ## Experimental variant review
 
-Use version 0.4.0 to inspect explicitly typed `match` handlers:
+Use `variants` to inspect explicitly typed `match` handlers:
 
 ```powershell
 slop variants --root . --lang py
@@ -523,7 +729,7 @@ the detector's supported shape.
 
 Like `models`, this command keeps source hashes, locations, discovery coverage and
 failures visible. It supports external config and `--strict`, never executes source,
-and has no score or M2 contribution. Both commands are available in v0.4.0.
+and has no score or M2 contribution. Both commands are available in v0.5.0.
 
 ## Experimental derived-state review
 
@@ -706,7 +912,7 @@ scan does not inherit boundary declarations from its parent. Rebase the prefixes
 when using a different scan root. If both configuration files declare boundaries,
 the `slop.toml` list replaces the `pyproject.toml` list.
 
-External configuration and detailed stale explanations are available in v0.4.0.
+External configuration and detailed stale explanations are supported.
 
 To keep configuration outside the repository, select a file explicitly:
 
@@ -716,8 +922,9 @@ slop findings --root . --config C:/review-config/service.toml --metric m3
 slop review show --root . --config C:/review-config/service.toml --store C:/review-config/reviews.json
 ```
 
-`--config` works on `score`, `scan`, `tree`, `compare`, `explain`, `findings`,
-`rules`, `models`, `variants`, `derived`, `errors` (source checkout), `review set`,
+`--config` works on `score`, `scan`, `tree`, `compare`, `changes`, `surface`,
+`architecture`, `history`, `explain`, `findings`, `rules`, `models`, `variants`,
+`derived`, `errors` (source checkout), `review set`,
 and `review show`.
 Put it after the command name. An explicit
 file replaces both local config files. Settings come from defaults, then that file,
