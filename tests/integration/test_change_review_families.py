@@ -247,3 +247,50 @@ def test_git_error_comparison_uses_committed_source_and_preserves_worktree(tmp_p
     assert (root / "fetch.py").read_text(encoding="utf-8") == "dirty = True\n"
     assert (root / ".git/index").read_bytes() == index
     assert git(root, "status", "--porcelain=v1") == status
+
+
+def test_git_renamed_unparseable_clone_member_is_unresolved_not_removed(tmp_path, monkeypatch):
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
+    root = tmp_path / "renamed-clone"
+    root.mkdir()
+    git(root, "init")
+    git(root, "config", "user.name", "Clone rename test")
+    git(root, "config", "user.email", "clone@example.invalid")
+    source = (
+        "def first(source):\n"
+        "    value = source + 1\n"
+        "    value *= 2\n"
+        "    value -= 3\n"
+        "    value //= 4\n"
+        "    value += 5\n"
+        "    return value\n"
+    )
+    write(root, "a.py", source)
+    write(root, "b.py", source.replace("first", "second"))
+    git(root, "add", ".")
+    git(root, "commit", "-m", "two copies")
+    baseline = git(root, "rev-parse", "HEAD").decode().strip()
+    git(root, "mv", "b.py", "renamed.py")
+    write(root, "renamed.py", source.replace("first", "second") + "\ndef broken(:\n")
+    git(root, "add", ".")
+    git(root, "commit", "-m", "rename with unparseable edit")
+    selected = api.ComparisonRequest(
+        baseline=api.GitSourceReference(root=root, revision=baseline),
+        current=api.GitSourceReference(root=root, revision="HEAD"),
+        config=api.AnalysisConfig(clone_min_sloc=2),
+    )
+    comparison = api.compare(selected)
+    pairs = [change.pair for cohort in comparison.cohorts for change in cohort.changes]
+    assert any(
+        pair.kind == "renamed"
+        and pair.baseline_path.root == "b.py"
+        and pair.current_path.root == "renamed.py"
+        for pair in pairs
+    )
+
+    groups = clone_changes(api.review_change(selected))
+
+    assert len(groups) == 1 and groups[0]["state"] == "unresolved"
+    assert groups[0]["removed"] == 0
+    missing = [member for member in groups[0]["members"] if member["state"] == "unresolved"]
+    assert len(missing) == 1 and member_paths(missing[0]["baseline"]) == {"b.py"}
