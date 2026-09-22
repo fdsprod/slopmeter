@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from slop_measure.api import AnalysisConfig, DirectorySourceReference, SnapshotRequest, scan
@@ -19,6 +20,7 @@ from slop_measure.application.reviews import load_review_store, write_clone_revi
 from slop_measure.application.variants import inspect_variants
 from slop_measure.cli import app
 from slop_measure.domain.reviews import ReviewDisposition
+from slop_measure.errors import InputError
 
 INSPECTORS = {
     "score": scan,
@@ -80,7 +82,13 @@ def chosen(report, kind: str):
     return next(
         item
         for item in review_targets(report)
-        if item.state == "reviewable" and item.anchor.subject.kind.value == kind
+        if item.state == "reviewable"
+        and item.anchor.subject.kind.value == kind
+        and (
+            kind != "clone"
+            or {location.path.root for location in item.anchor.subject.locations}
+            == {"a.py", "b.py"}
+        )
     )
 
 
@@ -124,9 +132,7 @@ def test_selected_report_family_controls_native_resolution(
     selected = analyze(project, selected_family)
     resolution = resolve_reviews(selected, ledger)
     result = resolution.results[0]
-    assert result.state == (
-        "current" if family == selected_family else "not-in-selected-report"
-    )
+    assert result.state == ("current" if family == selected_family else "not-in-selected-report")
     if family != selected_family:
         assert result.reason == "review-family-not-in-selected-report"
     assert result.event == ledger.events[0]
@@ -134,6 +140,172 @@ def test_selected_report_family_controls_native_resolution(
     assert resolution.events == ledger.events
     assert type(resolution).model_validate_json(resolution.model_dump_json()) == resolution
     assert store.read_bytes() == before
+
+
+def test_supersession_is_explicit_preserves_legacy_and_uses_original_link_event(
+    project: Path,
+) -> None:
+    report, store = analyze(project), project.parent / "reviews.json"
+    legacy = legacy_record(store, report)
+    unlinked = record(store, report)
+    assert "supersedes_legacy_id" not in unlinked.events[0].model_dump(mode="json")
+    assert resolve_reviews(report, unlinked).legacy_results[0].state == "current"
+    legacy_id = legacy.decisions[0].id
+    linked = record(
+        store, report, review_id=unlinked.events[0].review_id, supersedes_legacy_id=legacy_id
+    )
+    assert linked.events[1].supersedes_legacy_id == legacy_id
+    repeated = record(
+        store, report, review_id=linked.events[1].review_id, supersedes_legacy_id=legacy_id
+    )
+    latest = record(store, report, review_id=linked.events[1].review_id)
+    assert latest.legacy_decisions == legacy.decisions
+    assert latest.events[:3] == repeated.events and latest.events[:2] == linked.events
+    assert "supersedes_legacy_id" not in latest.events[-1].model_dump(mode="json")
+    resolution = resolve_reviews(report, latest)
+    old = resolution.legacy_results[0]
+    assert old.state == "superseded" and old.decision == legacy.decisions[0]
+    assert old.review_id == linked.events[1].review_id and old.sequence == 2
+    assert resolution.results[0].event == latest.events[-1]
+    assert resolution.results[0].state == "current"
+    assert load_review_ledger(store) == latest
+    assert type(resolution).model_validate_json(resolution.model_dump_json()) == resolution
+
+
+@pytest.mark.parametrize("replacement_state", ["current", "stale", "missing", "outside"])
+def test_superseded_legacy_remains_separate_from_replacement_resolution(
+    project: Path, replacement_state: str
+) -> None:
+    report, store = analyze(project), project.parent / "reviews.json"
+    legacy = legacy_record(store, report)
+    ledger = record(store, report, supersedes_legacy_id=legacy.decisions[0].id)
+    if replacement_state == "stale":
+        path = project / "a.py"
+        path.write_text(path.read_text() + "# new comment\n", encoding="utf-8")
+    elif replacement_state == "missing":
+        (project / "b.py").write_text("VALUE = 1\n", encoding="utf-8")
+    selected = analyze(project, "model" if replacement_state == "outside" else "score")
+    before = store.read_bytes()
+    resolution = resolve_reviews(selected, ledger)
+    old = resolution.legacy_results[0]
+    assert old.state == "superseded" and old.decision == legacy.decisions[0]
+    assert old.review_id == ledger.events[0].review_id and old.sequence == 1
+    expected = "not-in-selected-report" if replacement_state == "outside" else replacement_state
+    assert resolution.results[0].state == expected
+    assert store.read_bytes() == before
+
+
+def test_explicit_supersession_accepts_changed_evidence_for_same_clone_members(
+    project: Path,
+) -> None:
+    report, store = analyze(project), project.parent / "reviews.json"
+    legacy = legacy_record(store, report)
+    for name in ("a.py", "b.py"):
+        path = project / name
+        path.write_text(path.read_text().replace("+ 1", "+ 2"), encoding="utf-8")
+    changed = analyze(project)
+    assert chosen(changed, "clone").id != chosen(report, "clone").id
+    ledger = record(store, changed, supersedes_legacy_id=legacy.decisions[0].id)
+    resolution = resolve_reviews(changed, ledger)
+    assert resolution.legacy_results[0].state == "superseded"
+    assert resolution.results[0].state == "current"
+
+
+@pytest.mark.parametrize("invalid", ["unknown-id", "non-clone", "different-members", "claimed"])
+def test_invalid_supersession_does_not_write(project: Path, invalid: str) -> None:
+    report, store = analyze(project), project.parent / "reviews.json"
+    legacy = legacy_record(store, report)
+    legacy_id, kind = legacy.decisions[0].id, "clone"
+    if invalid == "unknown-id":
+        legacy_id = "unknown-legacy-id"
+    elif invalid == "non-clone":
+        kind = "complexity"
+    elif invalid == "different-members":
+        (project / "c.py").write_text((project / "a.py").read_text(), encoding="utf-8")
+        report = analyze(project)
+    else:
+        record(store, report, supersedes_legacy_id=legacy_id)
+    before = store.read_bytes()
+    if invalid == "different-members":
+        target = next(
+            item
+            for item in review_targets(report)
+            if item.anchor.subject.kind.value == "clone"
+            and {location.path.root for location in item.anchor.subject.locations}
+            == {"a.py", "b.py", "c.py"}
+        )
+    else:
+        target = chosen(report, kind)
+    with pytest.raises((InputError, ValueError)):
+        write_review(
+            store,
+            report,
+            target.id,
+            actor="reviewer",
+            disposition=ReviewDisposition.DEFER,
+            reason="Explicit new judgment.",
+            supersedes_legacy_id=legacy_id,
+        )
+    assert store.read_bytes() == before
+
+
+@pytest.mark.parametrize("invalid", ["unknown-id", "non-clone", "different-members", "claimed"])
+def test_ledger_validation_rejects_forged_supersession(project: Path, invalid: str) -> None:
+    report, store = analyze(project), project.parent / "reviews.json"
+    legacy = legacy_record(store, report)
+    ledger = record(store, report)
+    wire = ledger.model_dump(mode="json")
+    event = wire["events"][0]
+    event["supersedes_legacy_id"] = legacy.decisions[0].id
+    if invalid == "unknown-id":
+        event["supersedes_legacy_id"] = "unknown-legacy-id"
+    elif invalid == "non-clone":
+        event["decision"]["anchor"] = chosen(report, "complexity").anchor.model_dump(mode="json")
+    elif invalid == "different-members":
+        (project / "c.py").write_text((project / "a.py").read_text(), encoding="utf-8")
+        different = next(
+            item
+            for item in review_targets(analyze(project))
+            if item.anchor.subject.kind.value == "clone"
+            and {location.path.root for location in item.anchor.subject.locations}
+            == {"a.py", "b.py", "c.py"}
+        )
+        event["decision"]["anchor"] = different.anchor.model_dump(mode="json")
+    else:
+        wire["events"].append({**event, "sequence": 2, "review_id": "other-history"})
+    with pytest.raises(ValidationError):
+        type(ledger).model_validate(wire)
+
+
+def test_cli_supersedes_records_link_and_retains_legacy_decision(project: Path) -> None:
+    report = analyze(project)
+    store, saved = project.parent / "reviews.json", project.parent / "score.json"
+    legacy = legacy_record(store, report)
+    saved.write_text(report.model_dump_json(), encoding="utf-8")
+    result = CliRunner().invoke(
+        app,
+        [
+            "review-report",
+            "set",
+            chosen(report, "clone").id,
+            "--report",
+            str(saved),
+            "--store",
+            str(store),
+            "--actor",
+            "Ada",
+            "--disposition",
+            "defer",
+            "--reason",
+            "New explicit judgment.",
+            "--supersedes",
+            legacy.decisions[0].id,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    ledger = load_review_ledger(store)
+    assert ledger.events[0].supersedes_legacy_id == legacy.decisions[0].id
+    assert ledger.legacy_decisions == legacy.decisions
 
 
 @pytest.mark.parametrize("kind", KINDS)
@@ -145,9 +317,7 @@ def test_supported_family_with_no_matching_evidence_remains_missing(
     for path in project.glob("*.py"):
         path.write_text("VALUE = 1\n", encoding="utf-8")
     selected = analyze(project, family)
-    assert not [
-        item for item in review_targets(selected) if item.anchor.subject.kind.value == kind
-    ]
+    assert not [item for item in review_targets(selected) if item.anchor.subject.kind.value == kind]
     result = resolve_reviews(selected, ledger).results[0]
     assert result.state == "missing"
     assert result.reason == "evidence-absent-or-unavailable"
