@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from test_git_comparison import git
+from typer.testing import CliRunner
 
 
 @pytest.fixture
@@ -103,3 +104,67 @@ def test_missing_revision_is_an_explicit_input_error(history_repo):
     end = commit(history_repo, "value = 1\n", 1)
     with pytest.raises(InvalidSource):
         analyze(history_repo, "does-not-exist", end)
+
+
+def test_backdated_removal_has_unknown_age_and_roundtrip_preserves_evidence(history_repo):
+    start = commit(history_repo, "value = 1\n", 1)
+    commit(history_repo, "value = 1\nadded = 2\n", 10)
+    end = commit(history_repo, "value = 1\nadded = 3\n", 5)
+    report = analyze(history_repo, start, end)
+    assessments = [item for cohort in report.steps[-1].cohorts for item in cohort.rework]
+    assert len(assessments) == 1
+    assert assessments[0].state == "unresolved" and assessments[0].reason == "timestamp-order"
+    assert type(report).model_validate_json(report.model_dump_json()) == report
+    wire = report.model_dump(mode="json")
+    wire["steps"][0]["churn"] = 100
+    with pytest.raises(ValueError):
+        type(report).model_validate(wire)
+
+
+def test_failed_source_has_unavailable_totals(history_repo):
+    start = commit(history_repo, "value = 1\n", 1)
+    end = commit(history_repo, "def broken(:\n", 2)
+    report = analyze(history_repo, start, end)
+    assert report.steps[0].totals.state == "unavailable"
+    assert report.steps[0].churn is None
+    assert report.steps[0].diagnostics
+
+
+def test_exact_file_rename_preserves_introduction_origin(history_repo):
+    root = history_repo
+    start = commit(root, "value = 1\n", 1)
+    introduced = commit(root, "value = 1\nadded = 2\n", 2)
+    git(root, "mv", "app.py", "renamed.py")
+    git(root, "commit", "-m", "rename")
+    (root / "renamed.py").write_text("value = 1\nadded = 3\n", encoding="utf-8")
+    git(root, "add", ".")
+    git(root, "commit", "-m", "rewrite after rename")
+    report = analyze(root, start, "HEAD", window_days=365)
+    assert report.steps[1].churn == 0
+    item = report.steps[-1].cohorts[0].rework[0]
+    assert item.introduced_commit == introduced
+    assert item.introduced_path.root == "app.py" and item.deleted_path.root == "renamed.py"
+
+
+def test_merge_measures_integrated_source_once(history_repo):
+    root = history_repo
+    start = commit(root, "value = 1\n", 1)
+    git(root, "checkout", "-b", "side")
+    commit(root, "value = 1\nadded = 2\n", 2)
+    git(root, "checkout", "--detach", start)
+    git(root, "merge", "--no-ff", "side", "-m", "integrate")
+    report = analyze(root, start, "HEAD")
+    assert len(report.steps) == 1
+    assert report.steps[0].parent == start and report.steps[0].added == 1
+
+
+def test_cli_history_exposes_pinned_evidence(history_repo):
+    import json  # noqa: PLC0415
+
+    from slop_measure.cli import app  # noqa: PLC0415
+
+    start = commit(history_repo, "value = 1\n", 1)
+    end = commit(history_repo, "value = 2\n", 2)
+    result = CliRunner().invoke(app, ["history", start, end, "--repo", str(history_repo), "--json"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout) == analyze(history_repo, start, end).model_dump(mode="json")
