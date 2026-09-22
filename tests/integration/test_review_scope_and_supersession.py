@@ -225,6 +225,10 @@ def test_invalid_supersession_does_not_write(project: Path, invalid: str) -> Non
         report = analyze(project)
     else:
         record(store, report, supersedes_legacy_id=legacy_id)
+        for name in ("a.py", "b.py"):
+            path = project / name
+            path.write_text(path.read_text().replace("+ 1", "+ 2"), encoding="utf-8")
+        report = analyze(project)
     before = store.read_bytes()
     if invalid == "different-members":
         target = next(
