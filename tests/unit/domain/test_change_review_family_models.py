@@ -110,6 +110,7 @@ def test_error_change_union_retains_existing_finding_and_explicit_states() -> No
     }
     changed = adapter.validate_python({"state": "introduced", "current": error_occurrence()})
     assert adapter.validate_json(changed.model_dump_json()) == changed
+    assert changed.state == "introduced"
     assert changed.current.finding.fallback_kind == "empty-list"
 
 
