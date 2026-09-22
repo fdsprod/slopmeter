@@ -16,6 +16,7 @@ from slop_measure.api import (
     GitSourceReference,
 )
 from slop_measure.cli import app
+from slop_measure.domain.surface import UnresolvedSymbols
 
 
 @pytest.fixture(autouse=True)
@@ -174,7 +175,7 @@ def test_declaration_rename_does_not_invent_added_and_removed_symbols(tmp_path):
     report = api.review_surface(request)
 
     assert report.summary["added"] == report.summary["removed"] == 0
-    unresolved = next(item for item in report.symbols if item.state == "unresolved")
+    unresolved = next(item for item in report.symbols if isinstance(item, UnresolvedSymbols))
     assert [item.qualified_name for item in unresolved.baseline] == ["old_name"]
     assert [item.qualified_name for item in unresolved.current] == ["new_name"]
     assert unresolved.reason
@@ -187,7 +188,7 @@ def test_competing_move_candidates_remain_unresolved(tmp_path):
     report = api.review_surface(request)
 
     assert report.summary["added"] == report.summary["moved"] == report.summary["removed"] == 0
-    unresolved = next(item for item in report.symbols if item.state == "unresolved")
+    unresolved = next(item for item in report.symbols if isinstance(item, UnresolvedSymbols))
     assert len(unresolved.baseline) == 1
     assert {item.path.root for item in unresolved.current} == {"one.py", "two.py"}
     assert unresolved.reason
@@ -201,7 +202,7 @@ def test_duplicate_qualified_names_are_not_arbitrarily_paired(tmp_path):
 
     assert report.summary["unresolved"] >= 1
     assert report.summary["unchanged"] == 0
-    unresolved = next(item for item in report.symbols if item.state == "unresolved")
+    unresolved = next(item for item in report.symbols if isinstance(item, UnresolvedSymbols))
     assert len(unresolved.baseline) == len(unresolved.current) == 2
 
 
@@ -418,7 +419,7 @@ def test_possible_move_and_edit_without_rename_evidence_remains_unresolved(tmp_p
 
     assert report.summary["added"] == report.summary["removed"] == report.summary["moved"] == 0
     assert report.summary["unresolved"] == 1
-    unresolved = next(item for item in report.symbols if item.state == "unresolved")
+    unresolved = next(item for item in report.symbols if isinstance(item, UnresolvedSymbols))
     assert unresolved.baseline[0].path.root == "old.py"
     assert unresolved.current[0].path.root == "new.py"
     assert unresolved.reason
