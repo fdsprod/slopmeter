@@ -1,5 +1,6 @@
 """Explicit review-store writes and read-only source-bound review resolution."""
 
+import json
 import os
 import tempfile
 from contextlib import suppress
@@ -28,7 +29,14 @@ def load_review_store(path: Path) -> ReviewStore:
     """Read an explicitly selected store without modifying it."""
     try:
         _check_store(path)
-        return ReviewStore.model_validate_json(path.read_bytes())
+        payload = json.loads(path.read_bytes())
+        if isinstance(payload, dict) and payload.get("schema_version") == "2":
+            raise InputError(
+                "Schema-2 ledgers require review-report show --report REPORT --store STORE. "
+                "Generate a fresh saved report first. Keep a schema-1 copy to use score --reviews "
+                "or the legacy review commands; this command does not convert the ledger."
+            )
+        return ReviewStore.model_validate(payload)
     except (OSError, ValueError) as error:
         raise InputError(f"Cannot load review store: {error}") from error
 
