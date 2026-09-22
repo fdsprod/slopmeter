@@ -45,7 +45,7 @@ packages = ["src/slop_measure"]
 
 [tool.hatch.build.targets.sdist]
 only-include = [
-  "src", "tests", "tools", "calibration", ".specs", ".github",
+  "src", "tests", "tools", "calibration", "evaluation", ".specs", ".github",
   ".gitattributes", ".gitignore", "README.md", "pyproject.toml", "uv.lock",
 ]
 exclude = ["**/__pycache__/**", "**/*.pyc", "**/.pytest_cache/**"]

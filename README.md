@@ -1098,3 +1098,17 @@ Production callables whose assertions alone cause a threshold crossing receive a
 classification-review hint. This does not move them into the test cohort or change
 their score. Inspect intent before separating self-test scenarios or configuring
 file-level test paths. Do not exclude a mixed-purpose file merely to lower a score.
+
+### Public detector evaluation (source checkout)
+
+The [public evaluation suite](evaluation/README.md) retains pinned examples,
+source hashes, review labels, and expected raw evidence. It includes a real
+exception-fallback introduction and fix, an intentional fallback, and unsupported
+derived-state and response-contract cases. These selected-file cases test evidence
+and coverage. They do not establish defect precision or change calibrated scores.
+
+Run `tools/evaluate.py` with the checked-in manifest and a verified source cache.
+Source downloads require `--fetch`. Each run needs a new output directory. The
+runner keeps full reports, checks expected values, and marks timeouts or incomplete
+evidence explicitly. Target source and upstream tests are never executed. See the
+suite documentation for commands, exit codes, and scope limits.
