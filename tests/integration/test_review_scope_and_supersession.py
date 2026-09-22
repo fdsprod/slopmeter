@@ -253,7 +253,9 @@ def test_invalid_supersession_does_not_write(project: Path, invalid: str) -> Non
     assert store.read_bytes() == before
 
 
-@pytest.mark.parametrize("invalid", ["unknown-id", "non-clone", "different-members", "claimed"])
+@pytest.mark.parametrize(
+    "invalid", ["unknown-id", "non-clone", "different-members", "language", "cohort", "claimed"]
+)
 def test_ledger_validation_rejects_forged_supersession(project: Path, invalid: str) -> None:
     report, store = analyze(project), project.parent / "reviews.json"
     legacy = legacy_record(store, report)
@@ -265,6 +267,10 @@ def test_ledger_validation_rejects_forged_supersession(project: Path, invalid: s
         event["supersedes_legacy_id"] = "unknown-legacy-id"
     elif invalid == "non-clone":
         event["decision"]["anchor"] = chosen(report, "complexity").anchor.model_dump(mode="json")
+    elif invalid in {"language", "cohort"}:
+        event["decision"]["anchor"]["subject"][invalid] = (
+            "typescript" if invalid == "language" else "test"
+        )
     elif invalid == "different-members":
         (project / "c.py").write_text((project / "a.py").read_text(), encoding="utf-8")
         different = next(
@@ -277,8 +283,21 @@ def test_ledger_validation_rejects_forged_supersession(project: Path, invalid: s
         event["decision"]["anchor"] = different.anchor.model_dump(mode="json")
     else:
         wire["events"].append({**event, "sequence": 2, "review_id": "other-history"})
+    unlinked = {
+        **wire,
+        "events": [
+            {key: value for key, value in item.items() if key != "supersedes_legacy_id"}
+            for item in wire["events"]
+        ],
+    }
+    type(ledger).model_validate(unlinked)
     with pytest.raises(ValidationError):
         type(ledger).model_validate(wire)
+    store.write_text(json.dumps(wire), encoding="utf-8")
+    before = store.read_bytes()
+    with pytest.raises(InputError):
+        load_review_ledger(store)
+    assert store.read_bytes() == before
 
 
 def test_cli_supersedes_records_link_and_retains_legacy_decision(project: Path) -> None:
