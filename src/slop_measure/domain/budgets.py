@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from enum import StrEnum
 from json import dumps
-from typing import Annotated, Self
+from typing import Annotated, Literal, Self
 
 from pydantic import (
     BaseModel,
@@ -16,7 +16,7 @@ from pydantic import (
 )
 
 from slop_measure.domain.evidence import SourceSpan
-from slop_measure.domain.reports import ComparisonAnalysis
+from slop_measure.domain.reports import ComparisonAnalysis, SourceSide
 from slop_measure.domain.source import ProjectPath
 
 
@@ -77,9 +77,49 @@ class BudgetEvidence(_BudgetRecord):
     kind: _Text
 
 
+class _IncompleteDetail(_BudgetRecord):
+    code: Literal[
+        "analysis-limitation",
+        "analysis-error",
+        "unresolved-pattern",
+        "unresolved-clone",
+        "unresolved-error",
+        "unsupported-handler",
+    ]
+    message: _Text
+
+
+class SourceBudgetBlocker(_IncompleteDetail):
+    scope: Literal["source"] = "source"
+    side: SourceSide
+    path: ProjectPath
+    span: SourceSpan | None = None
+
+
+class PopulationBudgetBlocker(_IncompleteDetail):
+    scope: Literal["population"] = "population"
+    side: SourceSide | None = None
+    path: None = None
+    span: None = None
+
+
+BudgetBlocker = Annotated[
+    SourceBudgetBlocker | PopulationBudgetBlocker, Field(discriminator="scope")
+]
+
+
 class BudgetCheck(BudgetLimit):
     evidence: tuple[BudgetEvidence, ...] = ()
     incomplete_reasons: tuple[_Text, ...] = ()
+    incomplete_details: tuple[BudgetBlocker, ...] = ()
+
+    @model_validator(mode="after")
+    def compatible_messages(self) -> Self:
+        if self.incomplete_details and set(self.incomplete_reasons) != {
+            item.message for item in self.incomplete_details
+        }:
+            raise ValueError("budget reason messages must match their structured details")
+        return self
 
     @computed_field
     @property

@@ -36,6 +36,7 @@ from slop_measure.domain.source import DirectorySourceReference, GitSourceRefere
 from slop_measure.errors import InputError, InvalidSource, SelectionError, error_message, exit_code
 from slop_measure.reporting import terminal
 from slop_measure.reporting.architecture import render_architecture
+from slop_measure.reporting.budgets import render_budget
 from slop_measure.reporting.change_review import render_change_review
 from slop_measure.reporting.comparison import render_comparison
 from slop_measure.reporting.derived import render_derived
@@ -314,11 +315,7 @@ def changes_command(  # noqa: PLR0913
         )
     else:
         typer.echo(render_change_review(report))
-        typer.echo(f"Budget: {budget.state}")
-        for check in budget.checks:
-            typer.echo(f"  {check.metric}: observed {check.observed}, maximum {check.maximum}")
-            for reason in check.incomplete_reasons:
-                typer.echo(f"    incomplete: {reason}")
+        typer.echo(render_budget(budget))
     if enforce_budget:
         raise typer.Exit(
             {BudgetState.PASSED: 0, BudgetState.EXCEEDED: 1, BudgetState.INCOMPLETE: 3}[

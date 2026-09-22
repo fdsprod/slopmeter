@@ -3,9 +3,11 @@
 import pytest
 from test_change_review import request, roots as shared_roots, write
 from test_change_review_families import FALLBACK
+from typer.testing import CliRunner
 
 from slop_measure import api
 from slop_measure.application.budgets import evaluate_budget
+from slop_measure.cli import app
 from slop_measure.domain.budgets import BudgetCheck, BudgetPolicy
 
 roots = shared_roots
@@ -24,7 +26,6 @@ def evaluate(roots):
     return evaluate_budget(report, policy)
 
 
-@pytest.mark.xfail(strict=True, reason="Pending structured budget blockers")
 def test_unchanged_unsupported_handlers_keep_both_locations_and_only_block_error_budget(roots):
     source = FALLBACK.replace("return []", "return client.default")
     for root in roots:
@@ -47,7 +48,6 @@ def test_unchanged_unsupported_handlers_keep_both_locations_and_only_block_error
     assert type(result).model_validate_json(result.model_dump_json()) == result
 
 
-@pytest.mark.xfail(strict=True, reason="Pending structured budget blockers")
 def test_failed_source_reason_names_actual_current_file_without_inventing_baseline_failure(roots):
     write(roots[0], "broken.py", "value = 1\n")
     write(roots[1], "broken.py", "def broken(:\n")
@@ -65,7 +65,6 @@ def test_failed_source_reason_names_actual_current_file_without_inventing_baseli
     assert result.state == "incomplete"
 
 
-@pytest.mark.xfail(strict=True, reason="Pending structured budget blockers")
 def test_aggregate_exclusions_have_population_scope_without_fabricated_source_spans(roots):
     report = api.review_change(request(roots, languages=("python",)))
     wire = report.model_dump(mode="json")
@@ -112,7 +111,6 @@ def payload(details, reasons=None):
     }
 
 
-@pytest.mark.xfail(strict=True, reason="Pending structured budget blockers")
 def test_structured_reasons_roundtrip_and_old_text_only_budgets_still_load():
     new = BudgetCheck.model_validate(payload([detail()]))
     assert BudgetCheck.model_validate_json(new.model_dump_json()) == new
@@ -138,3 +136,20 @@ def test_source_and_population_blockers_reject_contradictory_locations(changes):
 def test_structured_reason_cannot_contradict_compatibility_message():
     with pytest.raises(ValueError):
         BudgetCheck.model_validate(payload([detail()], reasons=["Everything assessed"]))
+
+
+def test_terminal_budget_names_the_side_path_and_handler_span(roots, tmp_path):
+    for root in roots:
+        write(root, "fetch.py", FALLBACK.replace("return []", "return client.default"))
+    policy_file = tmp_path / "budget.toml"
+    policy_file.write_text('[[limits]]\nmetric="introduced-errors"\nmaximum=0\n', encoding="utf-8")
+
+    result = CliRunner().invoke(
+        app, ["changes", *map(str, roots), "--lang", "py", "--budget", str(policy_file)]
+    )
+
+    assert result.exit_code == 0, result.output
+    lines = result.stdout.lower().splitlines()
+    for side in ("baseline", "current"):
+        assert any(side in line and "fetch.py:4" in line for line in lines)
+    assert "incomplete" in result.stdout.lower()

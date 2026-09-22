@@ -516,6 +516,13 @@ debt does not consume an introduction budget. Unsupported or unresolved evidence
 can make a check incomplete. An incomplete budget takes precedence over an
 exceeded result, while each check still exposes its observed count and cap.
 
+Each check includes `incomplete_details`: a reason code, message, and source side,
+path, and span when known. Aggregate limits use population scope. Old comparison
+limits that do not record a source side retain that uncertainty in the message.
+The text-only `incomplete_reasons` field remains available for older readers.
+An unchanged unsupported handler still makes the error check incomplete; a lack
+of observed introductions does not establish that all introductions were assessed.
+
 Without `--enforce-budget`, a completed budget report is advisory and returns 0.
 With `--budget --json`, output has `report` and `budget` objects. Without a budget,
 JSON is the change report itself.
