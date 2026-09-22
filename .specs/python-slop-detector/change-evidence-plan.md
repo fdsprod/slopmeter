@@ -1,8 +1,8 @@
 # Change-specific engineering evidence
 
 Status on 2026-09-21: the implementation slices below are available in the source
-checkout. Integrated tests and distribution checks passed. The final static and
-working-tree checks follow the documentation commit. This is not a release or
+checkout. Integrated tests, static checks, and distribution checks passed. The
+final working-tree check follows the documentation commit. This is not a release or
 a validation of defect probabilities.
 
 The work extends existing source discovery, comparisons, detectors, and report
@@ -19,7 +19,7 @@ have separate authors from the implementations they specify.
 | TB-4: Novel surface | Source-bound Python declarations, file counts, conservative moves, and a derived novel declaration ratio. | Implemented; final validation underway |
 | TB-5: Declared architecture | Static direct imports, forbidden module relationships, fan-out, and strongly connected components. | Implemented; final validation underway |
 | TB-6: History and rework | Bounded first-parent Git history, exact source churn, recent line rework, and explicit partial traversal. | Implemented; final validation underway |
-| TB-7: Evaluation and delivery | Independent controls, a public fix-pair pilot, user documentation, and integrated checks. | Pilot and focused checks available; final validation underway |
+| TB-7: Evaluation and delivery | Independent controls, bounded HTTPX/Rich/Black observations, user documentation, and integrated checks. | Evaluation record and final commit review underway |
 | User extension: Raw state dispatch | Source evidence for literal-string `.state` tests, with continuity and no score contribution. Shared enum outcome vocabulary and concrete variant dispatch in the new implementation. | Implemented; final validation underway |
 
 ```mermaid
@@ -158,11 +158,13 @@ Independent tests cover positive controls, intentional keep cases, uncertain
 matching, parser failures, provenance, imported-report checks, and CLI behavior.
 Focused passing suites do not replace the full integrated validation gate.
 
-The [GitHub example pilot](github-example-pilot-2026-09.md) inspected four public
-fix/test pairs. One AstrBot exception-fallback case is supported. PyRIT, Werkzeug,
-and NetworkX expose broader coverage gaps. Historical target tests were read,
-not executed. These selected cases do not estimate precision or recall. NetworkX
-is already a calibration project and is not a new holdout repository.
+The [bounded change evaluation](change-evidence-evaluation.md) inspects pinned
+HTTPX, Rich, and Black pairs. It checks observed changes, retained evidence, and
+explicit source limits. Public origins were verified before bounded parent
+fetches. Slopmeter self-review and synthetic controls are reported separately.
+The selected public changes do not supply an independently labeled introduced
+defect. They do not estimate precision, recall, or maintenance risk. The evaluation
+record owns the exact revisions, scope choices, observations, and final artifacts.
 
 Delivery checks:
 
@@ -171,9 +173,10 @@ Delivery checks:
 - [x] Learning and performance checks: 69 passed, one skipped.
 - [x] Distribution checks: four tests passed for wheel and source distribution.
   Isolated installed command smoke checks passed for both artifacts.
-- [x] Pyright and all five import contracts passed. Source/test Ruff passed.
+- [x] Pyright and all five import contracts passed. Whole-repository Ruff and
+  formatting passed for 240 files.
 - [x] Source-only self-review and explicit report limits recorded in the checkpoint.
-- [ ] Final whole-repository Ruff/formatting and working-tree check after docs commit.
+- [ ] Final working-tree and commit check after docs commit.
 
 The [checkpoint](change-evidence-checkpoint.md) records validation details and
 the deliberate source-selection limits of the self-review.

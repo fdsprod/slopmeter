@@ -2,8 +2,8 @@
 
 Updated 2026-09-21 after the user resumed work with unrestricted filesystem
 permissions. The earlier pause has ended. The implementation is in the source
-checkout. Integrated tests and distribution checks passed. Final static and
-working-tree checks follow this documentation commit. No push or release is claimed.
+checkout. Integrated tests, static checks, and distribution checks passed. The
+final working-tree check follows this documentation commit. No push or release is claimed.
 
 ## Implemented scope
 
@@ -43,16 +43,18 @@ below only after the actual runs finish.
 
 ## Evaluation limits
 
-The [public example pilot](github-example-pilot-2026-09.md) inspected four selected
-upstream fix/test pairs using pinned source. One AstrBot fallback case is
-supported. PyRIT, Werkzeug, and NetworkX remain coverage-gap examples. Upstream
-historical tests were not executed. The sample does not establish precision,
-recall, or calibrated maintenance risk.
+The [bounded change evaluation](change-evidence-evaluation.md) uses pinned HTTPX,
+Rich, and Black pairs. The evaluator verified their public origins and fetched
+bounded parent history without changing checkouts. Target code and historical
+tests were not executed. The selected public changes do not provide an
+independently labeled introduced defect. No precision, recall, or calibrated
+maintenance-risk claim follows from this sample.
 
-Synthetic controls, self-review, and independent public-source examples must stay
-separate. Existing `.tmp/evaluation040` and calibration checkouts expose one
-reachable commit each. They do not supply historical change pairs without more
-history. Calibration repositories are not new held-out projects.
+Synthetic controls, Slopmeter self-review, and public-source observations remain
+separate. The evaluation record owns the exact source pairs, explicit exclusions,
+observations, and final artifacts. Calibration repositories are not new held-out
+projects. Other research files in the workspace are outside this delivery's
+evaluation claims.
 
 The existing inventory can report excluded files only as aggregate counts for a
 language/cohort, without their paths. An exclusion can therefore make all
@@ -62,8 +64,8 @@ change counts or relax uncertainty merely to make enforcement pass.
 
 ## Integrated validation
 
-Runtime: Windows, Python 3.12.14. Root orchestration recorded these results after
-freezing the implementation source:
+Runtime: Windows, Python 3.12.14. Implementation source commit: `8a07a8d`.
+Root orchestration recorded these results after freezing the implementation source:
 
 | Check | Result |
 |---|---|
@@ -74,11 +76,11 @@ freezing the implementation source:
 | Isolated installed command smoke checks | `changes`, enforced budgets, `surface`, `architecture`, and `history` passed for both artifacts. |
 | Import contracts | All five passed. |
 | Pyright | Zero errors. |
-| Ruff | Source and tests passed. Final whole-repository check follows the learning-test formatting and temporary-directory cleanup. |
+| Ruff and formatting | Whole-repository checks passed for 240 files. |
 | Dependency audit | No known vulnerabilities in audited installed dependencies. The local package was skipped because it is not on PyPI. |
 
-The source-only self-review compared baseline `73b9680` with the frozen working
-source. Selection used `src/**/*.py` with generated markers disabled. Raw state
+The source-only self-review compared baseline `73b9680` with the frozen source
+recorded in `8a07a8d`. Selection used `src/**/*.py` with generated markers disabled. Raw state
 dispatch had 40 persisted occurrences, zero introduced/removed/unresolved
 occurrences, and zero comparison limitations. This is a source-syntax result,
 not an independent quality label.
@@ -87,8 +89,8 @@ The broader whole-project comparison withheld introduction/removal claims where
 aggregate exclusion counts made correspondence incomplete. The source-only run
 does not erase that limit or establish complete counts for the broader scan.
 
-Final whole-repository Ruff/formatting, working-tree, and commit checks remain
-for root orchestration after this documentation commit. A separate format-only
+Final working-tree and commit checks remain for root orchestration after this
+documentation commit. A separate format-only
 commit reflows one learning-test call without changing assertions.
 
 Do not replace a failed or unavailable check with a completion claim. Keep the
