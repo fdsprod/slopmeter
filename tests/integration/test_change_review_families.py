@@ -9,6 +9,7 @@ from typer.testing import CliRunner
 
 from slop_measure import api
 from slop_measure.cli import app
+from slop_measure.domain.reports import ComparisonCohortReport
 
 roots = shared_roots
 CLONE = "def first(source):\n    value = source + 1\n    return value\n"
@@ -280,7 +281,12 @@ def test_git_renamed_unparseable_clone_member_is_unresolved_not_removed(tmp_path
         config=api.AnalysisConfig(clone_min_sloc=2),
     )
     comparison = api.compare(selected)
-    pairs = [change.pair for cohort in comparison.cohorts for change in cohort.changes]
+    pairs = [
+        change.pair
+        for cohort in comparison.cohorts
+        if isinstance(cohort, ComparisonCohortReport)
+        for change in cohort.changes
+    ]
     assert any(
         pair.kind == "renamed"
         and pair.baseline_path.root == "b.py"
