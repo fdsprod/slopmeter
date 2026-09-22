@@ -124,6 +124,9 @@ class ErrorReviewReport(ExperimentalReport):
         "of reachability, return-type equivalence, or business intent.",
         "Protected calls are possible operations, not attribution of which operation raised. "
         "Exception spelling does not establish inheritance or a builtin binding.",
+        "Operation evidence includes eager declaration headers such as decorators and defaults; "
+        "it omits nested bodies, local annotations, and lazy type expressions. "
+        "Calls or yields in nested declaration annotations remain unresolved.",
         "None, False, and empty containers can be intentional failure or snapshot results. "
         "Review the caller contract, observability, and whether failure needs a distinct result. "
         "Logging alone does not prove a fallback is safe.",

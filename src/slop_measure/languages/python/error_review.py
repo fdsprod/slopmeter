@@ -30,12 +30,57 @@ def _span(node: ast.stmt | ast.expr | ast.ExceptHandler) -> SourceSpan:
     return SourceSpan(start_line=node.lineno, end_line=node.end_lineno or node.lineno)
 
 
+def _definition_headers(node: _Scope) -> Iterable[ast.AST]:
+    """Visit eager declaration expressions without entering the declared body."""
+    if isinstance(node, ast.ClassDef):
+        return (*node.decorator_list, *node.bases, *(item.value for item in node.keywords))
+    defaults = (*node.args.defaults, *(item for item in node.args.kw_defaults if item is not None))
+    if isinstance(node, _Function):
+        annotations = (
+            node.returns,
+            *(
+                argument.annotation
+                for argument in ast.walk(node.args)
+                if isinstance(argument, ast.arg)
+            ),
+        )
+        if any(
+            isinstance(child, (ast.Call, ast.Yield, ast.YieldFrom))
+            for annotation in annotations
+            if annotation is not None
+            for child in ast.walk(annotation)
+        ):
+            raise _Unresolved("Declaration annotation evaluation is outside the supported scope.")
+        return (*node.decorator_list, *defaults)
+    return defaults
+
+
 def _walk_scope(nodes: Iterable[ast.AST], *, handlers: bool = False) -> Iterator[ast.AST]:
     for node in nodes:
-        if isinstance(node, _Scope) or (isinstance(node, ast.ExceptHandler) and not handlers):
+        if isinstance(node, ast.TypeAlias) or (
+            isinstance(node, ast.ExceptHandler) and not handlers
+        ):
             continue
         yield node
-        yield from _walk_scope(ast.iter_child_nodes(node), handlers=handlers)
+        children = _scope_children(node)
+        yield from _walk_scope(children, handlers=handlers)
+
+
+def _scope_children(node: ast.AST) -> Iterable[ast.AST]:
+    if isinstance(node, _Scope):
+        return _definition_headers(node)
+    if isinstance(node, ast.AnnAssign):
+        # Local variable annotations are not evaluated inside a function.
+        return (node.target, node.value) if node.value is not None else (node.target,)
+    return ast.iter_child_nodes(node)
+
+
+def _protected_span(statements: list[ast.stmt]) -> SourceSpan:
+    first, last = statements[0], statements[-1]
+    start = first.lineno
+    if isinstance(first, _Function | ast.ClassDef) and first.decorator_list:
+        start = min(start, *(decorator.lineno for decorator in first.decorator_list))
+    return SourceSpan(start_line=start, end_line=last.end_lineno or last.lineno)
 
 
 def _fallback_kind(value: ast.expr | None) -> ErrorFallbackKind | None:
@@ -162,10 +207,7 @@ def _findings(
     return (
         ErrorFallbackFinding(
             caught=caught,
-            protected=SourceSpan(
-                start_line=protected.body[0].lineno,
-                end_line=protected.body[-1].end_lineno or protected.body[-1].lineno,
-            ),
+            protected=_protected_span(protected.body),
             operations=tuple(
                 ErrorExpression(span=_span(node), expression=ast.unparse(node))
                 for node in _walk_scope(protected.body)
