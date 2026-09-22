@@ -5,11 +5,22 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
+from test_git_comparison import git
 from typer.testing import CliRunner
 
 from slop_measure import api
-from slop_measure.api import AnalysisConfig, ComparisonRequest, DirectorySourceReference
+from slop_measure.api import (
+    AnalysisConfig,
+    ComparisonRequest,
+    DirectorySourceReference,
+    GitSourceReference,
+)
 from slop_measure.cli import app
+
+
+@pytest.fixture(autouse=True)
+def isolated_source_roots(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
 
 
 def comparison(
@@ -255,3 +266,159 @@ def test_surface_cli_emits_the_api_report(tmp_path):
     )
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout) == api.review_surface(request).model_dump(mode="json")
+
+
+def test_move_across_production_and_test_cohorts_is_not_continuity(tmp_path):
+    source = "def repeated():\n    return 1\n"
+    request = comparison(tmp_path, {"production.py": source}, {"tests/test_sample.py": source})
+
+    report = api.review_surface(request)
+
+    assert report.summary["moved"] == 0
+    assert report.summary["added"] == report.summary["removed"] == 1
+
+
+@pytest.mark.parametrize(
+    "before,after",
+    [
+        ("@cache\ndef sample():\n    return 1\n", "@trace\ndef sample():\n    return 1\n"),
+        (
+            "def sample(value: int):\n    return value\n",
+            "def sample(value: str):\n    return value\n",
+        ),
+        ("def sample():\n    return 1\n", "def sample():\n    return 2\n"),
+    ],
+)
+def test_decorators_annotations_and_literals_change_symbol_fingerprints(tmp_path, before, after):
+    request = comparison(tmp_path, {"sample.py": before}, {"sample.py": after})
+
+    report = api.review_surface(request)
+
+    assert report.summary["modified"] == 1
+    change = report.symbols[0]
+    assert change.state == "modified"
+    assert change.baseline.ast_fingerprint != change.current.ast_fingerprint
+
+
+def test_nested_class_and_method_scopes_are_distinct(tmp_path):
+    request = comparison(
+        tmp_path,
+        {},
+        {
+            "nested.py": (
+                "class Outer:\n    class Inner:\n        def read(self):\n            return 1\n"
+            )
+        },
+    )
+
+    report = api.review_surface(request)
+
+    assert {
+        (item.current.kind, item.current.qualified_name)
+        for item in report.symbols
+        if item.state == "added"
+    } == {("class", "Outer"), ("class", "Outer.Inner"), ("function", "Outer.Inner.read")}
+    assert report.summary["added"] == 3
+
+
+@pytest.mark.parametrize("missing_side", ["baseline", "current"])
+def test_failed_possible_move_cannot_prove_symbol_addition_or_removal(tmp_path, missing_side):
+    source = "def carried():\n    return 1\n"
+    request = comparison(
+        tmp_path,
+        {"old.py": "def broken(:\n" if missing_side == "baseline" else source},
+        {"new.py": "def broken(:\n" if missing_side == "current" else source},
+    )
+
+    report = api.review_surface(request)
+
+    assert report.summary["added"] == report.summary["removed"] == 0
+    assert report.summary["unresolved"] >= 1
+    assert report.limitations
+
+
+def test_generated_marker_exclusion_cannot_prove_a_moved_symbol_was_removed(tmp_path):
+    source = "def carried():\n    return 1\n"
+    request = comparison(
+        tmp_path,
+        {"old.py": source},
+        {"new.py": "# @generated\n" + source},
+    )
+
+    report = api.review_surface(request)
+
+    assert report.summary["removed"] == report.summary["added"] == 0
+    assert report.summary["unresolved"] >= 1
+
+
+@pytest.mark.parametrize("projection", ["boolean-summary", "ratio", "duplicate-owner"])
+def test_imported_surface_report_rejects_projection_or_ownership_tampering(tmp_path, projection):
+    request = comparison(tmp_path, {}, {"sample.py": "def added():\n    return 1\n"})
+    report = api.review_surface(request)
+    wire = report.model_dump(mode="json")
+    if projection == "boolean-summary":
+        wire["summary"]["added"] = True
+    elif projection == "ratio":
+        wire["novel_ratio"]["value"] = 0.25
+    else:
+        for field in ("summary", "file_summary", "novel_ratio"):
+            wire.pop(field)
+        wire["symbols"].append(wire["symbols"][0])
+
+    with pytest.raises(ValueError):
+        type(report).model_validate(wire)
+
+
+def test_git_file_rename_with_edits_preserves_modified_symbol_identity(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init")
+    git(repo, "config", "user.name", "Surface test")
+    git(repo, "config", "user.email", "surface@example.invalid")
+    source = (
+        "def kept(value):\n"
+        "    first = value + 1\n"
+        "    second = first + 2\n"
+        "    third = second + 3\n"
+        "    fourth = third + 4\n"
+        "    return fourth\n"
+    )
+    (repo / "old.py").write_text(source, encoding="utf-8")
+    git(repo, "add", ".")
+    git(repo, "commit", "-m", "baseline")
+    baseline = git(repo, "rev-parse", "HEAD").decode().strip()
+    git(repo, "mv", "old.py", "new.py")
+    (repo / "new.py").write_text(source.replace("third + 4", "third + 5"), encoding="utf-8")
+    git(repo, "add", ".")
+    git(repo, "commit", "-m", "rename and edit")
+    request = ComparisonRequest(
+        baseline=GitSourceReference(root=repo, revision=baseline),
+        current=GitSourceReference(root=repo, revision="HEAD"),
+        config=AnalysisConfig(languages=frozenset({"python"})),
+    )
+
+    report = api.review_surface(request)
+
+    assert report.summary["modified"] == 1
+    assert report.summary["added"] == report.summary["removed"] == 0
+    change = report.symbols[0]
+    assert change.state == "modified"
+    assert change.baseline.path.root == "old.py" and change.current.path.root == "new.py"
+    assert report.file_summary["renamed"] == 1
+
+
+def test_possible_move_and_edit_without_rename_evidence_remains_unresolved(tmp_path):
+    request = comparison(
+        tmp_path,
+        {"old.py": "def carried(value):\n    return value + 1\n"},
+        {"new.py": "def carried(value):\n    return value + 2\n"},
+    )
+
+    report = api.review_surface(request)
+
+    assert report.summary["added"] == report.summary["removed"] == report.summary["moved"] == 0
+    assert report.summary["unresolved"] == 1
+    unresolved = next(item for item in report.symbols if item.state == "unresolved")
+    assert unresolved.baseline[0].path.root == "old.py"
+    assert unresolved.current[0].path.root == "new.py"
+    assert unresolved.reason
