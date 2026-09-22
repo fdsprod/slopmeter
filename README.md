@@ -549,6 +549,67 @@ ran `models` and `variants` on pinned HTTPX, Rich, and Black snapshots. It found
 very limited supported coverage, with no qualifying positive cases. The results
 do not establish precision or recall. Synthetic controls are recorded separately.
 
+## Experimental exception fallback review (source checkout)
+
+The `errors` command is available after v0.5.0 in this checkout:
+
+```powershell
+slop errors --root . --lang py
+slop errors --root . --config C:/review-config/project.toml --json
+```
+
+It looks for exception handlers that return a literal empty/default value while
+the same function has another non-default explicit return outside its exception handlers.
+For example, a handler that returns `[]` after a failed fetch can look like a
+successful fetch with no results. Each candidate shows the caught exception,
+protected source span and calls, fallback return, and other return locations.
+Calls are possible operations; the report does not identify which call raised.
+Operation evidence includes eager definition headers such as decorators and
+defaults. It omits nested bodies, annotations, and lazy type expressions; an
+empty call list does not prove that the protected body cannot raise. Calls or
+yields in nested declaration annotations remain unresolved.
+
+Supported fallbacks are `None` (including bare `return`), `False`, numeric zero,
+empty strings/bytes, and empty list/dict/tuple literals. Named values and calls
+such as `Failure(error)` remain unresolved. The detector does not infer exception
+inheritance or return contracts. Logging before a fallback does not suppress a
+candidate.
+
+The first slice supports functions, async functions, methods, and nested functions.
+Conditional handler flow, generators, `except*`, dynamic exception expressions,
+and enclosing `finally` blocks remain unresolved. Normal-return evidence is
+syntactic: it does not prove reachability or that callers treat a fallback as
+success. Coverage counts exception handlers, not all functions or defects.
+
+**An intentional fallback can be correct.** Check the caller contract: can it
+distinguish an empty result from failure, and does it need to? Preserve a useful
+fallback when appropriate. Consider an explicit failure result or propagation
+only when the contract requires it. No automatic fix is proposed.
+
+This command parses source without executing it. It preserves source hashes,
+discovery coverage, diagnostics, and unsupported reasons. `--strict` fails on
+analysis errors, not on findings or unresolved syntax. Findings are experimental,
+unscored, and do not change M2 or calibrated scores. Independent positive and
+negative controls do not establish real-project precision or recall.
+
+The [initial source evaluation](.specs/python-slop-detector/error-fallback-evaluation.md)
+reviewed all 30 candidates in pinned HTTPX, Rich, and Black snapshots. Most were
+intentional predicates or documented fallback values. No defect was confirmed.
+This evidence supports review use, not automatic failure gates.
+
+Save the JSON outside the scanned source, then retain an attributed review:
+
+```powershell
+slop errors --root . --json | Set-Content -Encoding utf8 C:/reviews/errors.json
+slop review-report list --report C:/reviews/errors.json --kind error
+slop review-report set TARGET_ID --report C:/reviews/errors.json --store C:/reviews/decisions.json --actor reviewer-name --disposition defer --reason "Check how callers distinguish unavailable data from an empty result."
+slop review-report show --report C:/reviews/errors.json --store C:/reviews/decisions.json
+```
+
+These commands review a saved snapshot. Generate fresh JSON to check whether a
+decision still applies. An error review resolved against a score report is
+`not-in-selected-report`, not evidence that its source finding disappeared.
+
 ## Development checks
 
 Use uv 0.11.14, the version pinned in `pyproject.toml`. Create or update the locked
@@ -656,7 +717,8 @@ slop review show --root . --config C:/review-config/service.toml --store C:/revi
 ```
 
 `--config` works on `score`, `scan`, `tree`, `compare`, `explain`, `findings`,
-`rules`, `models`, `variants`, `derived`, `review set`, and `review show`.
+`rules`, `models`, `variants`, `derived`, `errors` (source checkout), `review set`,
+and `review show`.
 Put it after the command name. An explicit
 file replaces both local config files. Settings come from defaults, then that file,
 then CLI overrides such as `--lang` and `--strict`. A missing or invalid explicit
@@ -728,6 +790,9 @@ The new `review-report` workflow reads saved native JSON from `score`, `models`,
 model findings, analyzed variant handlers, and derived-state findings. Failed and
 unresolved experimental results are not reviewable targets. This workflow is
 available in v0.5.0.
+
+The source checkout also accepts `errors` reports and the `error` review kind.
+Only candidate exception fallbacks become review targets.
 
 Save JSON using UTF-8. For example, in PowerShell:
 

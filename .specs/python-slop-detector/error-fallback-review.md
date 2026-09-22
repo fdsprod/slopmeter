@@ -1,6 +1,7 @@
 # Exception fallback review
 
-Status: implementation in progress. This experiment does not change scores, M2,
+Status: implemented and validated in the source checkout after v0.5.0.
+This experiment does not change scores, M2,
 calibration, or source classification.
 
 ## Question
@@ -30,9 +31,13 @@ family is `error`. All evidence models are frozen and reject unknown fields.
 `fallback_kind` is one of `none`, `false`, `zero`, `empty-string`, `empty-bytes`,
 `empty-list`, `empty-dict`, or `empty-tuple`. Bare `return` is `none`. Expression
 text is normalized with `ast.unparse`; it is evidence, not executable output.
-The protected span covers the try body. Operations are calls in that body,
-excluding nested function/class/lambda bodies and exception handlers. They are
-possible operations, not an attribution of which operation raised.
+Return evidence spans the return statement, and a bare return has expression
+`None`. Handler spans cover the except clause; bare catches use `bare except`.
+The protected span covers the try body, including a decorator before the first
+definition. Operations include calls in eager definition headers (decorators,
+defaults, class bases and keywords). Nested bodies, annotations, lazy type
+expressions, and exception handlers are omitted. Operations are possible calls,
+not an attribution of which operation raised or an exhaustive exception source.
 
 Each handler gets one outcome. Coverage uses `exception-handlers` as its unit.
 An empty file has no handlers; it does not have a successful function assessment.
@@ -55,11 +60,14 @@ omitted summary and reject a supplied summary that disagrees with their evidence
 - A handler ending in `raise`, or with no return, is assessed with no finding.
   A literal/default return without a corroborating normal return is also assessed
   with no finding. Explicit failure objects and non-default returns are not
-  candidates; indirect fallback values remain unresolved.
+  candidates; indirect fallback values (including failure constructor calls)
+  remain unresolved. Non-default literals are assessed with no candidate.
 - Conditional handler flow, early exits before a final return, `except*`, dynamic
   exception expressions, generators, module/class-level handlers, and handlers
   enclosed by a try/finally remain unresolved with specific reasons. This includes
   an outer finally that can replace the observed return.
+- Calls or yields in nested declaration annotations remain unresolved. Local
+  annotations and lazy type expressions do not supply eager-operation evidence.
 - No exception-return sentinel inference, imported contract resolution, or
   automatic fixes. `None`, `False`, and empty containers can be intentional
   failure/snapshot results. Candidates require a reviewer to inspect the caller
