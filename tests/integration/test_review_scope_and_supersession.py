@@ -134,6 +134,7 @@ def test_selected_report_family_controls_native_resolution(
     result = resolution.results[0]
     assert result.state == ("current" if family == selected_family else "not-in-selected-report")
     if family != selected_family:
+        assert result.state == "not-in-selected-report"
         assert result.reason == "review-family-not-in-selected-report"
     assert result.event == ledger.events[0]
     assert resolution.schema_version == "3" and ledger.schema_version == "2"
@@ -234,7 +235,8 @@ def test_invalid_supersession_does_not_write(project: Path, invalid: str) -> Non
         target = next(
             item
             for item in review_targets(report)
-            if item.anchor.subject.kind.value == "clone"
+            if item.state == "reviewable"
+            and item.anchor.subject.kind.value == "clone"
             and {location.path.root for location in item.anchor.subject.locations}
             == {"a.py", "b.py", "c.py"}
         )
@@ -276,7 +278,8 @@ def test_ledger_validation_rejects_forged_supersession(project: Path, invalid: s
         different = next(
             item
             for item in review_targets(analyze(project))
-            if item.anchor.subject.kind.value == "clone"
+            if item.state == "reviewable"
+            and item.anchor.subject.kind.value == "clone"
             and {location.path.root for location in item.anchor.subject.locations}
             == {"a.py", "b.py", "c.py"}
         )
@@ -340,7 +343,13 @@ def test_supported_family_with_no_matching_evidence_remains_missing(
     for path in project.glob("*.py"):
         path.write_text("VALUE = 1\n", encoding="utf-8")
     selected = analyze(project, family)
-    assert not [item for item in review_targets(selected) if item.anchor.subject.kind.value == kind]
+    targets = review_targets(selected)
+    assert all(item.state == "reviewable" for item in targets)
+    assert not [
+        item
+        for item in targets
+        if item.state == "reviewable" and item.anchor.subject.kind.value == kind
+    ]
     result = resolve_reviews(selected, ledger).results[0]
     assert result.state == "missing"
     assert result.reason == "evidence-absent-or-unavailable"
